@@ -1,0 +1,747 @@
+<script>
+  import axios from 'axios';
+  import Swal from 'sweetalert2';
+  import { onMount } from 'svelte';
+
+  let categories = [];
+  let templates = [];
+  let selectedCategories = [];
+  let expenseDate = new Date().toISOString().split('T')[0];
+  let notes = '';
+  let amount = '';
+  let loading = false;
+  let categoriesLoading = true;
+  let templatesLoading = true;
+  let showTemplates = false;
+  let transactionType = 'expense'; // 'expense' or 'income'
+  let balance = { amount: 0, notes: '' };
+  let balanceLoading = true;
+
+  const quickAmounts = [10000, 25000, 50000, 75000, 100000];
+
+  onMount(async () => {
+    await Promise.all([loadCategories(), loadTemplates(), loadBalance()]);
+    // Auto-focus amount field on mobile
+    setTimeout(() => {
+      const amountInput = document.getElementById('amount');
+      if (amountInput && window.innerWidth <= 768) {
+        // amountInput.focus();
+      }
+    }, 100);
+  });
+
+  async function loadCategories() {
+    try {
+      const response = await axios.get('/api/categories');
+      categories = response.data.map(cat => ({
+        id: cat.slug,
+        label: cat.name
+      }));
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      // Fallback to default categories if API fails
+      categories = [
+        { id: 'daily', label: 'Daily' },
+        { id: 'monthly', label: 'Monthly' },
+        { id: 'others', label: 'Others' }
+      ];
+    } finally {
+      categoriesLoading = false;
+    }
+  }
+
+  async function loadTemplates() {
+    try {
+      const response = await axios.get('/api/templates');
+      templates = response.data;
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    } finally {
+      templatesLoading = false;
+    }
+  }
+
+  async function loadBalance() {
+    try {
+      const response = await axios.get('/api/income/balance');
+      balance = response.data;
+    } catch (error) {
+      console.error('Error loading balance:', error);
+    } finally {
+      balanceLoading = false;
+    }
+  }
+
+  function setQuickAmount(quickAmount) {
+    amount = quickAmount.toString();
+  }
+
+  function applyTemplate(template) {
+    selectedCategories = [...template.categories];
+    amount = template.amount.toString();
+    notes = template.notes || '';
+    showTemplates = false;
+  }
+
+
+
+  function formatCurrency(value) {
+    if (!value && value !== 0) return '';
+    // Convert to number if it's a string, or use the number directly
+    let numericValue;
+    if (typeof value === 'string') {
+      numericValue = value.replace(/\D/g, '');
+      if (!numericValue) return '';
+      numericValue = parseFloat(numericValue);
+    } else {
+      numericValue = value;
+    }
+    if (isNaN(numericValue)) return '';
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(numericValue);
+  }
+
+  function handleAmountInput(e) {
+    const value = e.target.value;
+    const numericValue = value.replace(/\D/g, '');
+    amount = numericValue;
+  }
+
+  function toggleCategory(categoryId) {
+    if (selectedCategories.includes(categoryId)) {
+      selectedCategories = selectedCategories.filter(id => id !== categoryId);
+    } else {
+      selectedCategories = [...selectedCategories, categoryId];
+    }
+    
+    // If category selected, scroll to date field
+    if (selectedCategories.length > 0) {
+      setTimeout(() => {
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+          dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }
+
+  function handleDateChange() {
+    // After date selected, scroll to amount field (without focusing)
+    setTimeout(() => {
+      const amountInput = document.getElementById('amount');
+      if (amountInput) {
+        amountInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+
+  async function handleSubmit() {
+    if (transactionType === 'expense' && selectedCategories.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'Please select at least one category',
+        zIndex: 9999
+      });
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'Please enter a valid amount',
+        zIndex: 9999
+      });
+      return;
+    }
+
+    loading = true;
+    
+    try {
+      if (transactionType === 'expense') {
+        const payload = {
+          categories: selectedCategories,
+          date: expenseDate,
+          notes: notes,
+          amount: parseFloat(amount)
+        };
+        const response = await axios.post('/api/expenses', payload);
+        
+        const categoryNames = categories
+          .filter(cat => selectedCategories.includes(cat.id))
+          .map(cat => cat.label)
+          .join(', ');
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Type:</strong> Expense</p>
+              <p><strong>Categories:</strong> ${categoryNames}</p>
+              <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Notes:</strong> ${notes || '-'}</p>
+            </div>
+          `,
+          confirmButtonText: 'OK',
+          zIndex: 9999
+        });
+      } else {
+        const payload = {
+          date: expenseDate,
+          notes: notes,
+          amount: parseFloat(amount)
+        };
+        const response = await axios.post('/api/income', payload);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Type:</strong> Income</p>
+              <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Notes:</strong> ${notes || '-'}</p>
+            </div>
+          `,
+          confirmButtonText: 'OK',
+          zIndex: 9999
+        });
+        await loadBalance();
+      }
+
+      // Reset form
+      selectedCategories = [];
+      notes = '';
+      amount = '';
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || `Failed to save ${transactionType}`,
+        zIndex: 9999
+      });
+    } finally {
+      loading = false;
+    }
+  }
+
+  function handleClear() {
+    selectedCategories = [];
+    expenseDate = new Date().toISOString().split('T')[0];
+    notes = '';
+    amount = '';
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }
+</script>
+
+<form class="input-expenses" on:submit|preventDefault={handleSubmit}>
+  <h1>Input {transactionType === 'expense' ? 'Expenses' : 'Income'}</h1>
+
+  <!-- Transaction Type Toggle -->
+  <div class="form-group">
+    <div class="type-toggle">
+      <button
+        type="button"
+        class="type-btn"
+        class:active={transactionType === 'expense'}
+        on:click={() => {
+          transactionType = 'expense';
+          selectedCategories = [];
+        }}
+      >
+        Expense
+      </button>
+      <button
+        type="button"
+        class="type-btn"
+        class:active={transactionType === 'income'}
+        on:click={() => {
+          transactionType = 'income';
+          selectedCategories = [];
+        }}
+      >
+        Income
+      </button>
+    </div>
+  </div>
+
+  <!-- Templates Section -->
+  {#if templates.length > 0}
+    <div class="form-group">
+      <div class="templates-header">
+        <label>Templates</label>
+        <button 
+          type="button" 
+          class="toggle-btn"
+          on:click={() => showTemplates = !showTemplates}
+        >
+          {showTemplates ? 'Hide' : 'Show'} ({templates.length})
+        </button>
+      </div>
+      {#if showTemplates}
+        <div class="templates-list">
+          {#each templates as template}
+            <button
+              type="button"
+              class="template-btn"
+              on:click={() => applyTemplate(template)}
+            >
+              <span class="template-name">{template.name}</span>
+              <span class="template-amount">{formatCurrency(template.amount)}</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  {#if transactionType === 'expense'}
+    <div class="form-group">
+      <label>Category {#if selectedCategories.length > 0}<span class="selected-count">({selectedCategories.length} selected)</span>{/if}</label>
+      {#if categoriesLoading}
+        <div class="loading-categories">Loading categories...</div>
+      {:else}
+        <div class="checkbox-group">
+          {#each categories as category}
+            <label class="checkbox-label" class:selected={selectedCategories.includes(category.id)}>
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(category.id)}
+                on:change={() => toggleCategory(category.id)}
+              />
+              <span>{category.label}</span>
+            </label>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  <div class="form-group">
+    <label for="date">Date</label>
+    <input
+      id="date"
+      type="date"
+      bind:value={expenseDate}
+      on:change={handleDateChange}
+      class="form-input"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="amount">Amount (IDR)</label>
+    <input
+      id="amount"
+      type="text"
+      bind:value={amount}
+      on:input={handleAmountInput}
+      placeholder="0"
+      class="form-input"
+      on:keydown={handleKeyDown}
+      inputmode="numeric"
+    />
+    {#if amount}
+      <div class="amount-preview">{formatCurrency(amount)}</div>
+    {/if}
+    
+    <!-- Quick Amount Buttons -->
+    <div class="quick-amounts">
+      <label class="quick-amounts-label">Quick Amount:</label>
+      <div class="quick-amounts-buttons">
+        {#each quickAmounts as quickAmount}
+          <button
+            type="button"
+            class="quick-amount-btn"
+            class:active={amount === quickAmount.toString()}
+            on:click={() => setQuickAmount(quickAmount)}
+          >
+            {formatCurrency(quickAmount.toString())}
+          </button>
+        {/each}
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="notes">Notes</label>
+    <textarea
+      id="notes"
+      bind:value={notes}
+      placeholder="Add notes (optional)"
+      class="form-textarea"
+      rows="3"
+      on:keydown={handleKeyDown}
+    ></textarea>
+  </div>
+
+  <div class="button-group">
+    <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
+    <button type="submit" class="btn btn-primary" disabled={loading}>
+      {#if loading}
+        <span class="spinner"></span> Submitting...
+      {:else}
+        Submit
+      {/if}
+    </button>
+  </div>
+</form>
+
+<style>
+  .input-expenses {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .checkbox-label:hover {
+    background-color: var(--background);
+    border-color: var(--primary-color);
+  }
+
+  .checkbox-label.selected {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-color: var(--primary-color);
+  }
+
+  .selected-count {
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: var(--text-secondary);
+  }
+
+  .loading-categories {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+
+  .checkbox-label span {
+    flex: 1;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .amount-preview {
+    margin-top: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 0.875rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #4338ca;
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--background);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary:disabled {
+    background-color: var(--text-secondary);
+  }
+
+  /* Type Toggle */
+  .type-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--background);
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+    border: 2px solid var(--border);
+  }
+
+  .type-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .type-btn:hover {
+    color: var(--text-primary);
+    background: var(--surface);
+  }
+
+  .type-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Templates */
+  .templates-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .toggle-btn {
+    padding: 0.25rem 0.75rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .templates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .template-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+
+  .template-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+  }
+
+  .template-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .template-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  /* Quick Amount Buttons */
+  .quick-amounts {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .quick-amounts-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .quick-amounts-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .quick-amount-btn {
+    padding: 0.75rem 0.5rem;
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .quick-amount-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+  }
+
+  .quick-amount-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 768px) {
+    .input-expenses {
+      padding: 0.5rem;
+    }
+
+    .checkbox-group {
+      gap: 0.5rem;
+    }
+
+    .checkbox-label {
+      padding: 1rem;
+      min-height: 56px; /* Better touch target */
+    }
+
+    .form-input,
+    .form-textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+      padding: 1rem;
+      min-height: 48px;
+    }
+
+    .quick-amounts-buttons {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-amount-btn {
+      padding: 1rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .button-group {
+      flex-direction: column;
+    }
+
+    .btn {
+      min-height: 48px;
+      font-size: 1rem;
+    }
+  }
+</style>
+
