@@ -119,15 +119,19 @@
     }
   }
 
-  async function loadMonths() {
-    loading = true;
+  async function loadMonths(silent = false) {
+    if (!silent) {
+      loading = true;
+    }
     try {
       const response = await api.get('/expenses/months');
       months = response.data;
     } catch (error) {
       console.error('Error loading months:', error);
     } finally {
-      loading = false;
+      if (!silent) {
+        loading = false;
+      }
     }
   }
 
@@ -323,9 +327,9 @@
     date={selectedDate}
     on:close={closeDateModal}
     on:refresh={async () => {
-      // Refresh data but preserve scroll position
+      // Refresh data but preserve scroll position and avoid resetting calendar scroll
       const currentScroll = calendarWrapper ? calendarWrapper.scrollTop : 0;
-      await Promise.all([loadMonths(), loadBalance()]);
+      await Promise.all([loadMonths(true), loadBalance()]);
       setTimeout(() => {
         if (calendarWrapper) {
           calendarWrapper.scrollTop = currentScroll;

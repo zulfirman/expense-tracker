@@ -790,22 +790,6 @@
         {/if}
 
         {#if expensesByCategory.length > 0}
-          <div class="chart-section">
-            <h3>Category Breakdown (Pie Chart)</h3>
-            <p class="chart-description">See where your money went by category</p>
-            <div class="chart-container">
-              <canvas bind:this={pieChartCanvas}></canvas>
-            </div>
-          </div>
-
-          <div class="chart-section">
-            <h3>Expenses by Category (Bar Chart)</h3>
-            <p class="chart-description">Compare spending across different categories</p>
-            <div class="chart-container">
-              <canvas bind:this={categoryChartCanvas}></canvas>
-            </div>
-          </div>
-
           <div class="category-list">
             <h4>Category Breakdown Details</h4>
             {#each expensesByCategory.sort((a, b) => b.total - a.total) as item}

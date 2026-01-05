@@ -271,8 +271,9 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 	month := c.Param("month")
 
 	type CategoryTotal struct {
-		Category string  `json:"category"`
-		Total    float64 `json:"total"`
+		CategoryID uint    `json:"categoryId"`
+		Category   string  `json:"category"`
+		Total      float64 `json:"total"`
 	}
 
 	type DailyTotal struct {
@@ -294,8 +295,12 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch income details"})
 	}
 
-	// Aggregate by category
-	categoryMap := make(map[string]float64)
+	// Aggregate by category (keyed by category ID to keep a stable reference)
+	type categoryAggregate struct {
+		Name  string
+		Total float64
+	}
+	categoryMap := make(map[uint]categoryAggregate)
 	dailyMap := make(map[string]struct {
 		Income  float64
 		Expense float64
@@ -314,7 +319,15 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 			}{Expense: expense.Amount}
 		}
 		for _, category := range expense.Categories {
-			categoryMap[category.Name] += expense.Amount
+			if agg, ok := categoryMap[category.ID]; ok {
+				agg.Total += expense.Amount
+				categoryMap[category.ID] = agg
+			} else {
+				categoryMap[category.ID] = categoryAggregate{
+					Name:  category.Name,
+					Total: expense.Amount,
+				}
+			}
 		}
 	}
 
@@ -333,10 +346,11 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 	}
 
 	categoryResults := make([]CategoryTotal, 0, len(categoryMap))
-	for category, total := range categoryMap {
+	for id, agg := range categoryMap {
 		categoryResults = append(categoryResults, CategoryTotal{
-			Category: category,
-			Total:    total,
+			CategoryID: id,
+			Category:   agg.Name,
+			Total:      agg.Total,
 		})
 	}
 

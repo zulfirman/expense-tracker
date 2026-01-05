@@ -1,21 +1,23 @@
 <script>
-  import api from '$lib/api';
-  import Swal from 'sweetalert2';
-  import { onMount } from 'svelte';
-  import DatePicker from '$lib/components/DatePicker.svelte';
+    import api from '$lib/api';
+    import Swal from 'sweetalert2';
+    import {onMount} from 'svelte';
 
-  let categories = [];
+    let categories = [];
   let budgets = {};
   let currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
   let loading = false;
   let categoriesLoading = true;
   let expensesByCategory = {};
+  let budgetCards = [];
   let showBudgetForm = false;
   let editingCategory = null;
   let budgetAmount = '';
 
   onMount(async () => {
-    await Promise.all([loadCategories(), loadBudgets(), loadExpenses()]);
+    // Ensure categories are loaded before budgets and expenses
+    await loadCategories();
+    await Promise.all([loadBudgets(), loadExpenses()]);
   });
 
   async function loadCategories() {
@@ -50,23 +52,16 @@
 
   async function loadExpenses() {
     try {
-      // Ensure categories are loaded first
-      if (categories.length === 0) {
-        await loadCategories();
-      }
-      
       const response = await api.get(`/expenses/month/${currentMonth}`);
       expensesByCategory = {};
       if (response.data && response.data.categories) {
         response.data.categories.forEach(item => {
-          // item.category is the category name, we need to map it to category ID
-          const category = categories.find(cat => cat.label === item.category);
-          if (category) {
-            // If expense already exists for this category, add to it (in case of duplicates)
-            expensesByCategory[category.id] = (expensesByCategory[category.id] || 0) + item.total;
+          // Backend now returns categoryId directly, so we can map by ID
+          const categoryId = item.categoryId;
+          if (categoryId) {
+            expensesByCategory[categoryId] = (expensesByCategory[categoryId] || 0) + item.total;
           } else {
-            // Debug: log unmapped categories
-            console.warn('Category not found for expense:', item.category, 'Available categories:', categories.map(c => c.label));
+            console.warn('Missing categoryId for expense category aggregate:', item);
           }
         });
       }
@@ -84,15 +79,12 @@
     }).format(amount);
   }
 
-  function getBudgetProgress(categoryId) {
-    const budget = budgets[categoryId] || 0;
-    const spent = expensesByCategory[categoryId] || 0;
-    if (budget === 0) return 0;
+  function getBudgetProgress(budget, spent) {
+    if (!budget) return 0;
     return Math.min((spent / budget) * 100, 100);
   }
 
-  function getBudgetStatus(categoryId) {
-    const progress = getBudgetProgress(categoryId);
+  function getBudgetStatus(progress) {
     if (progress >= 100) return 'exceeded';
     if (progress >= 75) return 'warning';
     if (progress >= 50) return 'caution';
@@ -208,9 +200,26 @@
 
   function handleAmountInput(e) {
     const value = e.target.value;
-    const numericValue = value.replace(/\D/g, '');
-    budgetAmount = numericValue;
+    budgetAmount = value.replace(/\D/g, '');
   }
+
+  // Derive budget cards reactively so progress updates when data changes
+  $: budgetCards = categories.map((category) => {
+    const budget = budgets[category.id] || 0;
+    const spent = expensesByCategory[category.id] || 0;
+    const progress = getBudgetProgress(budget, spent);
+    const status = getBudgetStatus(progress);
+    const remaining = budget - spent;
+
+    return {
+      category,
+      budget,
+      spent,
+      progress,
+      status,
+      remaining
+    };
+  });
 
   // Check for budget alerts
   function checkBudgetAlerts() {
@@ -282,35 +291,29 @@
     <div class="no-categories">No categories available</div>
   {:else}
     <div class="budget-list">
-      {#each categories as category}
-        {@const budget = budgets[category.id] || 0}
-        {@const spent = expensesByCategory[category.id] || 0}
-        {@const progress = getBudgetProgress(category.id)}
-        {@const status = getBudgetStatus(category.id)}
-        {@const remaining = budget - spent}
-        
+      {#each budgetCards as card}
         <div class="budget-card">
           <div class="budget-header">
             <div class="category-info">
-              <h3>{category.label}</h3>
-              {#if budget > 0}
-                <span class="budget-amount">Budget: {formatCurrency(budget)}</span>
+              <h3>{card.category.label}</h3>
+              {#if card.budget > 0}
+                <span class="budget-amount">Budget: {formatCurrency(card.budget)}</span>
               {:else}
                 <span class="no-budget">No budget set</span>
               {/if}
             </div>
             <div class="budget-actions">
-              {#if budget > 0}
+              {#if card.budget > 0}
                 <button
                   class="btn-icon"
-                  on:click={() => openBudgetForm(category.id)}
+                  on:click={() => openBudgetForm(card.category.id)}
                   title="Edit Budget"
                 >
                   ✏️
                 </button>
                 <button
                   class="btn-icon"
-                  on:click={() => deleteBudget(category.id)}
+                  on:click={() => deleteBudget(card.category.id)}
                   title="Delete Budget"
                 >
                   🗑️
@@ -318,7 +321,7 @@
               {:else}
                 <button
                   class="btn-add"
-                  on:click={() => openBudgetForm(category.id)}
+                  on:click={() => openBudgetForm(card.category.id)}
                 >
                   + Set Budget
                 </button>
@@ -326,25 +329,25 @@
             </div>
           </div>
 
-          {#if budget > 0}
+          {#if card.budget > 0}
             <div class="budget-progress">
               <div class="progress-info">
-                <span class="spent">Spent: {formatCurrency(spent)}</span>
-                <span class="remaining" class:negative={remaining < 0}>
-                  {remaining >= 0 ? 'Remaining: ' : 'Over by: '}{formatCurrency(Math.abs(remaining))}
+                <span class="spent">Spent: {formatCurrency(card.spent)}</span>
+                <span class="remaining" class:negative={card.remaining < 0}>
+                  {card.remaining >= 0 ? 'Remaining: ' : 'Over by: '}{formatCurrency(Math.abs(card.remaining))}
                 </span>
               </div>
               <div class="progress-bar-container">
                 <div
                   class="progress-bar"
-                  class:exceeded={progress >= 100}
-                  class:warning={progress >= 75 && progress < 100}
-                  class:caution={progress >= 50 && progress < 75}
-                  style="width: {Math.min(progress, 100)}%; background-color: {getStatusColor(status)}"
+                  class:exceeded={card.progress >= 100}
+                  class:warning={card.progress >= 75 && card.progress < 100}
+                  class:caution={card.progress >= 50 && card.progress < 75}
+                  style="width: {Math.min(card.progress, 100)}%; background-color: {getStatusColor(card.status)}"
                 ></div>
               </div>
               <div class="progress-percentage">
-                {Math.round(progress)}% used
+                {Math.round(card.progress)}% used
               </div>
             </div>
           {/if}
