@@ -202,7 +202,7 @@
 <div class="categories-page">
   <div class="header-section">
     <h1>My Categories</h1>
-    <button class="btn btn-primary" on:click={openAddForm} disabled={loading}>
+    <button class="btn btn-primary" style="max-width: 50%" on:click={openAddForm} disabled={loading}>
       + Add Category
     </button>
   </div>
