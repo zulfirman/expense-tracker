@@ -2,6 +2,7 @@
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   let expenseDate = new Date().toISOString().split('T')[0];
   let notes = '';
@@ -116,12 +117,11 @@
 
   <div class="form-group">
     <label for="date">Date</label>
-    <input
+    <DatePicker
       id="date"
-      type="date"
       bind:value={expenseDate}
-      on:change={handleDateChange}
-      class="form-input"
+      placeholder="Select date"
+      on:dateChange={handleDateChange}
     />
   </div>
 

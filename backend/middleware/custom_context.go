@@ -21,7 +21,7 @@ func CustomContextMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
-			
+
 			cc := &models.CustomContext{
 				Context:  c,
 				UserID:   0,
@@ -60,7 +60,7 @@ func CustomContextMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 			}
 
 			// Verify user still exists and get user info
-			var user models.User
+			var user models.M_user
 			if err := db.First(&user, claims.UserID).Error; err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{"message": "User not found"})
 			}
@@ -85,4 +85,3 @@ func GetCustomContext(c echo.Context) *models.CustomContext {
 		UserName: "",
 	}
 }
-

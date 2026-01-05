@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"expenses-tracker/middleware"
 	"expenses-tracker/models"
 	"net/http"
 	"os"
@@ -32,8 +33,8 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	Token string      `json:"token"`
-	User  models.User `json:"user"`
+	Token string        `json:"token"`
+	User  models.M_user `json:"user"`
 }
 
 func (h *AuthHandler) Signup(c echo.Context) error {
@@ -43,7 +44,7 @@ func (h *AuthHandler) Signup(c echo.Context) error {
 	}
 
 	// Check if user already exists
-	var existingUser models.User
+	var existingUser models.M_user
 	if err := h.db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 		return c.JSON(http.StatusConflict, map[string]string{"message": "Email already registered"})
 	}
@@ -55,7 +56,7 @@ func (h *AuthHandler) Signup(c echo.Context) error {
 	}
 
 	// Create user
-	user := models.User{
+	user := models.M_user{
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashedPassword),
@@ -84,7 +85,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	// Find user
-	var user models.User
+	var user models.M_user
 	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid email or password"})
 	}
@@ -110,7 +111,7 @@ func (h *AuthHandler) GetProfile(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 	userID := cc.UserID
 
-	var user models.User
+	var user models.M_user
 	if err := h.db.First(&user, userID).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
 	}
@@ -132,14 +133,14 @@ func (h *AuthHandler) UpdateProfile(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 	}
 
-	var user models.User
+	var user models.M_user
 	if err := h.db.First(&user, userID).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "User not found"})
 	}
 
 	// Check if email is being changed and if it's already taken
 	if req.Email != user.Email {
-		var existingUser models.User
+		var existingUser models.M_user
 		if err := h.db.Where("email = ? AND id != ?", req.Email, userID).First(&existingUser).Error; err == nil {
 			return c.JSON(http.StatusConflict, map[string]string{"message": "Email already in use"})
 		}
@@ -172,4 +173,3 @@ func (h *AuthHandler) generateToken(userID uint, email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
-

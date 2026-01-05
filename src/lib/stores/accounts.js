@@ -119,6 +119,17 @@ function createAccountsStore() {
         }
       })();
       return currentAccount;
+    },
+    clearAccounts: () => {
+      if (!browser) return;
+      
+      set({
+        accounts: [],
+        currentAccountId: null
+      });
+      
+      localStorage.removeItem('accounts');
+      localStorage.removeItem('currentAccountId');
     }
   };
 }

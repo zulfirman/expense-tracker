@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Income struct {
+type T_income struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	UserID    uint           `json:"userId" gorm:"default:null;index"`
 	Date      time.Time      `json:"date" gorm:"type:date"`
@@ -17,7 +17,7 @@ type Income struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (Income) TableName() string {
+func (T_income) TableName() string {
 	return "t_incomes"
 }
 

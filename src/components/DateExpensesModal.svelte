@@ -40,18 +40,18 @@
 
   async function loadCategories() {
     try {
-      const response = await axios.get('/api/categories');
-      categories = response.data.map(cat => ({
-        id: cat.slug,
-        label: cat.name
-      }));
+      const response = await api.get('/categories');
+      // Only show active categories in expense input
+      categories = response.data
+        .filter(cat => cat.isActive !== false)
+        .map(cat => ({
+          id: cat.id,
+          label: cat.name,
+          slug: cat.slug
+        }));
     } catch (error) {
       console.error('Error loading categories:', error);
-      categories = [
-        { id: 'daily', label: 'Daily' },
-        { id: 'monthly', label: 'Monthly' },
-        { id: 'others', label: 'Others' }
-      ];
+      categories = [];
     } finally {
       categoriesLoading = false;
     }
@@ -171,7 +171,7 @@
     showAddExpenseForm = false;
     showAddIncomeForm = false;
     editExpenseForm = {
-      categories: [...expense.categories],
+      categories: [...(expense.categoryIds || expense.categories || [])],
       notes: expense.notes || '',
       amount: expense.amount.toString()
     };
@@ -220,7 +220,7 @@
   }
 
   function applyTemplate(template) {
-    selectedCategories = [...template.categories];
+    selectedCategories = [...(template.categoryIds || template.categories || [])];
     amount = template.amount.toString();
     notes = template.notes || '';
     showTemplates = false;
@@ -255,8 +255,8 @@
 
     submitting = true;
     try {
-      await axios.post('/api/expenses', {
-        categories: selectedCategories,
+      await api.post('/expenses', {
+        categoryIds: selectedCategories,
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
@@ -326,7 +326,7 @@
 
     try {
       await api.put(`/expenses/${editingExpense.id}`, {
-        categories: editExpenseForm.categories,
+        categoryIds: editExpenseForm.categories,
         notes: editExpenseForm.notes,
         amount: parseFloat(editExpenseForm.amount)
       });

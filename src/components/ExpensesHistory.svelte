@@ -5,6 +5,7 @@
   import CalendarView from './CalendarView.svelte';
   import MonthDetailModal from './MonthDetailModal.svelte';
   import DateExpensesModal from './DateExpensesModal.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   let months = [];
   let selectedMonth = null;
@@ -53,8 +54,9 @@
     try {
       const response = await api.get('/categories');
       categories = response.data.map(cat => ({
-        id: cat.slug,
-        label: cat.name
+        id: cat.id,
+        label: cat.name,
+        slug: cat.slug
       }));
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -72,7 +74,7 @@
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('q', searchQuery);
-      if (searchCategory) params.append('category', searchCategory);
+      if (searchCategory) params.append('categoryId', searchCategory);
       if (dateFrom) params.append('dateFrom', dateFrom);
       if (dateTo) params.append('dateTo', dateTo);
 
@@ -217,13 +219,14 @@
     <div class="search-panel">
       <div class="search-form">
         <div class="form-group">
-          <label for="search-query">Search (notes, category)</label>
+          <label for="search-query">Search (notes)</label>
           <input
             id="search-query"
             type="text"
             bind:value={searchQuery}
             placeholder="Search expenses..."
             class="form-input"
+            on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
           />
         </div>
         <div class="form-group">
@@ -238,20 +241,18 @@
         <div class="date-range">
           <div class="form-group">
             <label for="date-from">From Date</label>
-            <input
+            <DatePicker
               id="date-from"
-              type="date"
               bind:value={dateFrom}
-              class="form-input"
+              placeholder="From date"
             />
           </div>
           <div class="form-group">
             <label for="date-to">To Date</label>
-            <input
+            <DatePicker
               id="date-to"
-              type="date"
               bind:value={dateTo}
-              class="form-input"
+              placeholder="To date"
             />
           </div>
         </div>
@@ -536,6 +537,7 @@
     gap: 0.75rem;
     max-height: 400px;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .expense-item {

@@ -19,17 +19,39 @@ func NewExpenseHandler(db *gorm.DB) *ExpenseHandler {
 	return &ExpenseHandler{db: db}
 }
 
+// Helper function to enrich expense with category names
+func (h *ExpenseHandler) enrichExpenseWithCategoryNames(expense models.T_expense) map[string]interface{} {
+	categoryIDs := make([]uint, len(expense.Categories))
+	categoryNames := make([]string, len(expense.Categories))
+	for i, cat := range expense.Categories {
+		categoryIDs[i] = cat.ID
+		categoryNames[i] = cat.Name
+	}
+
+	return map[string]interface{}{
+		"id":          expense.ID,
+		"userId":      expense.UserID,
+		"categoryIds": categoryIDs,
+		"categories":  categoryNames,
+		"date":        expense.Date,
+		"notes":       expense.Notes,
+		"amount":      expense.Amount,
+		"createdAt":   expense.CreatedAt,
+		"updatedAt":   expense.UpdatedAt,
+	}
+}
+
 type CreateExpenseRequest struct {
-	Categories []string `json:"categories"`
-	Date       string   `json:"date"`
-	Notes      string   `json:"notes"`
-	Amount     float64  `json:"amount"`
+	CategoryIDs []uint  `json:"categoryIds"`
+	Date        string  `json:"date"`
+	Notes       string  `json:"notes"`
+	Amount      float64 `json:"amount"`
 }
 
 type UpdateExpenseRequest struct {
-	Categories []string `json:"categories"`
-	Notes      string   `json:"notes"`
-	Amount     float64  `json:"amount"`
+	CategoryIDs []uint  `json:"categoryIds"`
+	Notes       string  `json:"notes"`
+	Amount      float64 `json:"amount"`
 }
 
 func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
@@ -46,9 +68,20 @@ func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date format"})
 	}
 
-	expense := models.Expense{
+	// Load categories
+	var categories []models.M_category
+	if len(req.CategoryIDs) > 0 {
+		if err := h.db.Where("id IN ? AND user_id = ?", req.CategoryIDs, userID).Find(&categories).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to validate categories"})
+		}
+		if len(categories) != len(req.CategoryIDs) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "One or more category IDs are invalid"})
+		}
+	}
+
+	expense := models.T_expense{
 		UserID:     userID,
-		Categories: req.Categories,
+		Categories: categories,
 		Date:       date,
 		Notes:      req.Notes,
 		Amount:     req.Amount,
@@ -58,11 +91,14 @@ func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create expense"})
 	}
 
-	return c.JSON(http.StatusCreated, expense)
+	// Preload categories for response
+	h.db.Preload("Categories").First(&expense, expense.ID)
+	expenseResponse := h.enrichExpenseWithCategoryNames(expense)
+	return c.JSON(http.StatusCreated, expenseResponse)
 }
 
 func (h *ExpenseHandler) GetMonths(c echo.Context) error {
-	userID := middleware.GetUserID(c)
+	userID := middleware.GetCustomContext(c).UserID
 
 	now := time.Now()
 	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
@@ -74,7 +110,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 	}
 
 	var results []MonthResult
-	err := h.db.Model(&models.Expense{}).
+	err := h.db.Model(&models.T_expense{}).
 		Select("TO_CHAR(date, 'YYYY-MM') as month, COALESCE(SUM(amount), 0) as total").
 		Where("user_id = ? AND date >= ?", userID, threeMonthsAgo).
 		Group("TO_CHAR(date, 'YYYY-MM')").
@@ -121,7 +157,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 			Total float64   `json:"total"`
 		}
 		var dateResults []DateResult
-		h.db.Model(&models.Expense{}).
+		h.db.Model(&models.T_expense{}).
 			Select("date, COALESCE(SUM(amount), 0) as total").
 			Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, monthKey).
 			Group("date").
@@ -147,7 +183,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 			Date  time.Time `json:"date"`
 			Total float64   `json:"total"`
 		}
-		h.db.Model(&models.Income{}).
+		h.db.Model(&models.T_income{}).
 			Select("date, COALESCE(SUM(amount), 0) as total").
 			Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, monthKey).
 			Group("date").
@@ -246,14 +282,14 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 		NetTotal float64 `json:"netTotal"`
 	}
 
-	// Get all expenses for the month
-	var expenses []models.Expense
-	if err := h.db.Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, month).Find(&expenses).Error; err != nil {
+	// Get all expenses for the month with categories preloaded
+	var expenses []models.T_expense
+	if err := h.db.Preload("Categories").Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, month).Find(&expenses).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch month details"})
 	}
 
 	// Get all income for the month
-	var incomes []models.Income
+	var incomes []models.T_income
 	if err := h.db.Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, month).Find(&incomes).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch income details"})
 	}
@@ -278,7 +314,7 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 			}{Expense: expense.Amount}
 		}
 		for _, category := range expense.Categories {
-			categoryMap[category] += expense.Amount
+			categoryMap[category.Name] += expense.Amount
 		}
 	}
 
@@ -338,31 +374,43 @@ func (h *ExpenseHandler) GetDateExpenses(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date format"})
 	}
 
-	var expenses []models.Expense
-	err = h.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&expenses).Error
+	var expenses []models.T_expense
+	err = h.db.Preload("Categories").Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&expenses).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch expenses"})
 	}
 
-	return c.JSON(http.StatusOK, expenses)
+	// Enrich with category names
+	enrichedExpenses := make([]map[string]interface{}, len(expenses))
+	for i, expense := range expenses {
+		enrichedExpenses[i] = h.enrichExpenseWithCategoryNames(expense)
+	}
+
+	return c.JSON(http.StatusOK, enrichedExpenses)
 }
 
 func (h *ExpenseHandler) SearchExpenses(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 	userID := cc.UserID
 
-	query := h.db.Model(&models.Expense{}).Where("user_id = ?", userID)
+	query := h.db.Model(&models.T_expense{}).Where("user_id = ?", userID)
 
-	// Search by text (notes or categories)
+	// Search by text (notes)
 	searchQuery := c.QueryParam("q")
 	if searchQuery != "" {
-		query = query.Where("notes ILIKE ? OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(categories) AS cat WHERE cat ILIKE ?)", "%"+searchQuery+"%", "%"+searchQuery+"%")
+		query = query.Where("notes ILIKE ?", "%"+searchQuery+"%")
 	}
 
-	// Filter by category
-	category := c.QueryParam("category")
-	if category != "" {
-		query = query.Where("EXISTS (SELECT 1 FROM jsonb_array_elements_text(categories) AS cat WHERE cat = ?)", category)
+	// Filter by category ID using join table
+	categoryIDStr := c.QueryParam("categoryId")
+	if categoryIDStr != "" {
+		if categoryID, err := strconv.ParseUint(categoryIDStr, 10, 32); err == nil {
+			query = query.Joins("JOIN t_expense_categories ON t_expenses.id = t_expense_categories.t_expense_id").
+				Where("t_expense_categories.m_category_id = ? AND t_expenses.user_id = ?", categoryID, userID)
+		}
+	} else {
+		// Ensure user_id filter is applied even without category filter
+		query = query.Where("user_id = ?", userID)
 	}
 
 	// Filter by date range
@@ -381,35 +429,23 @@ func (h *ExpenseHandler) SearchExpenses(c echo.Context) error {
 		}
 	}
 
-	var expenses []models.Expense
-	if err := query.Order("date DESC, created_at DESC").Find(&expenses).Error; err != nil {
+	var expenses []models.T_expense
+	if err := query.Preload("Categories").Order("date DESC, created_at DESC").Find(&expenses).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to search expenses"})
 	}
 
-	// Format response with category names
-	type ExpenseResponse struct {
-		ID         uint      `json:"id"`
-		Categories []string  `json:"categories"`
-		Date       time.Time `json:"date"`
-		Notes      string    `json:"notes"`
-		Amount     float64   `json:"amount"`
-		Category   string    `json:"category"` // First category for display
-	}
-
-	results := make([]ExpenseResponse, len(expenses))
+	// Enrich with category names
+	results := make([]map[string]interface{}, len(expenses))
 	for i, expense := range expenses {
-		categoryName := ""
-		if len(expense.Categories) > 0 {
-			categoryName = expense.Categories[0]
+		enriched := h.enrichExpenseWithCategoryNames(expense)
+		// Add first category name for backward compatibility
+		categories := enriched["categories"].([]string)
+		if len(categories) > 0 {
+			enriched["category"] = categories[0]
+		} else {
+			enriched["category"] = ""
 		}
-		results[i] = ExpenseResponse{
-			ID:         expense.ID,
-			Categories: expense.Categories,
-			Date:       expense.Date,
-			Notes:      expense.Notes,
-			Amount:     expense.Amount,
-			Category:   categoryName,
-		}
+		results[i] = enriched
 	}
 
 	return c.JSON(http.StatusOK, results)
@@ -428,12 +464,23 @@ func (h *ExpenseHandler) UpdateExpense(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 	}
 
-	var expense models.Expense
+	// Load categories
+	var categories []models.M_category
+	if len(req.CategoryIDs) > 0 {
+		if err := h.db.Where("id IN ? AND user_id = ?", req.CategoryIDs, userID).Find(&categories).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to validate categories"})
+		}
+		if len(categories) != len(req.CategoryIDs) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "One or more category IDs are invalid"})
+		}
+	}
+
+	var expense models.T_expense
 	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&expense).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Expense not found"})
 	}
 
-	expense.Categories = req.Categories
+	expense.Categories = categories
 	expense.Notes = req.Notes
 	expense.Amount = req.Amount
 
@@ -441,7 +488,10 @@ func (h *ExpenseHandler) UpdateExpense(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update expense"})
 	}
 
-	return c.JSON(http.StatusOK, expense)
+	// Preload categories for response
+	h.db.Preload("Categories").First(&expense, expense.ID)
+	expenseResponse := h.enrichExpenseWithCategoryNames(expense)
+	return c.JSON(http.StatusOK, expenseResponse)
 }
 
 func (h *ExpenseHandler) DeleteExpense(c echo.Context) error {
@@ -452,7 +502,7 @@ func (h *ExpenseHandler) DeleteExpense(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid expense ID"})
 	}
 
-	if err := h.db.Where("id = ? AND user_id = ?", id, userID).Unscoped().Delete(&models.Expense{}).Error; err != nil {
+	if err := h.db.Where("id = ? AND user_id = ?", id, userID).Unscoped().Delete(&models.T_expense{}).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete expense"})
 	}
 

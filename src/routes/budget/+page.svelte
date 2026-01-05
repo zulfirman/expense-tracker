@@ -2,6 +2,7 @@
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   let categories = [];
   let budgets = {};
@@ -21,8 +22,9 @@
     try {
       const response = await api.get('/categories');
       categories = response.data.map(cat => ({
-        id: cat.slug,
-        label: cat.name
+        id: cat.id,
+        label: cat.name,
+        slug: cat.slug
       }));
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -38,7 +40,7 @@
       const budgetsData = response.data || [];
       budgets = {};
       budgetsData.forEach(budget => {
-        budgets[budget.categorySlug] = budget.amount;
+        budgets[budget.categoryId] = budget.amount;
       });
     } catch (error) {
       console.error('Error loading budgets:', error);
@@ -48,11 +50,24 @@
 
   async function loadExpenses() {
     try {
+      // Ensure categories are loaded first
+      if (categories.length === 0) {
+        await loadCategories();
+      }
+      
       const response = await api.get(`/expenses/month/${currentMonth}`);
       expensesByCategory = {};
       if (response.data && response.data.categories) {
         response.data.categories.forEach(item => {
-          expensesByCategory[item.category] = item.total;
+          // item.category is the category name, we need to map it to category ID
+          const category = categories.find(cat => cat.label === item.category);
+          if (category) {
+            // If expense already exists for this category, add to it (in case of duplicates)
+            expensesByCategory[category.id] = (expensesByCategory[category.id] || 0) + item.total;
+          } else {
+            // Debug: log unmapped categories
+            console.warn('Category not found for expense:', item.category, 'Available categories:', categories.map(c => c.label));
+          }
         });
       }
     } catch (error) {
@@ -69,15 +84,15 @@
     }).format(amount);
   }
 
-  function getBudgetProgress(categorySlug) {
-    const budget = budgets[categorySlug] || 0;
-    const spent = expensesByCategory[categorySlug] || 0;
+  function getBudgetProgress(categoryId) {
+    const budget = budgets[categoryId] || 0;
+    const spent = expensesByCategory[categoryId] || 0;
     if (budget === 0) return 0;
     return Math.min((spent / budget) * 100, 100);
   }
 
-  function getBudgetStatus(categorySlug) {
-    const progress = getBudgetProgress(categorySlug);
+  function getBudgetStatus(categoryId) {
+    const progress = getBudgetProgress(categoryId);
     if (progress >= 100) return 'exceeded';
     if (progress >= 75) return 'warning';
     if (progress >= 50) return 'caution';
@@ -93,9 +108,9 @@
     }
   }
 
-  function openBudgetForm(categorySlug = null) {
-    editingCategory = categorySlug;
-    budgetAmount = categorySlug && budgets[categorySlug] ? budgets[categorySlug].toString() : '';
+  function openBudgetForm(categoryId = null) {
+    editingCategory = categoryId;
+    budgetAmount = categoryId && budgets[categoryId] ? budgets[categoryId].toString() : '';
     showBudgetForm = true;
   }
 
@@ -122,7 +137,7 @@
     loading = true;
     try {
       await api.post('/budgets', {
-        categorySlug: editingCategory,
+        categoryId: editingCategory,
         amount: amount,
         month: currentMonth
       });
@@ -150,7 +165,7 @@
     }
   }
 
-  async function deleteBudget(categorySlug) {
+  async function deleteBudget(categoryId) {
     const result = await Swal.fire({
       icon: 'warning',
       title: 'Delete Budget?',
@@ -164,7 +179,7 @@
     if (result.isConfirmed) {
       loading = true;
       try {
-        await api.delete(`/budgets/${categorySlug}?month=${currentMonth}`);
+        await api.delete(`/budgets/${categoryId}?month=${currentMonth}`);
         await loadBudgets();
         
         Swal.fire({
@@ -354,6 +369,7 @@
             type="text"
             bind:value={budgetAmount}
             on:input={handleAmountInput}
+            on:keydown={(e) => { if (e.key === 'Enter') saveBudget(); }}
             placeholder="0"
             class="form-input"
           />

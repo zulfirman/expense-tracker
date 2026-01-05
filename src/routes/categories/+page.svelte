@@ -260,6 +260,7 @@
             bind:value={categoryName}
             placeholder="e.g., Groceries"
             class="form-input"
+            on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
             disabled={loading}
           />
         </div>
@@ -294,6 +295,7 @@
             bind:value={categoryName}
             placeholder="e.g., Groceries"
             class="form-input"
+            on:keydown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
             disabled={loading}
           />
         </div>

@@ -37,10 +37,39 @@ func (a *StringArray) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, a)
 }
 
-type Expense struct {
+// UintArray is a custom type for PostgreSQL integer array (category IDs)
+type UintArray []uint
+
+func (a UintArray) Value() (driver.Value, error) {
+	if len(a) == 0 {
+		return "[]", nil
+	}
+	return json.Marshal(a)
+}
+
+func (a *UintArray) Scan(value interface{}) error {
+	if value == nil {
+		*a = []uint{}
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return json.Unmarshal([]byte(value.(string)), a)
+	}
+
+	return json.Unmarshal(bytes, a)
+}
+
+type T_expense struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
 	UserID     uint           `json:"userId" gorm:"default:null;index"`
-	Categories StringArray    `json:"categories" gorm:"type:jsonb"`
+	Categories []M_category   `json:"categories" gorm:"many2many:t_expense_categories;constraint:OnDelete:CASCADE"`
 	Date       time.Time      `json:"date" gorm:"type:date"`
 	Notes      string         `json:"notes" gorm:"type:text"`
 	Amount     float64        `json:"amount" gorm:"type:decimal(15,2)"`
@@ -49,6 +78,6 @@ type Expense struct {
 	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (Expense) TableName() string {
+func (T_expense) TableName() string {
 	return "t_expenses"
 }

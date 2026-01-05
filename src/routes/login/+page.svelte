@@ -4,6 +4,7 @@
   import axios from 'axios';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import { accounts } from '$lib/stores/accounts';
 
   let email = '';
   let password = '';
@@ -34,8 +35,14 @@
         password
       });
 
+      // Check if this is a fresh login (no existing accounts)
+      // If no existing accounts, treat as fresh login and clear any stale data
+      const hasExistingAccounts = localStorage.getItem('accounts');
+      const shouldClear = !hasExistingAccounts || JSON.parse(hasExistingAccounts || '[]').length === 0;
+
       // Add account to accounts store (handles multiple accounts)
-      auth.login(response.data.user, response.data.token);
+      // clearExisting=true means start fresh, false means add to existing
+      auth.login(response.data.user, response.data.token, shouldClear);
       
       Swal.fire({
         icon: 'success',
@@ -110,6 +117,13 @@
 
     <div class="auth-footer">
       <p>Don't have an account? <a href="/signup">Sign up</a></p>
+      {#if $auth.isAuthenticated}
+        <p style="margin-top: 1rem;">
+          <a href="/expenses" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+            Continue as {auth.user?.name || 'Current User'}
+          </a>
+        </p>
+      {/if}
     </div>
   </div>
 </div>

@@ -26,12 +26,9 @@ func main() {
 	}
 
 	// Auto migrate
-	if err := db.AutoMigrate(&models.User{}, &models.Expense{}, &models.Category{}, &models.ExpenseTemplate{}, &models.Income{}, &models.Balance{}, &models.Budget{}); err != nil {
+	if err := db.AutoMigrate(&models.M_user{}, &models.T_expense{}, &models.M_category{}, &models.M_expense_template{}, &models.T_income{}, &models.Balance{}, &models.R_budget{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
-
-	// Note: Categories are now user-specific, so we don't seed default categories
-	// Each user will create their own categories
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(db)
@@ -91,7 +88,7 @@ func main() {
 	// Budget routes
 	protected.GET("/budgets", budgetHandler.GetBudgets)
 	protected.POST("/budgets", budgetHandler.CreateBudget)
-	protected.DELETE("/budgets/:categorySlug", budgetHandler.DeleteBudget)
+	protected.DELETE("/budgets/:categoryId", budgetHandler.DeleteBudget)
 
 	// Start server
 	port := os.Getenv("PORT")

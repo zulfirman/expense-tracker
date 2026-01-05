@@ -3,6 +3,7 @@
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
   import InputExpenses from '$components/InputExpenses.svelte';
+  import DatePicker from '$lib/components/DatePicker.svelte';
 
   // Simplified for husband/wife budget tracking
   let categories = [];
@@ -201,12 +202,11 @@
 
   <div class="form-group">
     <label for="date">Date</label>
-    <input
+    <DatePicker
       id="date"
-      type="date"
       bind:value={expenseDate}
-      on:change={handleDateChange}
-      class="form-input"
+      placeholder="Select date"
+      on:dateChange={handleDateChange}
     />
   </div>
 

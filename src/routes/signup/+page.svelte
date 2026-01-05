@@ -4,6 +4,7 @@
   import axios from 'axios';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import { accounts } from '$lib/stores/accounts';
 
   let name = '';
   let email = '';
@@ -57,8 +58,9 @@
         password
       });
 
-      // Add account to accounts store (handles multiple accounts)
-      auth.login(response.data.user, response.data.token);
+      // Signup is always a fresh start - clear any existing accounts
+      // clearExisting=true means start fresh
+      auth.login(response.data.user, response.data.token, true);
       
       Swal.fire({
         icon: 'success',

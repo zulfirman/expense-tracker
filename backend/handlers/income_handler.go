@@ -44,7 +44,7 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date format"})
 	}
 
-	income := models.Income{
+	income := models.T_income{
 		UserID: userID,
 		Date:   date,
 		Amount: req.Amount,
@@ -113,7 +113,7 @@ func (h *IncomeHandler) GetDateIncome(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date format"})
 	}
 
-	var incomes []models.Income
+	var incomes []models.T_income
 	err = h.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&incomes).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch income"})
@@ -135,7 +135,7 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 	}
 
-	var income models.Income
+	var income models.T_income
 	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&income).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Income not found"})
 	}
@@ -173,7 +173,7 @@ func (h *IncomeHandler) DeleteIncome(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid income ID"})
 	}
 
-	var income models.Income
+	var income models.T_income
 	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&income).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Income not found"})
 	}
@@ -192,4 +192,3 @@ func (h *IncomeHandler) DeleteIncome(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Income deleted successfully"})
 }
-

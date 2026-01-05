@@ -13,9 +13,17 @@
   let chartInstance = null;
   let categoryChartCanvas;
   let categoryChartInstance = null;
+  let pieChartCanvas;
+  let pieChartInstance = null;
+  let cumulativeChartCanvas;
+  let cumulativeChartInstance = null;
+  let weeklyChartCanvas;
+  let weeklyChartInstance = null;
   let loading = true;
   let expensesByCategory = [];
   let dailyExpenses = [];
+  let weeklyData = [];
+  let cumulativeData = [];
 
   onMount(async () => {
     await loadMonthDetails();
@@ -30,16 +38,22 @@
       categoryChartInstance.destroy();
       categoryChartInstance = null;
     }
+    if (pieChartInstance) {
+      pieChartInstance.destroy();
+      pieChartInstance = null;
+    }
+    if (cumulativeChartInstance) {
+      cumulativeChartInstance.destroy();
+      cumulativeChartInstance = null;
+    }
+    if (weeklyChartInstance) {
+      weeklyChartInstance.destroy();
+      weeklyChartInstance = null;
+    }
   });
 
   afterUpdate(() => {
-    // Recreate charts after data updates
-    if (chartCanvas && dailyExpenses.length > 0 && !chartInstance) {
-      createDailyChart();
-    }
-    if (categoryChartCanvas && expensesByCategory.length > 0 && !categoryChartInstance) {
-      createCategoryChart();
-    }
+    // Charts are created in loadMonthDetails after data is loaded
   });
 
   async function loadMonthDetails() {
@@ -51,6 +65,9 @@
       expensesByCategory = response.data.categories || [];
       dailyExpenses = response.data.daily || [];
       
+      // Process data for additional charts
+      processChartData();
+      
       // Destroy existing charts
       if (chartInstance) {
         chartInstance.destroy();
@@ -60,16 +77,39 @@
         categoryChartInstance.destroy();
         categoryChartInstance = null;
       }
+      if (pieChartInstance) {
+        pieChartInstance.destroy();
+        pieChartInstance = null;
+      }
+      if (cumulativeChartInstance) {
+        cumulativeChartInstance.destroy();
+        cumulativeChartInstance = null;
+      }
+      if (weeklyChartInstance) {
+        weeklyChartInstance.destroy();
+        weeklyChartInstance = null;
+      }
 
       // Create charts after a small delay to ensure canvas is ready
       setTimeout(() => {
         if (dailyExpenses.length > 0 && chartCanvas) {
           createDailyChart();
         }
-        if (expensesByCategory.length > 0 && categoryChartCanvas) {
-          createCategoryChart();
+        if (expensesByCategory.length > 0) {
+          if (categoryChartCanvas) {
+            createCategoryChart();
+          }
+          if (pieChartCanvas) {
+            createPieChart();
+          }
         }
-      }, 100);
+        if (cumulativeData.length > 0 && cumulativeChartCanvas) {
+          createCumulativeChart();
+        }
+        if (weeklyData.length > 0 && weeklyChartCanvas) {
+          createWeeklyChart();
+        }
+      }, 200);
     } catch (error) {
       console.error('Error loading month details:', error);
     } finally {
@@ -77,8 +117,64 @@
     }
   }
 
+  function processChartData() {
+    // Process cumulative spending data
+    if (dailyExpenses.length > 0) {
+      const sortedDaily = [...dailyExpenses].sort((a, b) => {
+        return new Date(a.date) - new Date(b.date);
+      });
+      
+      let cumulative = 0;
+      cumulativeData = sortedDaily.map(item => {
+        cumulative += item.expense || 0;
+        return {
+          date: item.date,
+          cumulative: cumulative
+        };
+      });
+    }
+
+    // Process weekly spending data
+    if (dailyExpenses.length > 0) {
+      const sortedDaily = [...dailyExpenses].sort((a, b) => {
+        return new Date(a.date) - new Date(b.date);
+      });
+      
+      const weeklyMap = new Map();
+      sortedDaily.forEach(item => {
+        const date = new Date(item.date);
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+        const weekKey = weekStart.toISOString().split('T')[0];
+        
+        if (!weeklyMap.has(weekKey)) {
+          weeklyMap.set(weekKey, {
+            week: `Week ${Math.ceil(date.getDate() / 7)}`,
+            startDate: weekKey,
+            expense: 0,
+            income: 0
+          });
+        }
+        
+        const weekData = weeklyMap.get(weekKey);
+        weekData.expense += item.expense || 0;
+        weekData.income += item.income || 0;
+      });
+      
+      weeklyData = Array.from(weeklyMap.values()).sort((a, b) => {
+        return new Date(a.startDate) - new Date(b.startDate);
+      });
+    }
+  }
+
   function createDailyChart() {
     if (!chartCanvas || dailyExpenses.length === 0) return;
+
+    // Destroy existing chart if it exists
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
 
     const ctx = chartCanvas.getContext('2d');
     
@@ -231,6 +327,12 @@
   function createCategoryChart() {
     if (!categoryChartCanvas || expensesByCategory.length === 0) return;
 
+    // Destroy existing chart if it exists
+    if (categoryChartInstance) {
+      categoryChartInstance.destroy();
+      categoryChartInstance = null;
+    }
+
     const ctx = categoryChartCanvas.getContext('2d');
     
     // Sort categories by total (descending)
@@ -324,6 +426,309 @@
     }).format(amount);
   }
 
+  function createPieChart() {
+    if (!pieChartCanvas || expensesByCategory.length === 0) return;
+
+    // Destroy existing chart if it exists
+    if (pieChartInstance) {
+      pieChartInstance.destroy();
+      pieChartInstance = null;
+    }
+
+    const ctx = pieChartCanvas.getContext('2d');
+    
+    // Sort categories by total (descending)
+    const sortedCategories = [...expensesByCategory].sort((a, b) => b.total - a.total);
+
+    const colors = [
+      'rgba(79, 70, 229, 0.8)',
+      'rgba(124, 58, 237, 0.8)',
+      'rgba(168, 85, 247, 0.8)',
+      'rgba(192, 132, 252, 0.8)',
+      'rgba(217, 119, 6, 0.8)',
+      'rgba(234, 179, 8, 0.8)',
+      'rgba(16, 185, 129, 0.8)',
+      'rgba(59, 130, 246, 0.8)',
+      'rgba(239, 68, 68, 0.8)',
+      'rgba(245, 158, 11, 0.8)'
+    ];
+
+    const total = sortedCategories.reduce((sum, item) => sum + item.total, 0);
+
+    pieChartInstance = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: sortedCategories.map(item => item.category),
+        datasets: [{
+          data: sortedCategories.map(item => item.total),
+          backgroundColor: sortedCategories.map((_, index) => colors[index % colors.length]),
+          borderColor: sortedCategories.map((_, index) => colors[index % colors.length].replace('0.8', '1')),
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'right',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12
+              },
+              generateLabels: function(chart) {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label, i) => {
+                    const value = data.datasets[0].data[i];
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return {
+                      text: `${label} (${percentage}%)`,
+                      fillStyle: data.datasets[0].backgroundColor[i],
+                      strokeStyle: data.datasets[0].borderColor[i],
+                      lineWidth: data.datasets[0].borderWidth,
+                      hidden: false,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function createCumulativeChart() {
+    if (!cumulativeChartCanvas || cumulativeData.length === 0) return;
+
+    // Destroy existing chart if it exists
+    if (cumulativeChartInstance) {
+      cumulativeChartInstance.destroy();
+      cumulativeChartInstance = null;
+    }
+
+    const ctx = cumulativeChartCanvas.getContext('2d');
+    
+    const labels = cumulativeData.map(item => {
+      const date = new Date(item.date);
+      return date.getDate().toString();
+    });
+    
+    const cumulativeValues = cumulativeData.map(item => item.cumulative);
+
+    cumulativeChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Cumulative Spending',
+          data: cumulativeValues,
+          borderColor: 'rgb(239, 68, 68)',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: 'rgb(239, 68, 68)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Cumulative: ${formatCurrency(context.parsed.y)}`;
+              },
+              title: function(context) {
+                const index = context[0].dataIndex;
+                const date = new Date(cumulativeData[index].date);
+                return `Day ${date.getDate()}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Day of Month',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Cumulative Amount (IDR)',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  return (value / 1000).toFixed(0) + 'K';
+                }
+                return value.toString();
+              }
+            },
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function createWeeklyChart() {
+    if (!weeklyChartCanvas || weeklyData.length === 0) return;
+
+    // Destroy existing chart if it exists
+    if (weeklyChartInstance) {
+      weeklyChartInstance.destroy();
+      weeklyChartInstance = null;
+    }
+
+    const ctx = weeklyChartCanvas.getContext('2d');
+    
+    const labels = weeklyData.map(item => item.week);
+    const expenseData = weeklyData.map(item => item.expense);
+    const incomeData = weeklyData.map(item => item.income);
+
+    weeklyChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeData,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 2,
+            borderRadius: 4
+          },
+          {
+            label: 'Expenses',
+            data: expenseData,
+            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 2,
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Week',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Amount (IDR)',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  return (value / 1000).toFixed(0) + 'K';
+                }
+                return value.toString();
+              }
+            },
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          }
+        }
+      }
+    });
+  }
+
   function formatMonthYear(monthYear) {
     const [year, monthNum] = monthYear.split('-');
     const date = new Date(year, monthNum - 1);
@@ -364,19 +769,53 @@
           </div>
         {/if}
 
+        {#if cumulativeData.length > 0}
+          <div class="chart-section">
+            <h3>Cumulative Spending Trend</h3>
+            <p class="chart-description">Track your spending accumulation throughout the month</p>
+            <div class="chart-container">
+              <canvas bind:this={cumulativeChartCanvas}></canvas>
+            </div>
+          </div>
+        {/if}
+
+        {#if weeklyData.length > 0}
+          <div class="chart-section">
+            <h3>Weekly Income vs Expenses</h3>
+            <p class="chart-description">Compare your weekly income and expenses</p>
+            <div class="chart-container">
+              <canvas bind:this={weeklyChartCanvas}></canvas>
+            </div>
+          </div>
+        {/if}
+
         {#if expensesByCategory.length > 0}
           <div class="chart-section">
-            <h3>Expenses by Category</h3>
+            <h3>Category Breakdown (Pie Chart)</h3>
+            <p class="chart-description">See where your money went by category</p>
+            <div class="chart-container">
+              <canvas bind:this={pieChartCanvas}></canvas>
+            </div>
+          </div>
+
+          <div class="chart-section">
+            <h3>Expenses by Category (Bar Chart)</h3>
+            <p class="chart-description">Compare spending across different categories</p>
             <div class="chart-container">
               <canvas bind:this={categoryChartCanvas}></canvas>
             </div>
           </div>
 
           <div class="category-list">
-            <h4>Category Breakdown</h4>
+            <h4>Category Breakdown Details</h4>
             {#each expensesByCategory.sort((a, b) => b.total - a.total) as item}
+              {@const total = expensesByCategory.reduce((sum, cat) => sum + cat.total, 0)}
+              {@const percentage = ((item.total / total) * 100).toFixed(1)}
               <div class="category-item">
-                <span class="category-name">{item.category}</span>
+                <div class="category-info">
+                  <span class="category-name">{item.category}</span>
+                  <span class="category-percentage">{percentage}%</span>
+                </div>
                 <span class="category-amount">{formatCurrency(item.total)}</span>
               </div>
             {/each}
@@ -410,7 +849,7 @@
     background: var(--surface);
     border-radius: 1rem;
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -478,8 +917,15 @@
   .chart-section h3 {
     font-size: 1.25rem;
     color: var(--text-primary);
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-weight: 600;
+  }
+
+  .chart-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-style: italic;
   }
 
   .chart-container {
@@ -513,6 +959,13 @@
     padding: 1rem;
     background: var(--background);
     border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .category-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .category-name {
@@ -521,9 +974,15 @@
     text-transform: capitalize;
   }
 
+  .category-percentage {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
   .category-amount {
     font-weight: 600;
     color: var(--primary-color);
+    font-size: 1.125rem;
   }
 </style>
 

@@ -6,9 +6,14 @@
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
   import { onMount } from 'svelte';
+  import Swal from 'sweetalert2';
 
   let showProfileMenu = false;
   let showAccountMenu = false;
+  let showAddAccountModal = false;
+  let addAccountEmail = '';
+  let addAccountPassword = '';
+  let addAccountLoading = false;
 
   onMount(() => {
     theme.init();
@@ -67,6 +72,84 @@
         }
       }
     });
+  }
+
+  function openAddAccountModal() {
+    showAddAccountModal = true;
+    showProfileMenu = false;
+    addAccountEmail = '';
+    addAccountPassword = '';
+  }
+
+  function closeAddAccountModal() {
+    showAddAccountModal = false;
+    addAccountEmail = '';
+    addAccountPassword = '';
+  }
+
+  async function handleAddAccount() {
+    if (!addAccountEmail || !addAccountPassword) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Fields',
+        text: 'Please enter both email and password',
+        zIndex: 9999
+      });
+      return;
+    }
+
+    addAccountLoading = true;
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: addAccountEmail,
+          password: addAccountPassword
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+
+      const data = await response.json();
+      
+      // Add account to accounts store (this is explicitly adding a new account)
+      // Don't clear existing accounts when using "Add Account" modal
+      auth.login(data.user, data.token);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Account Added!',
+        text: `Logged in as ${data.user.name}`,
+        timer: 1500,
+        showConfirmButton: false,
+        zIndex: 9999
+      });
+
+      closeAddAccountModal();
+      // Reload to refresh data
+      window.location.reload();
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: error.message || 'Invalid email or password',
+        zIndex: 9999
+      });
+    } finally {
+      addAccountLoading = false;
+    }
+  }
+
+  function handleAddAccountKeyDown(e) {
+    if (e.key === 'Enter') {
+      handleAddAccount();
+    }
   }
 </script>
 
@@ -161,6 +244,15 @@
                 </svg>
                 Profile
               </button>
+              <button class="profile-menu-item" on:click={openAddAccountModal}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Add Account
+              </button>
               <button class="profile-menu-item" on:click={handleLogout}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -237,6 +329,100 @@
     </a>
   </nav>
 </div>
+{/if}
+
+{#if showAddAccountModal}
+  <div class="modal-backdrop" on:click={closeAddAccountModal}>
+    <div class="modal-content" on:click|stopPropagation>
+      <div class="modal-header">
+        <h2>Add Account</h2>
+        <button class="close-btn" on:click={closeAddAccountModal}>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="add-account-email">Email</label>
+          <input
+            id="add-account-email"
+            type="email"
+            bind:value={addAccountEmail}
+            placeholder="your@email.com"
+            class="form-input"
+            on:keydown={handleAddAccountKeyDown}
+            disabled={addAccountLoading}
+          />
+        </div>
+        <div class="form-group">
+          <label for="add-account-password">Password</label>
+          <input
+            id="add-account-password"
+            type="password"
+            bind:value={addAccountPassword}
+            placeholder="Enter password"
+            class="form-input"
+            on:keydown={handleAddAccountKeyDown}
+            disabled={addAccountLoading}
+          />
+        </div>
+        <div class="button-group">
+          <button class="btn btn-secondary" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
+          <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
+            {#if addAccountLoading}
+              <span class="spinner"></span> Logging in...
+            {:else}
+              Add Account
+            {/if}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if showAddAccountModal}
+  <div class="modal-backdrop" on:click={closeAddAccountModal}>
+    <div class="modal-content" on:click|stopPropagation>
+      <div class="modal-header">
+        <h2>Add Account</h2>
+        <button class="close-btn" on:click={closeAddAccountModal}>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="add-account-email">Email</label>
+          <input
+            id="add-account-email"
+            type="email"
+            bind:value={addAccountEmail}
+            placeholder="your@email.com"
+            class="form-input"
+            on:keydown={handleAddAccountKeyDown}
+            disabled={addAccountLoading}
+          />
+        </div>
+        <div class="form-group">
+          <label for="add-account-password">Password</label>
+          <input
+            id="add-account-password"
+            type="password"
+            bind:value={addAccountPassword}
+            placeholder="Enter password"
+            class="form-input"
+            on:keydown={handleAddAccountKeyDown}
+            disabled={addAccountLoading}
+          />
+        </div>
+        <div class="button-group">
+          <button class="btn btn-secondary" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
+          <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
+            {#if addAccountLoading}
+              <span class="spinner"></span> Logging in...
+            {:else}
+              Add Account
+            {/if}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -540,6 +726,154 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 1rem;
+  }
+
+  .modal-content {
+    background: var(--surface);
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .close-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-body .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .modal-body .form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--background);
+    color: var(--text-primary);
+  }
+
+  .modal-body .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .modal-body .form-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .modal-body .button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .modal-body .btn {
+    flex: 1;
+    padding: 0.875rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .modal-body .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .modal-body .btn-primary:hover:not(:disabled) {
+    background-color: #4338ca;
+  }
+
+  .modal-body .btn-secondary {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+
+  .modal-body .btn-secondary:hover:not(:disabled) {
+    background-color: var(--background);
+  }
+
+  .modal-body .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .modal-body .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   @media (max-width: 768px) {

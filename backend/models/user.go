@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type M_user struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	Name      string         `json:"name" gorm:"not null"`
 	Email     string         `json:"email" gorm:"uniqueIndex;not null"`
@@ -16,7 +16,7 @@ type User struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (User) TableName() string {
+func (M_user) TableName() string {
 	return "m_users"
 }
 

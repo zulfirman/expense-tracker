@@ -1,11 +1,12 @@
 <script>
   import api from '$lib/api';
   import Swal from 'sweetalert2';
+  import DatePicker from '$lib/components/DatePicker.svelte';
   import { onMount } from 'svelte';
 
   let categories = [];
   let templates = [];
-  let selectedCategories = [];
+  let selectedCategoryIds = [];
   let expenseDate = new Date().toISOString().split('T')[0];
   let notes = '';
   let amount = '';
@@ -23,18 +24,17 @@
   async function loadCategories() {
     try {
       const response = await api.get('/categories');
-      categories = response.data.map(cat => ({
-        id: cat.slug,
-        label: cat.name
-      }));
+      // Only show active categories in expense input
+      categories = response.data
+        .filter(cat => cat.isActive !== false)
+        .map(cat => ({
+          id: cat.id,
+          label: cat.name,
+          slug: cat.slug
+        }));
     } catch (error) {
       console.error('Error loading categories:', error);
-      // Fallback to default categories if API fails
-      categories = [
-        { id: 'daily', label: 'Daily' },
-        { id: 'monthly', label: 'Monthly' },
-        { id: 'others', label: 'Others' }
-      ];
+      categories = [];
     } finally {
       categoriesLoading = false;
     }
@@ -57,7 +57,7 @@
   }
 
   function applyTemplate(template) {
-    selectedCategories = [...template.categories];
+    selectedCategoryIds = [...(template.categoryIds || template.categories || [])];
     amount = template.amount.toString();
     notes = template.notes || '';
     showTemplates = false;
@@ -90,14 +90,14 @@
   }
 
   function toggleCategory(categoryId) {
-    if (selectedCategories.includes(categoryId)) {
-      selectedCategories = selectedCategories.filter(id => id !== categoryId);
+    if (selectedCategoryIds.includes(categoryId)) {
+      selectedCategoryIds = selectedCategoryIds.filter(id => id !== categoryId);
     } else {
-      selectedCategories = [...selectedCategories, categoryId];
+      selectedCategoryIds = [...selectedCategoryIds, categoryId];
     }
     
     // If category selected, scroll to date field
-    if (selectedCategories.length > 0) {
+    if (selectedCategoryIds.length > 0) {
       setTimeout(() => {
         const dateInput = document.getElementById('date');
         if (dateInput) {
@@ -118,7 +118,7 @@
   }
 
   async function handleSubmit() {
-    if (selectedCategories.length === 0) {
+    if (selectedCategoryIds.length === 0) {
       Swal.fire({
         icon: 'warning',
         title: 'Warning',
@@ -142,7 +142,7 @@
     
     try {
       const payload = {
-        categories: selectedCategories,
+        categoryIds: selectedCategoryIds,
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
@@ -150,7 +150,7 @@
       const response = await api.post('/expenses', payload);
       
       const categoryNames = categories
-        .filter(cat => selectedCategories.includes(cat.id))
+        .filter(cat => selectedCategoryIds.includes(cat.id))
         .map(cat => cat.label)
         .join(', ');
       
@@ -171,7 +171,7 @@
       });
 
       // Reset form
-      selectedCategories = [];
+      selectedCategoryIds = [];
       notes = '';
       amount = '';
     } catch (error) {
@@ -187,7 +187,7 @@
   }
 
   function handleClear() {
-    selectedCategories = [];
+    selectedCategoryIds = [];
     expenseDate = new Date().toISOString().split('T')[0];
     notes = '';
     amount = '';
@@ -235,16 +235,16 @@
   {/if}
 
   <div class="form-group">
-    <label>Category {#if selectedCategories.length > 0}<span class="selected-count">({selectedCategories.length} selected)</span>{/if}</label>
+    <label>Category {#if selectedCategoryIds.length > 0}<span class="selected-count">({selectedCategoryIds.length} selected)</span>{/if}</label>
     {#if categoriesLoading}
       <div class="loading-categories">Loading categories...</div>
     {:else}
       <div class="checkbox-group">
         {#each categories as category}
-          <label class="checkbox-label" class:selected={selectedCategories.includes(category.id)}>
+          <label class="checkbox-label" class:selected={selectedCategoryIds.includes(category.id)}>
             <input
               type="checkbox"
-              checked={selectedCategories.includes(category.id)}
+              checked={selectedCategoryIds.includes(category.id)}
               on:change={() => toggleCategory(category.id)}
             />
             <span>{category.label}</span>
@@ -256,12 +256,11 @@
 
   <div class="form-group">
     <label for="date">Date</label>
-    <input
+    <DatePicker
       id="date"
-      type="date"
       bind:value={expenseDate}
-      on:change={handleDateChange}
-      class="form-input"
+      placeholder="Select date"
+      on:dateChange={handleDateChange}
     />
   </div>
 

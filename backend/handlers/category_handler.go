@@ -31,7 +31,7 @@ func (h *CategoryHandler) GetCategories(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 	userID := cc.UserID
 
-	var categories []models.Category
+	var categories []models.M_category
 	if err := h.db.Where("user_id = ?", userID).Order("name ASC").Find(&categories).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch categories"})
 	}
@@ -52,12 +52,12 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	slug := strings.ToLower(strings.ReplaceAll(req.Name, " ", "-"))
 
 	// Check if category with same slug already exists for this user
-	var existing models.Category
+	var existing models.M_category
 	if err := h.db.Where("user_id = ? AND slug = ?", userID, slug).First(&existing).Error; err == nil {
 		return c.JSON(http.StatusConflict, map[string]string{"message": "Category already exists"})
 	}
 
-	category := models.Category{
+	category := models.M_category{
 		UserID:   userID,
 		Name:     req.Name,
 		Slug:     slug,
@@ -84,7 +84,7 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 	}
 
-	var category models.Category
+	var category models.M_category
 	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&category).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Category not found"})
 	}
@@ -107,7 +107,7 @@ func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	userID := cc.UserID
 	id := c.Param("id")
 
-	var category models.Category
+	var category models.M_category
 	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&category).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Category not found"})
 	}

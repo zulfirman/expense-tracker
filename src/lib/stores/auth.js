@@ -11,8 +11,13 @@ function createAuthStore() {
 
   return {
     subscribe,
-    login: (user, token) => {
+    login: (user, token, clearExisting = false) => {
       if (browser) {
+        // Clear existing accounts if requested (for fresh login/signup)
+        if (clearExisting) {
+          accounts.clearAccounts();
+        }
+        
         // Add to accounts store
         accounts.addAccount(user, token);
         
@@ -25,6 +30,8 @@ function createAuthStore() {
       if (browser) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
+        // Clear accounts when logging out (user wants fresh start)
+        accounts.clearAccounts();
       }
       set({ user: null, token: null, isAuthenticated: false });
     },

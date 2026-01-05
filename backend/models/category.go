@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Category struct {
+type M_category struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	Name      string         `json:"name" gorm:"unique;not null"`
 	Slug      string         `json:"slug" gorm:"unique;not null"`
@@ -17,6 +17,6 @@ type Category struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (Category) TableName() string {
+func (M_category) TableName() string {
 	return "m_categories"
 }
