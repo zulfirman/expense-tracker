@@ -397,6 +397,7 @@
       showCancelButton: true,
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       confirmButtonColor: '#ef4444',
       zIndex: 9999
     });
@@ -433,6 +434,7 @@
       showCancelButton: true,
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       confirmButtonColor: '#ef4444',
       zIndex: 9999
     });

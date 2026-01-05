@@ -2,6 +2,7 @@
     import api from '$lib/api';
     import Swal from 'sweetalert2';
     import {onMount} from 'svelte';
+    import '$lib/styles/shared.css';
 
     let categories = [];
   let budgets = {};
@@ -23,11 +24,14 @@
   async function loadCategories() {
     try {
       const response = await api.get('/categories');
-      categories = response.data.map(cat => ({
-        id: cat.id,
-        label: cat.name,
-        slug: cat.slug
-      }));
+      // Only show active categories in budget page
+      categories = response.data
+        .filter(cat => cat.isActive !== false)
+        .map(cat => ({
+          id: cat.id,
+          label: cat.name,
+          slug: cat.slug
+        }));
     } catch (error) {
       console.error('Error loading categories:', error);
       categories = [];
@@ -165,6 +169,7 @@
       showCancelButton: true,
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       zIndex: 9999
     });
 
@@ -305,18 +310,16 @@
             <div class="budget-actions">
               {#if card.budget > 0}
                 <button
-                  class="btn-icon"
+                  class="btn-text btn-edit"
                   on:click={() => openBudgetForm(card.category.id)}
-                  title="Edit Budget"
                 >
-                  ✏️
+                  Edit
                 </button>
                 <button
-                  class="btn-icon"
+                  class="btn-text btn-delete"
                   on:click={() => deleteBudget(card.category.id)}
-                  title="Delete Budget"
                 >
-                  🗑️
+                  Delete
                 </button>
               {:else}
                 <button
@@ -355,6 +358,7 @@
       {/each}
     </div>
   {/if}
+  <br><br>
 </div>
 
 {#if showBudgetForm}
@@ -485,18 +489,10 @@
     align-items: center;
   }
 
-  .btn-icon {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.25rem;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  }
-
-  .btn-icon:hover {
-    opacity: 1;
+  .budget-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .btn-add {
@@ -572,151 +568,11 @@
     text-align: right;
   }
 
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 1rem;
-  }
-
-  .modal-content {
-    background: var(--surface);
-    border-radius: 1rem;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-header h2 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .close-btn:hover {
-    color: var(--text-primary);
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
   .amount-preview {
     margin-top: 0.5rem;
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--primary-color);
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 0.875rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #4338ca;
-  }
-
-  .btn-secondary {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: var(--background);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
   }
 </style>
 

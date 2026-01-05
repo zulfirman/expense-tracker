@@ -19,14 +19,51 @@
     theme.init();
     accounts.init();
     auth.init();
+    
+    // Check authentication and redirect if needed
+    const { pathname } = window.location;
+    const publicRoutes = ['/login', '/signup'];
+    const isPublicRoute = publicRoutes.includes(pathname);
+    
+    if (!isPublicRoute && !$auth.isAuthenticated && pathname !== '/') {
+      goto('/login');
+    }
+    
+    if (isPublicRoute && $auth.isAuthenticated) {
+      goto('/expenses');
+    }
+    
+    // Close profile menu when clicking outside
+    function handleClickOutside(event) {
+      const profileContainer = event.target.closest('.profile-menu-container');
+      if (!profileContainer && showProfileMenu) {
+        showProfileMenu = false;
+      }
+    }
+    
+    document.addEventListener('click', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   });
 
   $: isAuthenticated = $auth.isAuthenticated;
+  
+  // Watch for auth changes and redirect
+  $: if (!isAuthenticated && typeof window !== 'undefined') {
+    const { pathname } = window.location;
+    const publicRoutes = ['/login', '/signup'];
+    if (!publicRoutes.includes(pathname) && pathname !== '/') {
+      goto('/login');
+    }
+  }
   $: currentUser = $auth.user;
   $: accountList = $accounts.accounts;
   $: currentAccountId = $accounts.currentAccountId;
 
-  function toggleProfileMenu() {
+  function toggleProfileMenu(event) {
+    event.stopPropagation();
     showProfileMenu = !showProfileMenu;
   }
 
@@ -61,6 +98,7 @@
       showCancelButton: true,
       confirmButtonText: 'Remove',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       zIndex: 9999
     }).then((result) => {
       if (result.isConfirmed) {
@@ -120,7 +158,7 @@
       
       // Add account to accounts store (this is explicitly adding a new account)
       // Don't clear existing accounts when using "Add Account" modal
-      auth.login(data.user, data.token);
+      auth.login(data.user, data.token, data.refreshToken, false);
       
       Swal.fire({
         icon: 'success',
@@ -153,7 +191,7 @@
   }
 </script>
 
-{#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup'}
+{#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup' || $page.url.pathname === '/'}
 <div class="app-container">
   <header class="top-header">
     <div class="header-actions">

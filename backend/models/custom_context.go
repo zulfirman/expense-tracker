@@ -10,6 +10,3 @@ type CustomContext struct {
 	Email    string
 	UserName string
 }
-
-
-

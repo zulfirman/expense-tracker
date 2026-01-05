@@ -239,16 +239,16 @@
     {#if categoriesLoading}
       <div class="loading-categories">Loading categories...</div>
     {:else}
-      <div class="checkbox-group">
+      <div class="category-pills">
         {#each categories as category}
-          <label class="checkbox-label" class:selected={selectedCategoryIds.includes(category.id)}>
-            <input
-              type="checkbox"
-              checked={selectedCategoryIds.includes(category.id)}
-              on:change={() => toggleCategory(category.id)}
-            />
-            <span>{category.label}</span>
-          </label>
+          <button
+            type="button"
+            class="category-pill"
+            class:selected={selectedCategoryIds.includes(category.id)}
+            on:click={() => toggleCategory(category.id)}
+          >
+            {category.label}
+          </button>
         {/each}
       </div>
     {/if}
@@ -345,30 +345,33 @@
     color: var(--text-primary);
   }
 
-  .checkbox-group {
+  .category-pills {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.75rem;
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    transition: all 0.2s;
   }
 
-  .checkbox-label:hover {
+  .category-pill {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 2rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .category-pill:hover {
     background-color: var(--background);
     border-color: var(--primary-color);
   }
 
-  .checkbox-label.selected {
-    background-color: rgba(79, 70, 229, 0.1);
+  .category-pill.selected {
+    background-color: var(--primary-color);
+    color: white;
     border-color: var(--primary-color);
   }
 
@@ -382,16 +385,6 @@
     padding: 1rem;
     text-align: center;
     color: var(--text-secondary);
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-  }
-
-  .checkbox-label span {
-    flex: 1;
   }
 
   .form-input,
@@ -598,13 +591,14 @@
       padding: 0.5rem;
     }
 
-    .checkbox-group {
+    .category-pills {
       gap: 0.5rem;
     }
 
-    .checkbox-label {
-      padding: 1rem;
-      min-height: 56px; /* Better touch target */
+    .category-pill {
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      min-height: 40px; /* Better touch target */
     }
 
     .form-input,

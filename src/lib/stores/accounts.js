@@ -9,7 +9,7 @@ function createAccountsStore() {
 
   return {
     subscribe,
-    addAccount: (user, token) => {
+    addAccount: (user, token, refreshToken) => {
       if (!browser) return;
       
       update(state => {
@@ -18,6 +18,7 @@ function createAccountsStore() {
           name: user.name,
           email: user.email,
           token: token,
+          refreshToken: refreshToken,
           addedAt: new Date().toISOString()
         };
 
@@ -55,9 +56,11 @@ function createAccountsStore() {
           if (state.currentAccountId) {
             const currentAccount = state.accounts.find(acc => acc.id === state.currentAccountId);
             localStorage.setItem('auth_token', currentAccount.token);
+            localStorage.setItem('auth_refresh_token', currentAccount.refreshToken);
             localStorage.setItem('auth_user', JSON.stringify({ id: currentAccount.id, name: currentAccount.name, email: currentAccount.email }));
           } else {
             localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_refresh_token');
             localStorage.removeItem('auth_user');
           }
         }
@@ -77,6 +80,7 @@ function createAccountsStore() {
           state.currentAccountId = accountId;
           localStorage.setItem('currentAccountId', accountId.toString());
           localStorage.setItem('auth_token', account.token);
+          localStorage.setItem('auth_refresh_token', account.refreshToken);
           localStorage.setItem('auth_user', JSON.stringify({ id: account.id, name: account.name, email: account.email }));
         }
         return state;
@@ -102,6 +106,7 @@ function createAccountsStore() {
               const currentAccount = accounts.find(acc => acc.id === currentAccountId);
               if (currentAccount) {
                 localStorage.setItem('auth_token', currentAccount.token);
+                localStorage.setItem('auth_refresh_token', currentAccount.refreshToken);
                 localStorage.setItem('auth_user', JSON.stringify({ id: currentAccount.id, name: currentAccount.name, email: currentAccount.email }));
               }
             }

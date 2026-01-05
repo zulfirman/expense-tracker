@@ -141,10 +141,16 @@
 
   .month-card {
     background: var(--surface);
-    border-radius: 0.75rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s;
+  }
+
+  .month-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
   .month-header {
@@ -152,127 +158,224 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem;
-    background: none;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     border: none;
     cursor: pointer;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s;
-    margin-bottom: 0.75rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
   }
 
   .month-header:hover {
-    background-color: var(--background);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+  }
+
+  .month-header:active {
+    transform: translateY(0);
   }
 
   .month-header h2 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
+    font-size: 1.375rem;
+    color: white;
     margin: 0;
     text-transform: capitalize;
+    font-weight: 600;
+    letter-spacing: 0.3px;
   }
 
   .total-amount {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--primary-color);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    backdrop-filter: blur(10px);
   }
 
   .dates-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.75rem;
   }
 
   .date-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.75rem 0.5rem;
+    padding: 0.875rem 0.5rem;
     background: var(--background);
     border: 2px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     font-size: 0.875rem;
-    min-height: 70px;
+    min-height: 80px;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .date-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.2s;
   }
 
   .date-item:hover {
     background: var(--surface);
     border-color: var(--primary-color);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
   }
 
   .date-item:active {
-    transform: scale(0.95);
+    transform: translateY(-1px) scale(0.98);
   }
 
   .date-item.has-data {
-    background: rgba(79, 70, 229, 0.05);
+    background: rgba(79, 70, 229, 0.08);
     border-color: var(--primary-color);
+    border-width: 2px;
+  }
+
+  .date-item.has-data::before {
+    background: var(--primary-color);
   }
 
   .date-item.is-today {
     border-color: var(--success);
-    border-width: 2px;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    border-width: 3px;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .date-item.is-today::before {
+    background: var(--success);
+    height: 4px;
   }
 
   .date-item.no-data {
-    opacity: 0.6;
+    opacity: 0.5;
+    border-style: dashed;
   }
 
   .date-item.no-data:hover {
-    opacity: 1;
+    opacity: 0.8;
+    border-style: solid;
   }
 
   .date-number {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.375rem;
+    font-size: 1rem;
+  }
+
+  .date-item.is-today .date-number {
+    color: var(--success);
+    font-size: 1.125rem;
   }
 
   .date-amount {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-word;
   }
 
   .date-amount.empty {
     color: var(--text-secondary);
-    opacity: 0.5;
+    opacity: 0.4;
+    font-size: 0.65rem;
   }
 
   .date-item.income-only {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.12);
     border-color: #10b981;
+    border-width: 2px;
+  }
+
+  .date-item.income-only::before {
+    background: #10b981;
   }
 
   .date-item.expense-only {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.12);
     border-color: #ef4444;
+    border-width: 2px;
+  }
+
+  .date-item.expense-only::before {
+    background: #ef4444;
   }
 
   .date-item.both {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.12);
     border-color: #3b82f6;
+    border-width: 2px;
+  }
+
+  .date-item.both::before {
+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #ef4444 100%);
   }
 
   .date-item.income-only .date-amount {
     color: #10b981;
     font-weight: 700;
+    font-size: 0.75rem;
   }
 
   .date-item.expense-only .date-amount {
     color: #ef4444;
     font-weight: 700;
+    font-size: 0.75rem;
   }
 
   .date-item.both .date-amount {
     color: #3b82f6;
     font-weight: 700;
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .dates-list {
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .date-item {
+      min-height: 70px;
+      padding: 0.75rem 0.375rem;
+    }
+
+    .month-header {
+      padding: 0.875rem 1rem;
+    }
+
+    .month-header h2 {
+      font-size: 1.125rem;
+    }
+
+    .total-amount {
+      font-size: 1rem;
+      padding: 0.25rem 0.75rem;
+    }
+
+    .month-card {
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
   }
 </style>
 

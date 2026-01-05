@@ -42,7 +42,7 @@
 
       // Add account to accounts store (handles multiple accounts)
       // clearExisting=true means start fresh, false means add to existing
-      auth.login(response.data.user, response.data.token, shouldClear);
+      auth.login(response.data.user, response.data.token, response.data.refreshToken, shouldClear);
       
       Swal.fire({
         icon: 'success',

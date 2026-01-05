@@ -6,6 +6,7 @@
   import MonthDetailModal from './MonthDetailModal.svelte';
   import DateExpensesModal from './DateExpensesModal.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
+  import '$lib/styles/shared.css';
 
   let months = [];
   let selectedMonth = null;
@@ -53,11 +54,14 @@
   async function loadCategories() {
     try {
       const response = await api.get('/categories');
-      categories = response.data.map(cat => ({
-        id: cat.id,
-        label: cat.name,
-        slug: cat.slug
-      }));
+      // Only show active categories in history filter
+      categories = response.data
+        .filter(cat => cat.isActive !== false)
+        .map(cat => ({
+          id: cat.id,
+          label: cat.name,
+          slug: cat.slug
+        }));
     } catch (error) {
       console.error('Error loading categories:', error);
       categories = [];
@@ -219,75 +223,6 @@
     </button>
   </div>
 
-  {#if showSearch}
-    <div class="search-panel">
-      <div class="search-form">
-        <div class="form-group">
-          <label for="search-query">Search (notes)</label>
-          <input
-            id="search-query"
-            type="text"
-            bind:value={searchQuery}
-            placeholder="Search expenses..."
-            class="form-input"
-            on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
-          />
-        </div>
-        <div class="form-group">
-          <label for="search-category">Category</label>
-          <select id="search-category" bind:value={searchCategory} class="form-input">
-            <option value="">All Categories</option>
-            {#each categories as category}
-              <option value={category.id}>{category.label}</option>
-            {/each}
-          </select>
-        </div>
-        <div class="date-range">
-          <div class="form-group">
-            <label for="date-from">From Date</label>
-            <DatePicker
-              id="date-from"
-              bind:value={dateFrom}
-              placeholder="From date"
-            />
-          </div>
-          <div class="form-group">
-            <label for="date-to">To Date</label>
-            <DatePicker
-              id="date-to"
-              bind:value={dateTo}
-              placeholder="To date"
-            />
-          </div>
-        </div>
-        <button class="btn-clear" on:click={clearSearch}>Clear</button>
-      </div>
-      
-      {#if searchLoading}
-        <div class="search-loading">Searching...</div>
-      {:else if filteredExpenses.length > 0}
-        <div class="search-results">
-          <h3>Search Results ({filteredExpenses.length})</h3>
-          <div class="expenses-list">
-            {#each filteredExpenses as expense}
-              <div class="expense-item">
-                <div class="expense-info">
-                  <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                  <div class="expense-category">{expense.category}</div>
-                  {#if expense.notes}
-                    <div class="expense-notes">{expense.notes}</div>
-                  {/if}
-                </div>
-                <div class="expense-amount">{formatCurrency(expense.amount)}</div>
-              </div>
-            {/each}
-          </div>
-        </div>
-      {:else if searchQuery || searchCategory || dateFrom || dateTo}
-        <div class="no-results">No expenses found matching your search criteria.</div>
-      {/if}
-    </div>
-  {/if}
 
   <!-- Balance Display -->
   {#if !balanceLoading && !loading}
@@ -337,6 +272,87 @@
       }, 50);
     }}
   />
+{/if}
+
+{#if showSearch}
+  <div class="modal-backdrop" on:click={() => showSearch = false}>
+    <div class="modal-content search-modal" on:click|stopPropagation>
+      <div class="modal-header">
+        <h2>Search Expenses</h2>
+        <button class="close-btn" on:click={() => showSearch = false}>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="search-form">
+          <div class="form-group">
+            <label for="search-query">Search (notes)</label>
+            <input
+              id="search-query"
+              type="text"
+              bind:value={searchQuery}
+              placeholder="Search expenses..."
+              class="form-input"
+              on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
+            />
+          </div>
+          <div class="form-group">
+            <label for="search-category">Category</label>
+            <select id="search-category" bind:value={searchCategory} class="form-input">
+              <option value="">All Categories</option>
+              {#each categories as category}
+                <option value={category.id}>{category.label}</option>
+              {/each}
+            </select>
+          </div>
+          <div class="date-range">
+            <div class="form-group">
+              <label for="date-from">From Date</label>
+              <DatePicker
+                id="date-from"
+                bind:value={dateFrom}
+                placeholder="From date"
+              />
+            </div>
+            <div class="form-group">
+              <label for="date-to">To Date</label>
+              <DatePicker
+                id="date-to"
+                bind:value={dateTo}
+                placeholder="To date"
+              />
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn btn-secondary" on:click={clearSearch}>Clear</button>
+            <button type="button" class="btn btn-primary" on:click={searchExpenses}>Search</button>
+          </div>
+        </div>
+        
+        {#if searchLoading}
+          <div class="search-loading">Searching...</div>
+        {:else if filteredExpenses.length > 0}
+          <div class="search-results">
+            <h3>Search Results ({filteredExpenses.length})</h3>
+            <div class="expenses-list">
+              {#each filteredExpenses as expense}
+                <div class="expense-item">
+                  <div class="expense-info">
+                    <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                    <div class="expense-category">{expense.category}</div>
+                    {#if expense.notes}
+                      <div class="expense-notes">{expense.notes}</div>
+                    {/if}
+                  </div>
+                  <div class="expense-amount">{formatCurrency(expense.amount)}</div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {:else if searchQuery || searchCategory || dateFrom || dateTo}
+          <div class="no-results">No expenses found matching your search criteria.</div>
+        {/if}
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -391,7 +407,7 @@
   }
 
   .balance-amount {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: white;
     line-height: 1.2;
@@ -452,13 +468,10 @@
     border-color: var(--primary-color);
   }
 
-  .search-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    flex-shrink: 0;
+  .search-modal {
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .search-form {
@@ -467,54 +480,10 @@
     gap: 1rem;
   }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .form-input {
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    background: var(--background);
-    color: var(--text-primary);
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
   .date-range {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-  }
-
-  .btn-clear {
-    padding: 0.75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .btn-clear:hover {
-    background: var(--background);
-    border-color: var(--danger);
-    color: var(--danger);
   }
 
   .search-loading, .no-results {

@@ -55,3 +55,57 @@ html, body {
   z-index: 9999 !important;
 }
 
+/* Dark mode for SweetAlert */
+:root.dark .swal2-popup {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root.dark .swal2-title {
+  color: var(--text-primary) !important;
+}
+
+:root.dark .swal2-content {
+  color: var(--text-secondary) !important;
+}
+
+:root.dark .swal2-confirm {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+:root.dark .swal2-cancel {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:root.dark .swal2-cancel:hover {
+  background-color: var(--background) !important;
+}
+
+:root.dark .swal2-html-container {
+  color: var(--text-primary) !important;
+}
+
+:root.dark .swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+:root.dark .swal2-icon.swal2-error {
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}
+
+:root.dark .swal2-icon.swal2-success {
+  border-color: var(--success) !important;
+  color: var(--success) !important;
+}
+
+:root.dark .swal2-icon.swal2-info {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+}
+

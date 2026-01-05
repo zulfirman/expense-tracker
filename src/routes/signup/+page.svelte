@@ -60,7 +60,7 @@
 
       // Signup is always a fresh start - clear any existing accounts
       // clearExisting=true means start fresh
-      auth.login(response.data.user, response.data.token, true);
+      auth.login(response.data.user, response.data.token, response.data.refreshToken, true);
       
       Swal.fire({
         icon: 'success',

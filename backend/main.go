@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// Auto migrate
-	if err := db.AutoMigrate(&models.M_user{}, &models.T_expense{}, &models.M_category{}, &models.M_expense_template{}, &models.T_income{}, &models.Balance{}, &models.R_budget{}); err != nil {
+	if err := db.AutoMigrate(&models.M_user{}, &models.T_expense{}, &models.M_category{}, &models.M_expense_template{}, &models.T_income{}, &models.Balance{}, &models.R_budget{}, &models.RefreshToken{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
@@ -48,6 +48,7 @@ func main() {
 	api := e.Group("/api")
 	api.POST("/auth/signup", authHandler.Signup)
 	api.POST("/auth/login", authHandler.Login)
+	api.POST("/auth/refresh", authHandler.RefreshToken)
 
 	// Protected routes (authentication required)
 	protected := api.Group("")

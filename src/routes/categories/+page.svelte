@@ -3,6 +3,7 @@
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import '$lib/styles/shared.css';
 
   let categories = [];
   let loading = false;
@@ -145,6 +146,7 @@
       showCancelButton: true,
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       zIndex: 9999
     });
 
@@ -231,12 +233,8 @@
               />
               <span class="toggle-slider"></span>
             </label>
-            <button class="btn-icon" on:click={() => openEditForm(category)} title="Edit">
-              ✏️
-            </button>
-            <button class="btn-icon" on:click={() => handleDelete(category)} title="Delete">
-              🗑️
-            </button>
+            <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
+            <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
           </div>
         </div>
       {/each}
@@ -427,88 +425,10 @@
     transform: translateX(26px);
   }
 
-  .btn-icon {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.25rem;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  }
-
-  .btn-icon:hover {
-    opacity: 1;
-  }
-
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+  .category-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 1rem;
-  }
-
-  .modal-content {
-    background: var(--surface);
-    border-radius: 1rem;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-header h2 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .close-btn:hover {
-    color: var(--text-primary);
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
+    gap: 0.75rem;
   }
 
   .checkbox-label {
@@ -516,83 +436,6 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    background: var(--background);
-    color: var(--text-primary);
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  .form-input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 0.875rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #4338ca;
-  }
-
-  .btn-secondary {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: var(--background);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
   }
 </style>
 

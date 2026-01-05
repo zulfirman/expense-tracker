@@ -86,6 +86,7 @@
       showCancelButton: true,
       confirmButtonText: 'Logout',
       cancelButtonText: 'Cancel',
+      reverseButtons: true,
       zIndex: 9999
     }).then((result) => {
       if (result.isConfirmed) {
