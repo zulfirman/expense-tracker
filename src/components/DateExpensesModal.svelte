@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  import axios from 'axios';
+  import api from '$lib/api';
   import Swal from 'sweetalert2';
 
   const dispatch = createEventDispatcher();
@@ -59,7 +59,7 @@
 
   async function loadTemplates() {
     try {
-      const response = await axios.get('/api/templates');
+      const response = await api.get('/templates');
       templates = response.data;
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -72,7 +72,7 @@
     if (!date) return;
     
     try {
-      const response = await axios.get(`/api/income/date/${date.date}`);
+      const response = await api.get(`/income/date/${date.date}`);
       incomes = response.data;
     } catch (error) {
       console.error('Error loading incomes:', error);
@@ -84,7 +84,7 @@
     
     loading = true;
     try {
-      const response = await axios.get(`/api/expenses/date/${date.date}`);
+      const response = await api.get(`/expenses/date/${date.date}`);
       expenses = response.data;
     } catch (error) {
       console.error('Error loading expenses:', error);
@@ -104,10 +104,9 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   }
 
@@ -326,7 +325,7 @@
     }
 
     try {
-      await axios.put(`/api/expenses/${editingExpense.id}`, {
+      await api.put(`/expenses/${editingExpense.id}`, {
         categories: editExpenseForm.categories,
         notes: editExpenseForm.notes,
         amount: parseFloat(editExpenseForm.amount)
@@ -364,7 +363,7 @@
     }
 
     try {
-      await axios.put(`/api/income/${editingIncome.id}`, {
+      await api.put(`/income/${editingIncome.id}`, {
         date: date.date,
         notes: editIncomeForm.notes,
         amount: parseFloat(editIncomeForm.amount)
@@ -404,7 +403,7 @@
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`/api/expenses/${expenseId}`);
+        await api.delete(`/expenses/${expenseId}`);
         
         Swal.fire({
           icon: 'success',
@@ -440,7 +439,7 @@
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`/api/income/${incomeId}`);
+        await api.delete(`/income/${incomeId}`);
         
         Swal.fire({
           icon: 'success',
@@ -475,7 +474,7 @@
 
     submitting = true;
     try {
-      await axios.post('/api/income', {
+      await api.post('/income', {
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
@@ -596,7 +595,7 @@
           </div>
 
           <div class="form-group">
-            <label for="add-amount">Amount (IDR)</label>
+            <label for="add-amount">Amount (Rp.)</label>
             <input
               id="add-amount"
               type="text"
@@ -657,7 +656,7 @@
           <h3>Add Income</h3>
 
           <div class="form-group">
-            <label for="add-income-amount">Amount (IDR)</label>
+            <label for="add-income-amount">Amount (Rp.)</label>
             <input
               id="add-income-amount"
               type="text"
@@ -738,7 +737,7 @@
           </div>
 
           <div class="form-group">
-            <label for="edit-expense-amount">Amount (IDR)</label>
+            <label for="edit-expense-amount">Amount (Rp.)</label>
             <input
               id="edit-expense-amount"
               type="text"
@@ -774,7 +773,7 @@
           <h3>Edit Income</h3>
 
           <div class="form-group">
-            <label for="edit-income-amount">Amount (IDR)</label>
+            <label for="edit-income-amount">Amount (Rp.)</label>
             <input
               id="edit-income-amount"
               type="text"

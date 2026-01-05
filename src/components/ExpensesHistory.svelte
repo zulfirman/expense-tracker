@@ -1,5 +1,5 @@
 <script>
-  import axios from 'axios';
+  import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
   import CalendarView from './CalendarView.svelte';
@@ -16,6 +16,17 @@
   let balanceLoading = true;
   let savedScrollPosition = 0;
   let calendarWrapper;
+  
+  // Search functionality
+  let searchQuery = '';
+  let searchCategory = '';
+  let dateFrom = '';
+  let dateTo = '';
+  let showSearch = false;
+  let allExpenses = [];
+  let filteredExpenses = [];
+  let categories = [];
+  let searchLoading = false;
 
   function formatCurrency(value) {
     if (!value && value !== 0) return '';
@@ -28,20 +39,76 @@
       numericValue = value;
     }
     if (isNaN(numericValue)) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(numericValue);
   }
 
   onMount(async () => {
-    await Promise.all([loadMonths(), loadBalance()]);
+    await Promise.all([loadMonths(), loadBalance(), loadCategories()]);
   });
+
+  async function loadCategories() {
+    try {
+      const response = await api.get('/categories');
+      categories = response.data.map(cat => ({
+        id: cat.slug,
+        label: cat.name
+      }));
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      categories = [];
+    }
+  }
+
+  async function searchExpenses() {
+    if (!searchQuery && !searchCategory && !dateFrom && !dateTo) {
+      filteredExpenses = [];
+      return;
+    }
+
+    searchLoading = true;
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('q', searchQuery);
+      if (searchCategory) params.append('category', searchCategory);
+      if (dateFrom) params.append('dateFrom', dateFrom);
+      if (dateTo) params.append('dateTo', dateTo);
+
+      const response = await api.get(`/expenses/search?${params.toString()}`);
+      filteredExpenses = response.data || [];
+    } catch (error) {
+      console.error('Error searching expenses:', error);
+      filteredExpenses = [];
+    } finally {
+      searchLoading = false;
+    }
+  }
+
+  function clearSearch() {
+    searchQuery = '';
+    searchCategory = '';
+    dateFrom = '';
+    dateTo = '';
+    filteredExpenses = [];
+    showSearch = false;
+  }
+
+  function toggleSearch() {
+    showSearch = !showSearch;
+    if (!showSearch) {
+      clearSearch();
+    }
+  }
+
+  $: if (searchQuery || searchCategory || dateFrom || dateTo) {
+    searchExpenses();
+  }
 
   async function loadBalance() {
     try {
-      const response = await axios.get('/api/income/balance');
+      const response = await api.get('/income/balance');
       balance = response.data;
     } catch (error) {
       console.error('Error loading balance:', error);
@@ -53,7 +120,7 @@
   async function loadMonths() {
     loading = true;
     try {
-      const response = await axios.get('/api/expenses/months');
+      const response = await api.get('/expenses/months');
       months = response.data;
     } catch (error) {
       console.error('Error loading months:', error);
@@ -135,7 +202,87 @@
 </script>
 
 <div class="expenses-history">
-  <h1>Expenses History</h1>
+  <div class="header-section">
+    <h1>Expenses History</h1>
+    <button class="search-toggle-btn" on:click={toggleSearch} class:active={showSearch}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      Search
+    </button>
+  </div>
+
+  {#if showSearch}
+    <div class="search-panel">
+      <div class="search-form">
+        <div class="form-group">
+          <label for="search-query">Search (notes, category)</label>
+          <input
+            id="search-query"
+            type="text"
+            bind:value={searchQuery}
+            placeholder="Search expenses..."
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label for="search-category">Category</label>
+          <select id="search-category" bind:value={searchCategory} class="form-input">
+            <option value="">All Categories</option>
+            {#each categories as category}
+              <option value={category.id}>{category.label}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="date-range">
+          <div class="form-group">
+            <label for="date-from">From Date</label>
+            <input
+              id="date-from"
+              type="date"
+              bind:value={dateFrom}
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="date-to">To Date</label>
+            <input
+              id="date-to"
+              type="date"
+              bind:value={dateTo}
+              class="form-input"
+            />
+          </div>
+        </div>
+        <button class="btn-clear" on:click={clearSearch}>Clear</button>
+      </div>
+      
+      {#if searchLoading}
+        <div class="search-loading">Searching...</div>
+      {:else if filteredExpenses.length > 0}
+        <div class="search-results">
+          <h3>Search Results ({filteredExpenses.length})</h3>
+          <div class="expenses-list">
+            {#each filteredExpenses as expense}
+              <div class="expense-item">
+                <div class="expense-info">
+                  <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                  <div class="expense-category">{expense.category}</div>
+                  {#if expense.notes}
+                    <div class="expense-notes">{expense.notes}</div>
+                  {/if}
+                </div>
+                <div class="expense-amount">{formatCurrency(expense.amount)}</div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {:else if searchQuery || searchCategory || dateFrom || dateTo}
+        <div class="no-results">No expenses found matching your search criteria.</div>
+      {/if}
+    </div>
+  {/if}
 
   <!-- Balance Display -->
   {#if !balanceLoading && !loading}
@@ -265,6 +412,178 @@
   .balance-detail-item .expense-text {
     color: rgba(255, 200, 200, 1);
     font-weight: 600;
+  }
+
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .search-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+
+  .search-toggle-btn:hover {
+    background: var(--background);
+    border-color: var(--primary-color);
+  }
+
+  .search-toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .search-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .form-input {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--background);
+    color: var(--text-primary);
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .date-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .btn-clear {
+    padding: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+
+  .btn-clear:hover {
+    background: var(--background);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .search-loading, .no-results {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+  }
+
+  .search-results {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .search-results h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+
+  .expenses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .expense-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .expense-info {
+    flex: 1;
+  }
+
+  .expense-date {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .expense-category {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .expense-notes {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .expense-amount {
+    font-weight: 600;
+    color: var(--danger);
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 768px) {
+    .date-range {
+      grid-template-columns: 1fr;
+    }
+
+    .expenses-list {
+      max-height: 300px;
+    }
   }
 </style>
 

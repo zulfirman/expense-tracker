@@ -1,5 +1,5 @@
 <script>
-  import axios from 'axios';
+  import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
 
@@ -18,7 +18,7 @@
 
   async function loadBalance() {
     try {
-      const response = await axios.get('/api/income/balance');
+      const response = await api.get('/income/balance');
       balance = response.data;
     } catch (error) {
       console.error('Error loading balance:', error);
@@ -42,10 +42,9 @@
       numericValue = value;
     }
     if (isNaN(numericValue)) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(numericValue);
   }
 
@@ -83,7 +82,7 @@
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await axios.post('/api/income', payload);
+      const response = await api.post('/income', payload);
       
       Swal.fire({
         icon: 'success',
@@ -153,7 +152,7 @@
   </div>
 
   <div class="form-group">
-    <label for="amount">Amount (IDR)</label>
+    <label for="amount">Amount (Rp.)</label>
     <input
       id="amount"
       type="text"

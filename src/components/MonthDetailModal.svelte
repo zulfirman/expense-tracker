@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onMount, onDestroy, afterUpdate } from 'svelte';
-  import axios from 'axios';
+  import api from '$lib/api';
   import { Chart, registerables } from 'chart.js';
 
   Chart.register(...registerables);
@@ -47,7 +47,7 @@
     
     loading = true;
     try {
-      const response = await axios.get(`/api/expenses/month/${month.month}`);
+      const response = await api.get(`/expenses/month/${month.month}`);
       expensesByCategory = response.data.categories || [];
       dailyExpenses = response.data.daily || [];
       
@@ -318,10 +318,9 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   }
 

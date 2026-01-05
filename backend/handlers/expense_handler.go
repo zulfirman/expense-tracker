@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"expenses-tracker/middleware"
 	"expenses-tracker/models"
 	"net/http"
 	"strconv"
@@ -32,6 +33,9 @@ type UpdateExpenseRequest struct {
 }
 
 func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
 	var req CreateExpenseRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
@@ -43,6 +47,7 @@ func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
 	}
 
 	expense := models.Expense{
+		UserID:     userID,
 		Categories: req.Categories,
 		Date:       date,
 		Notes:      req.Notes,
@@ -57,6 +62,8 @@ func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
 }
 
 func (h *ExpenseHandler) GetMonths(c echo.Context) error {
+	userID := middleware.GetUserID(c)
+
 	now := time.Now()
 	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	threeMonthsAgo := currentMonth.AddDate(0, -3, 0)
@@ -69,7 +76,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 	var results []MonthResult
 	err := h.db.Model(&models.Expense{}).
 		Select("TO_CHAR(date, 'YYYY-MM') as month, COALESCE(SUM(amount), 0) as total").
-		Where("date >= ?", threeMonthsAgo).
+		Where("user_id = ? AND date >= ?", userID, threeMonthsAgo).
 		Group("TO_CHAR(date, 'YYYY-MM')").
 		Order("month DESC").
 		Scan(&results).Error
@@ -108,7 +115,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 	iterMonth = currentMonth
 	for iterMonth.After(threeMonthsAgo) || iterMonth.Equal(threeMonthsAgo) {
 		monthKey := iterMonth.Format("2006-01")
-		
+
 		type DateResult struct {
 			Date  time.Time `json:"date"`
 			Total float64   `json:"total"`
@@ -116,7 +123,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 		var dateResults []DateResult
 		h.db.Model(&models.Expense{}).
 			Select("date, COALESCE(SUM(amount), 0) as total").
-			Where("TO_CHAR(date, 'YYYY-MM') = ?", monthKey).
+			Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, monthKey).
 			Group("date").
 			Order("date DESC").
 			Scan(&dateResults)
@@ -126,7 +133,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 			Expense float64
 			Income  float64
 		})
-		
+
 		// Add expenses to date map
 		for _, dr := range dateResults {
 			dateMap[dr.Date] = struct {
@@ -142,7 +149,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 		}
 		h.db.Model(&models.Income{}).
 			Select("date, COALESCE(SUM(amount), 0) as total").
-			Where("TO_CHAR(date, 'YYYY-MM') = ?", monthKey).
+			Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, monthKey).
 			Group("date").
 			Scan(&incomeResults)
 
@@ -161,18 +168,18 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 
 		// Convert to DateTotal slice with net total (income - expense) and type info
 		type DateTotalWithType struct {
-			Date      string  `json:"date"`
-			Total     float64 `json:"total"`
-			HasIncome bool    `json:"hasIncome"`
-			HasExpense bool   `json:"hasExpense"`
+			Date       string  `json:"date"`
+			Total      float64 `json:"total"`
+			HasIncome  bool    `json:"hasIncome"`
+			HasExpense bool    `json:"hasExpense"`
 		}
 		dateTotalsWithType := make([]DateTotalWithType, 0, len(dateMap))
 		for date, amounts := range dateMap {
 			netTotal := amounts.Income - amounts.Expense
 			dateTotalsWithType = append(dateTotalsWithType, DateTotalWithType{
-				Date:      date.Format("2006-01-02"),
-				Total:     netTotal,
-				HasIncome: amounts.Income > 0,
+				Date:       date.Format("2006-01-02"),
+				Total:      netTotal,
+				HasIncome:  amounts.Income > 0,
 				HasExpense: amounts.Expense > 0,
 			})
 		}
@@ -223,6 +230,8 @@ type DateTotal struct {
 }
 
 func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	month := c.Param("month")
 
 	type CategoryTotal struct {
@@ -239,13 +248,13 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 
 	// Get all expenses for the month
 	var expenses []models.Expense
-	if err := h.db.Where("TO_CHAR(date, 'YYYY-MM') = ?", month).Find(&expenses).Error; err != nil {
+	if err := h.db.Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, month).Find(&expenses).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch month details"})
 	}
 
 	// Get all income for the month
 	var incomes []models.Income
-	if err := h.db.Where("TO_CHAR(date, 'YYYY-MM') = ?", month).Find(&incomes).Error; err != nil {
+	if err := h.db.Where("user_id = ? AND TO_CHAR(date, 'YYYY-MM') = ?", userID, month).Find(&incomes).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch income details"})
 	}
 
@@ -321,6 +330,8 @@ func (h *ExpenseHandler) GetMonthDetails(c echo.Context) error {
 }
 
 func (h *ExpenseHandler) GetDateExpenses(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	dateStr := c.Param("date")
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
@@ -328,7 +339,7 @@ func (h *ExpenseHandler) GetDateExpenses(c echo.Context) error {
 	}
 
 	var expenses []models.Expense
-	err = h.db.Where("date = ?", date).Order("created_at DESC").Find(&expenses).Error
+	err = h.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&expenses).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch expenses"})
 	}
@@ -336,7 +347,77 @@ func (h *ExpenseHandler) GetDateExpenses(c echo.Context) error {
 	return c.JSON(http.StatusOK, expenses)
 }
 
+func (h *ExpenseHandler) SearchExpenses(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
+	query := h.db.Model(&models.Expense{}).Where("user_id = ?", userID)
+
+	// Search by text (notes or categories)
+	searchQuery := c.QueryParam("q")
+	if searchQuery != "" {
+		query = query.Where("notes ILIKE ? OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(categories) AS cat WHERE cat ILIKE ?)", "%"+searchQuery+"%", "%"+searchQuery+"%")
+	}
+
+	// Filter by category
+	category := c.QueryParam("category")
+	if category != "" {
+		query = query.Where("EXISTS (SELECT 1 FROM jsonb_array_elements_text(categories) AS cat WHERE cat = ?)", category)
+	}
+
+	// Filter by date range
+	dateFrom := c.QueryParam("dateFrom")
+	dateTo := c.QueryParam("dateTo")
+	if dateFrom != "" {
+		fromDate, err := time.Parse("2006-01-02", dateFrom)
+		if err == nil {
+			query = query.Where("date >= ?", fromDate)
+		}
+	}
+	if dateTo != "" {
+		toDate, err := time.Parse("2006-01-02", dateTo)
+		if err == nil {
+			query = query.Where("date <= ?", toDate)
+		}
+	}
+
+	var expenses []models.Expense
+	if err := query.Order("date DESC, created_at DESC").Find(&expenses).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to search expenses"})
+	}
+
+	// Format response with category names
+	type ExpenseResponse struct {
+		ID         uint      `json:"id"`
+		Categories []string  `json:"categories"`
+		Date       time.Time `json:"date"`
+		Notes      string    `json:"notes"`
+		Amount     float64   `json:"amount"`
+		Category   string    `json:"category"` // First category for display
+	}
+
+	results := make([]ExpenseResponse, len(expenses))
+	for i, expense := range expenses {
+		categoryName := ""
+		if len(expense.Categories) > 0 {
+			categoryName = expense.Categories[0]
+		}
+		results[i] = ExpenseResponse{
+			ID:         expense.ID,
+			Categories: expense.Categories,
+			Date:       expense.Date,
+			Notes:      expense.Notes,
+			Amount:     expense.Amount,
+			Category:   categoryName,
+		}
+	}
+
+	return c.JSON(http.StatusOK, results)
+}
+
 func (h *ExpenseHandler) UpdateExpense(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid expense ID"})
@@ -348,7 +429,7 @@ func (h *ExpenseHandler) UpdateExpense(c echo.Context) error {
 	}
 
 	var expense models.Expense
-	if err := h.db.First(&expense, id).Error; err != nil {
+	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&expense).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Expense not found"})
 	}
 
@@ -364,12 +445,14 @@ func (h *ExpenseHandler) UpdateExpense(c echo.Context) error {
 }
 
 func (h *ExpenseHandler) DeleteExpense(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid expense ID"})
 	}
 
-	if err := h.db.Unscoped().Delete(&models.Expense{}, id).Error; err != nil {
+	if err := h.db.Where("id = ? AND user_id = ?", id, userID).Unscoped().Delete(&models.Expense{}).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to delete expense"})
 	}
 

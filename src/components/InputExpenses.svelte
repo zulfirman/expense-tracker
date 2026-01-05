@@ -1,5 +1,5 @@
 <script>
-  import axios from 'axios';
+  import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
 
@@ -22,7 +22,7 @@
 
   async function loadCategories() {
     try {
-      const response = await axios.get('/api/categories');
+      const response = await api.get('/categories');
       categories = response.data.map(cat => ({
         id: cat.slug,
         label: cat.name
@@ -42,7 +42,7 @@
 
   async function loadTemplates() {
     try {
-      const response = await axios.get('/api/templates');
+      const response = await api.get('/templates');
       templates = response.data;
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -77,10 +77,9 @@
       numericValue = value;
     }
     if (isNaN(numericValue)) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(numericValue);
   }
 
@@ -148,7 +147,7 @@
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await axios.post('/api/expenses', payload);
+      const response = await api.post('/expenses', payload);
       
       const categoryNames = categories
         .filter(cat => selectedCategories.includes(cat.id))
@@ -267,7 +266,7 @@
   </div>
 
   <div class="form-group">
-    <label for="amount">Amount (IDR)</label>
+    <label for="amount">Amount (Rp.)</label>
     <input
       id="amount"
       type="text"

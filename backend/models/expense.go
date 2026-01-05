@@ -39,6 +39,7 @@ func (a *StringArray) Scan(value interface{}) error {
 
 type Expense struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
+	UserID     uint           `json:"userId" gorm:"default:null;index"`
 	Categories StringArray    `json:"categories" gorm:"type:jsonb"`
 	Date       time.Time      `json:"date" gorm:"type:date"`
 	Notes      string         `json:"notes" gorm:"type:text"`
@@ -48,3 +49,6 @@ type Expense struct {
 	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
+func (Expense) TableName() string {
+	return "t_expenses"
+}

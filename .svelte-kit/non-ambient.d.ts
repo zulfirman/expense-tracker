@@ -27,17 +27,22 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/expenses" | "/history" | "/income";
+		RouteId(): "/" | "/budget" | "/categories" | "/expenses" | "/history" | "/income" | "/login" | "/profile" | "/signup";
 		RouteParams(): {
 			
 		};
 		LayoutParams(): {
 			"/": Record<string, never>;
+			"/budget": Record<string, never>;
+			"/categories": Record<string, never>;
 			"/expenses": Record<string, never>;
 			"/history": Record<string, never>;
-			"/income": Record<string, never>
+			"/income": Record<string, never>;
+			"/login": Record<string, never>;
+			"/profile": Record<string, never>;
+			"/signup": Record<string, never>
 		};
-		Pathname(): "/" | "/expenses" | "/expenses/" | "/history" | "/history/" | "/income" | "/income/";
+		Pathname(): "/" | "/budget" | "/budget/" | "/categories" | "/categories/" | "/expenses" | "/expenses/" | "/history" | "/history/" | "/income" | "/income/" | "/login" | "/login/" | "/profile" | "/profile/" | "/signup" | "/signup/";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): string & {};
 	}

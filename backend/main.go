@@ -1,18 +1,16 @@
 package main
 
 import (
-	"errors"
 	"expenses-tracker/database"
 	"expenses-tracker/handlers"
+	authMiddleware "expenses-tracker/middleware"
 	"expenses-tracker/models"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -28,18 +26,20 @@ func main() {
 	}
 
 	// Auto migrate
-	if err := db.AutoMigrate(&models.Expense{}, &models.Category{}, &models.ExpenseTemplate{}, &models.Income{}, &models.Balance{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.Expense{}, &models.Category{}, &models.ExpenseTemplate{}, &models.Income{}, &models.Balance{}, &models.Budget{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// Seed default categories if they don't exist
-	seedCategories(db)
+	// Note: Categories are now user-specific, so we don't seed default categories
+	// Each user will create their own categories
 
 	// Initialize handlers
+	authHandler := handlers.NewAuthHandler(db)
 	expenseHandler := handlers.NewExpenseHandler(db)
 	categoryHandler := handlers.NewCategoryHandler(db)
 	templateHandler := handlers.NewTemplateHandler(db)
 	incomeHandler := handlers.NewIncomeHandler(db)
+	budgetHandler := handlers.NewBudgetHandler(db)
 
 	// Setup Echo
 	e := echo.New()
@@ -47,24 +47,51 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	// API routes
+	// Public routes (no authentication required)
 	api := e.Group("/api")
-	api.POST("/expenses", expenseHandler.CreateExpense)
-	api.GET("/expenses/months", expenseHandler.GetMonths)
-	api.GET("/expenses/month/:month", expenseHandler.GetMonthDetails)
-	api.GET("/expenses/date/:date", expenseHandler.GetDateExpenses)
-	api.PUT("/expenses/:id", expenseHandler.UpdateExpense)
-	api.DELETE("/expenses/:id", expenseHandler.DeleteExpense)
-	api.GET("/categories", categoryHandler.GetCategories)
-	api.GET("/templates", templateHandler.GetTemplates)
-	api.POST("/templates", templateHandler.CreateTemplate)
-	api.DELETE("/templates/:id", templateHandler.DeleteTemplate)
-	api.POST("/income", incomeHandler.CreateIncome)
-	api.GET("/income/balance", incomeHandler.GetBalance)
-	api.PUT("/income/balance", incomeHandler.UpdateBalance)
-	api.GET("/income/date/:date", incomeHandler.GetDateIncome)
-	api.PUT("/income/:id", incomeHandler.UpdateIncome)
-	api.DELETE("/income/:id", incomeHandler.DeleteIncome)
+	api.POST("/auth/signup", authHandler.Signup)
+	api.POST("/auth/login", authHandler.Login)
+
+	// Protected routes (authentication required)
+	protected := api.Group("")
+	protected.Use(authMiddleware.CustomContextMiddleware(db))
+
+	// Auth routes
+	protected.GET("/auth/profile", authHandler.GetProfile)
+	protected.PUT("/auth/profile", authHandler.UpdateProfile)
+
+	// Expense routes
+	protected.POST("/expenses", expenseHandler.CreateExpense)
+	protected.GET("/expenses/months", expenseHandler.GetMonths)
+	protected.GET("/expenses/month/:month", expenseHandler.GetMonthDetails)
+	protected.GET("/expenses/date/:date", expenseHandler.GetDateExpenses)
+	protected.GET("/expenses/search", expenseHandler.SearchExpenses)
+	protected.PUT("/expenses/:id", expenseHandler.UpdateExpense)
+	protected.DELETE("/expenses/:id", expenseHandler.DeleteExpense)
+
+	// Category routes
+	protected.GET("/categories", categoryHandler.GetCategories)
+	protected.POST("/categories", categoryHandler.CreateCategory)
+	protected.PUT("/categories/:id", categoryHandler.UpdateCategory)
+	protected.DELETE("/categories/:id", categoryHandler.DeleteCategory)
+
+	// Template routes
+	protected.GET("/templates", templateHandler.GetTemplates)
+	protected.POST("/templates", templateHandler.CreateTemplate)
+	protected.DELETE("/templates/:id", templateHandler.DeleteTemplate)
+
+	// Income routes
+	protected.POST("/income", incomeHandler.CreateIncome)
+	protected.GET("/income/balance", incomeHandler.GetBalance)
+	protected.PUT("/income/balance", incomeHandler.UpdateBalance)
+	protected.GET("/income/date/:date", incomeHandler.GetDateIncome)
+	protected.PUT("/income/:id", incomeHandler.UpdateIncome)
+	protected.DELETE("/income/:id", incomeHandler.DeleteIncome)
+
+	// Budget routes
+	protected.GET("/budgets", budgetHandler.GetBudgets)
+	protected.POST("/budgets", budgetHandler.CreateBudget)
+	protected.DELETE("/budgets/:categorySlug", budgetHandler.DeleteBudget)
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -75,44 +102,5 @@ func main() {
 	log.Printf("Server starting on port %s", port)
 	if err := e.Start(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
-	}
-}
-
-func seedCategories(db *gorm.DB) {
-	defaultCategories := []models.Category{
-		{Name: "Makanan & Minuman", Slug: "makanan-minuman", IsActive: true},
-		{Name: "Transportasi", Slug: "transportasi", IsActive: true},
-		{Name: "Bensin", Slug: "bensin", IsActive: true},
-		{Name: "Tagihan Listrik", Slug: "tagihan-listrik", IsActive: true},
-		{Name: "Kontrakan", Slug: "kontrakan", IsActive: true},
-		{Name: "Buat Ayang", Slug: "buat-ayang", IsActive: true},
-		{Name: "Internet & Pulsa", Slug: "internet-pulsa", IsActive: true},
-		{Name: "Belanja Bulanan", Slug: "belanja-bulanan", IsActive: true},
-		{Name: "Jalan-jalan", Slug: "jalan-jalan", IsActive: true},
-		{Name: "Tabungan", Slug: "tabungan", IsActive: true},
-		{Name: "Lain-lain", Slug: "lain-lain", IsActive: true},
-	}
-
-	for _, category := range defaultCategories {
-		var existing models.Category
-		if err := db.Where("slug = ?", category.Slug).First(&existing).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// Fallback: auto-generate slug if empty (though we already set them)
-				if category.Slug == "" {
-					category.Slug = strings.ToLower(strings.ReplaceAll(category.Name, " ", "-"))
-				}
-
-				if err := db.Create(&category).Error; err != nil {
-					log.Printf("Failed to create category %s: %v", category.Name, err)
-				} else {
-					log.Printf("Created default category: %s", category.Name)
-				}
-			}
-		} else {
-			// Optional: ensure it's active even if exists
-			if !existing.IsActive {
-				db.Model(&existing).Update("is_active", true)
-			}
-		}
 	}
 }

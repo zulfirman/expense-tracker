@@ -11,8 +11,12 @@ type Category struct {
 	Name      string         `json:"name" gorm:"unique;not null"`
 	Slug      string         `json:"slug" gorm:"unique;not null"`
 	IsActive  bool           `json:"isActive" gorm:"default:true"`
+	UserID    uint           `json:"userId" gorm:"default:null;index"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
+func (Category) TableName() string {
+	return "m_categories"
+}

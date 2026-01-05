@@ -1,5 +1,5 @@
 <script>
-  import axios from 'axios';
+  import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
 
@@ -7,26 +7,9 @@
   let notes = '';
   let amount = '';
   let loading = false;
-  let balance = { amount: 0, notes: '' };
-  let balanceLoading = true;
 
   // Simplified quick amounts for salary/income
   const quickAmounts = [100000, 250000, 500000, 1000000, 2000000];
-
-  onMount(async () => {
-    await loadBalance();
-  });
-
-  async function loadBalance() {
-    try {
-      const response = await axios.get('/api/income/balance');
-      balance = response.data;
-    } catch (error) {
-      console.error('Error loading balance:', error);
-    } finally {
-      balanceLoading = false;
-    }
-  }
 
   function setQuickAmount(quickAmount) {
     amount = quickAmount.toString();
@@ -43,10 +26,9 @@
       numericValue = value;
     }
     if (isNaN(numericValue)) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(numericValue);
   }
 
@@ -84,7 +66,7 @@
         notes: notes,
         amount: parseFloat(amount)
       };
-      await axios.post('/api/income', payload);
+      await api.post('/income', payload);
       
       Swal.fire({
         icon: 'success',
@@ -99,7 +81,6 @@
         confirmButtonText: 'OK',
         zIndex: 9999
       });
-      await loadBalance();
       
       // Reset form
       notes = '';
@@ -133,14 +114,6 @@
 <form class="input-income" on:submit|preventDefault={handleSubmit}>
   <h1>Record Income</h1>
 
-  <!-- Balance Display -->
-  {#if !balanceLoading}
-    <div class="balance-display">
-      <div class="balance-label">Current Balance</div>
-      <div class="balance-amount">{formatCurrency(balance.amount || 0)}</div>
-    </div>
-  {/if}
-
   <div class="form-group">
     <label for="date">Date</label>
     <input
@@ -153,7 +126,7 @@
   </div>
 
   <div class="form-group">
-    <label for="amount">Amount (IDR)</label>
+    <label for="amount">Amount (Rp.)</label>
     <input
       id="amount"
       type="text"
@@ -219,31 +192,6 @@
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
     color: var(--text-primary);
-  }
-
-  .balance-display {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-  }
-
-  .balance-label {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .balance-amount {
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-    line-height: 1.2;
   }
 
   .form-group {

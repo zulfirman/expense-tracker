@@ -16,6 +16,18 @@
   --danger: #ef4444;
 }
 
+:root.dark {
+  --primary-color: #6366f1;
+  --secondary-color: #8b5cf6;
+  --background: #111827;
+  --surface: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border: #374151;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--background);

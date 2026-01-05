@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"expenses-tracker/middleware"
 	"expenses-tracker/models"
 	"net/http"
 	"strconv"
@@ -30,6 +31,9 @@ type UpdateBalanceRequest struct {
 }
 
 func (h *IncomeHandler) CreateIncome(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
 	var req CreateIncomeRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
@@ -41,6 +45,7 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 	}
 
 	income := models.Income{
+		UserID: userID,
 		Date:   date,
 		Amount: req.Amount,
 		Notes:  req.Notes,
@@ -52,7 +57,7 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 
 	// Update balance
 	var balance models.Balance
-	if err := h.db.FirstOrCreate(&balance, models.Balance{ID: 1}).Error; err != nil {
+	if err := h.db.FirstOrCreate(&balance, models.Balance{UserID: userID}).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update balance"})
 	}
 	balance.Amount += req.Amount
@@ -64,8 +69,11 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 }
 
 func (h *IncomeHandler) GetBalance(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
 	var balance models.Balance
-	if err := h.db.FirstOrCreate(&balance, models.Balance{ID: 1}).Error; err != nil {
+	if err := h.db.FirstOrCreate(&balance, models.Balance{UserID: userID}).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch balance"})
 	}
 
@@ -73,13 +81,16 @@ func (h *IncomeHandler) GetBalance(c echo.Context) error {
 }
 
 func (h *IncomeHandler) UpdateBalance(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
 	var req UpdateBalanceRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
 	}
 
 	var balance models.Balance
-	if err := h.db.FirstOrCreate(&balance, models.Balance{ID: 1}).Error; err != nil {
+	if err := h.db.FirstOrCreate(&balance, models.Balance{UserID: userID}).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch balance"})
 	}
 
@@ -94,6 +105,8 @@ func (h *IncomeHandler) UpdateBalance(c echo.Context) error {
 }
 
 func (h *IncomeHandler) GetDateIncome(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	dateStr := c.Param("date")
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
@@ -101,7 +114,7 @@ func (h *IncomeHandler) GetDateIncome(c echo.Context) error {
 	}
 
 	var incomes []models.Income
-	err = h.db.Where("date = ?", date).Order("created_at DESC").Find(&incomes).Error
+	err = h.db.Where("user_id = ? AND date = ?", userID, date).Order("created_at DESC").Find(&incomes).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch income"})
 	}
@@ -110,6 +123,8 @@ func (h *IncomeHandler) GetDateIncome(c echo.Context) error {
 }
 
 func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid income ID"})
@@ -121,7 +136,7 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 	}
 
 	var income models.Income
-	if err := h.db.First(&income, id).Error; err != nil {
+	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&income).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Income not found"})
 	}
 
@@ -142,7 +157,7 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 
 	// Update balance with difference
 	var balance models.Balance
-	if err := h.db.FirstOrCreate(&balance, models.Balance{ID: 1}).Error; err == nil {
+	if err := h.db.FirstOrCreate(&balance, models.Balance{UserID: userID}).Error; err == nil {
 		balance.Amount = balance.Amount - oldAmount + req.Amount
 		h.db.Save(&balance)
 	}
@@ -151,13 +166,15 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 }
 
 func (h *IncomeHandler) DeleteIncome(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid income ID"})
 	}
 
 	var income models.Income
-	if err := h.db.First(&income, id).Error; err != nil {
+	if err := h.db.Where("id = ? AND user_id = ?", id, userID).First(&income).Error; err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Income not found"})
 	}
 
@@ -168,7 +185,7 @@ func (h *IncomeHandler) DeleteIncome(c echo.Context) error {
 
 	// Update balance
 	var balance models.Balance
-	if err := h.db.FirstOrCreate(&balance, models.Balance{ID: 1}).Error; err == nil {
+	if err := h.db.FirstOrCreate(&balance, models.Balance{UserID: userID}).Error; err == nil {
 		balance.Amount -= amount
 		h.db.Save(&balance)
 	}
