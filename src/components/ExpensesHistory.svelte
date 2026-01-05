@@ -5,6 +5,7 @@
   import CalendarView from './CalendarView.svelte';
   import MonthDetailModal from './MonthDetailModal.svelte';
   import DateExpensesModal from './DateExpensesModal.svelte';
+  import AdvancedAnalyticsModal from './AdvancedAnalyticsModal.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import '$lib/styles/shared.css';
 
@@ -13,11 +14,16 @@
   let selectedDate = null;
   let showMonthDetail = false;
   let showDateModal = false;
+  let showAnalytics = false;
+  let analyticsMonth = null;
   let loading = false;
   let balance = { amount: 0 };
   let balanceLoading = true;
   let savedScrollPosition = 0;
   let calendarWrapper;
+  let isLoadingMore = false;
+  let hasMoreMonths = true;
+  let oldestLoadedMonth = null;
   
   // Search functionality
   let searchQuery = '';
@@ -121,20 +127,54 @@
     }
   }
 
-  async function loadMonths(silent = false) {
-    if (!silent) {
+  async function loadMonths(silent = false, beforeMonth = null) {
+    if (!silent && !beforeMonth) {
       loading = true;
     }
+    if (beforeMonth) {
+      isLoadingMore = true;
+    }
     try {
-      const response = await api.get('/expenses/months');
-      months = response.data;
+      let url = '/expenses/months';
+      if (beforeMonth) {
+        url += `?before=${beforeMonth}`;
+      }
+      const response = await api.get(url);
+      const newMonths = response.data || [];
+      
+      if (beforeMonth) {
+        // Append older months
+        months = [...months, ...newMonths];
+      } else {
+        // Initial load
+        months = newMonths;
+      }
+      
+      // Update oldest loaded month (last month in the array is the oldest)
+      if (newMonths.length > 0) {
+        oldestLoadedMonth = newMonths[newMonths.length - 1].month;
+      }
+      
+      // Check if there are more months to load
+      // For initial load, check if we got 4 months (current + 3 back)
+      // For pagination, check if we got 6 months
+      const expectedCount = beforeMonth ? 6 : 4;
+      hasMoreMonths = newMonths.length >= expectedCount;
     } catch (error) {
-      // Months failed to load
+      hasMoreMonths = false;
     } finally {
-      if (!silent) {
+      if (!silent && !beforeMonth) {
         loading = false;
       }
+      if (beforeMonth) {
+        isLoadingMore = false;
+      }
     }
+  }
+
+  async function loadMoreMonths() {
+    if (isLoadingMore || !hasMoreMonths || !oldestLoadedMonth) return;
+    await loadMonths(true, oldestLoadedMonth);
   }
 
   function getTotalExpenses() {
@@ -167,6 +207,16 @@
     }
     selectedMonth = month;
     showMonthDetail = true;
+  }
+
+  function handleAnalyticsClick(month) {
+    analyticsMonth = month.month; // YYYY-MM format
+    showAnalytics = true;
+  }
+
+  function closeAnalytics() {
+    showAnalytics = false;
+    analyticsMonth = null;
   }
 
   function handleDateClick(date) {
@@ -204,8 +254,7 @@
   }
 
   function handleLoadMore(direction) {
-    // Don't reload, just let user continue scrolling
-    // The data is already loaded from the initial fetch (3 months back + current)
+    loadMoreMonths();
   }
 </script>
 
@@ -240,10 +289,17 @@
     <div class="calendar-wrapper" bind:this={calendarWrapper}>
       <CalendarView
         {months}
+        {hasMoreMonths}
         on:monthClick={(e) => handleMonthClick(e.detail)}
         on:dateClick={(e) => handleDateClick(e.detail)}
         on:loadMore={(e) => handleLoadMore(e.detail)}
       />
+      {#if isLoadingMore}
+        <div class="loading-more">
+          <div class="spinner"></div>
+          <span>Loading more months...</span>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -269,6 +325,13 @@
         }
       }, 50);
     }}
+  />
+{/if}
+
+{#if showAnalytics && analyticsMonth}
+  <AdvancedAnalyticsModal
+    month={analyticsMonth}
+    on:close={closeAnalytics}
   />
 {/if}
 
@@ -464,6 +527,32 @@
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+  }
+
+  .loading-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .loading-more .spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .search-modal {

@@ -173,3 +173,62 @@ func (h *BudgetHandler) DeleteBudget(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Budget deleted successfully"})
 }
+
+type CopyBudgetsRequest struct {
+	FromMonth string `json:"fromMonth" validate:"required"`
+	ToMonth   string `json:"toMonth" validate:"required"`
+}
+
+func (h *BudgetHandler) CopyBudgets(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
+	var req CopyBudgetsRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
+	}
+
+	// Validate months format (YYYY-MM)
+	if len(req.FromMonth) != 7 || len(req.ToMonth) != 7 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid month format. Use YYYY-MM"})
+	}
+
+	// Get budgets from source month
+	var sourceBudgets []models.R_budget
+	if err := h.db.Where("user_id = ? AND month = ?", userID, req.FromMonth).Find(&sourceBudgets).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch source budgets"})
+	}
+
+	if len(sourceBudgets) == 0 {
+		return c.JSON(http.StatusNotFound, map[string]string{"message": "No budgets found in source month"})
+	}
+
+	// Check if target month already has budgets
+	var existingBudgets []models.R_budget
+	h.db.Where("user_id = ? AND month = ?", userID, req.ToMonth).Find(&existingBudgets)
+	if len(existingBudgets) > 0 {
+		return c.JSON(http.StatusConflict, map[string]string{"message": "Target month already has budgets"})
+	}
+
+	// Copy budgets to target month
+	copiedCount := 0
+	for _, sourceBudget := range sourceBudgets {
+		newBudget := models.R_budget{
+			UserID:     userID,
+			CategoryID: sourceBudget.CategoryID,
+			Month:      req.ToMonth,
+			Amount:     sourceBudget.Amount,
+		}
+		if err := h.db.Create(&newBudget).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to copy budgets"})
+		}
+		copiedCount++
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":     "Budgets copied successfully",
+		"copiedCount": copiedCount,
+		"fromMonth":   req.FromMonth,
+		"toMonth":     req.ToMonth,
+	})
+}

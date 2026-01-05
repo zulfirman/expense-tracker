@@ -102,7 +102,29 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 
 	now := time.Now()
 	currentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	threeMonthsAgo := currentMonth.AddDate(0, -3, 0)
+
+	// Check if "before" parameter is provided for pagination
+	beforeMonthStr := c.QueryParam("before")
+	var startMonth time.Time
+	var endMonth time.Time
+
+	if beforeMonthStr != "" {
+		// Parse the "before" month (YYYY-MM format)
+		beforeMonth, err := time.Parse("2006-01", beforeMonthStr)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid before month format"})
+		}
+		// Load 6 months before the specified month
+		endMonth = beforeMonth.AddDate(0, 0, -1) // End at the day before the beforeMonth
+		startMonth = endMonth.AddDate(0, -5, 0)  // Start 6 months before
+		// Adjust to first day of the month
+		startMonth = time.Date(startMonth.Year(), startMonth.Month(), 1, 0, 0, 0, 0, startMonth.Location())
+		endMonth = time.Date(endMonth.Year(), endMonth.Month(), 1, 0, 0, 0, 0, endMonth.Location())
+	} else {
+		// Initial load: current month + 3 months back
+		endMonth = currentMonth
+		startMonth = currentMonth.AddDate(0, -3, 0)
+	}
 
 	type MonthResult struct {
 		Month string  `json:"month"`
@@ -112,7 +134,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 	var results []MonthResult
 	err := h.db.Model(&models.T_expense{}).
 		Select("TO_CHAR(date, 'YYYY-MM') as month, COALESCE(SUM(amount), 0) as total").
-		Where("user_id = ? AND date >= ?", userID, threeMonthsAgo).
+		Where("user_id = ? AND date >= ? AND date < ?", userID, startMonth, endMonth.AddDate(0, 1, 0)).
 		Group("TO_CHAR(date, 'YYYY-MM')").
 		Order("month DESC").
 		Scan(&results).Error
@@ -121,7 +143,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch months"})
 	}
 
-	// Generate all months from 3 months ago to current month
+	// Generate all months in range (including empty ones)
 	allMonths := make(map[string]bool)
 	monthMap := make(map[string]float64)
 	for _, result := range results {
@@ -130,8 +152,8 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 	}
 
 	// Add all months in range (including empty ones)
-	iterMonth := threeMonthsAgo
-	for iterMonth.Before(currentMonth) || iterMonth.Equal(currentMonth) {
+	iterMonth := startMonth
+	for !iterMonth.After(endMonth) {
 		monthKey := iterMonth.Format("2006-01")
 		allMonths[monthKey] = true
 		if _, exists := monthMap[monthKey]; !exists {
@@ -146,10 +168,10 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 		Dates []DateTotal `json:"dates"`
 	}
 
-	// Build response with all months
+	// Build response with all months (in descending order)
 	var monthsWithDates []MonthWithDates
-	iterMonth = currentMonth
-	for iterMonth.After(threeMonthsAgo) || iterMonth.Equal(threeMonthsAgo) {
+	iterMonth = endMonth
+	for !iterMonth.Before(startMonth) {
 		monthKey := iterMonth.Format("2006-01")
 
 		type DateResult struct {
@@ -250,7 +272,7 @@ func (h *ExpenseHandler) GetMonths(c echo.Context) error {
 		})
 
 		iterMonth = iterMonth.AddDate(0, -1, 0)
-		if iterMonth.Before(threeMonthsAgo) {
+		if iterMonth.Before(startMonth) {
 			break
 		}
 	}

@@ -19,7 +19,86 @@
     // Ensure categories are loaded before budgets and expenses
     await loadCategories();
     await Promise.all([loadBudgets(), loadExpenses()]);
+    
+    // Check if there are no budgets for the current month and offer to import
+    await checkAndOfferImport();
   });
+
+  function formatMonthYear(monthStr) {
+    const [year, monthNum] = monthStr.split('-').map(Number);
+    const date = new Date(year, monthNum - 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  async function checkAndOfferImport() {
+    const hasBudgets = Object.keys(budgets).length > 0;
+    
+    if (!hasBudgets) {
+      // Calculate previous month
+      const [year, month] = currentMonth.split('-').map(Number);
+      let prevYear = year;
+      let prevMonth = month - 1;
+      if (prevMonth < 1) {
+        prevMonth = 12;
+        prevYear = year - 1;
+      }
+      const previousMonth = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+      
+      // Check if previous month has budgets
+      try {
+        const prevResponse = await api.get(`/budgets?month=${previousMonth}`);
+        const prevBudgets = prevResponse.data || [];
+        
+        if (prevBudgets.length > 0) {
+          const currentMonthName = formatMonthYear(currentMonth);
+          const previousMonthName = formatMonthYear(previousMonth);
+          
+          const result = await Swal.fire({
+            icon: 'question',
+            title: 'Import Previous Month Budget?',
+            html: `No budgets found for <strong>${currentMonthName}</strong>.<br>Would you like to import budgets from <strong>${previousMonthName}</strong>?`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Import',
+            cancelButtonText: 'No, Thanks',
+            reverseButtons: true,
+            zIndex: 9999
+          });
+          
+          if (result.isConfirmed) {
+            loading = true;
+            try {
+              await api.post('/budgets/copy', {
+                fromMonth: previousMonth,
+                toMonth: currentMonth
+              });
+              
+              await loadBudgets();
+              
+              Swal.fire({
+                icon: 'success',
+                title: 'Budgets Imported!',
+                text: `Successfully imported ${prevBudgets.length} budget(s) from ${previousMonthName}`,
+                timer: 2000,
+                showConfirmButton: false,
+                zIndex: 9999
+              });
+            } catch (error) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Import Failed',
+                text: error.response?.data?.message || 'Failed to import budgets',
+                zIndex: 9999
+              });
+            } finally {
+              loading = false;
+            }
+          }
+        }
+      } catch (error) {
+        // Silently fail if we can't check previous month
+      }
+    }
+  }
 
   async function loadCategories() {
     try {
@@ -196,6 +275,10 @@
 
   async function handleMonthChange() {
     await Promise.all([loadBudgets(), loadExpenses()]);
+    // Small delay to ensure budgets are loaded before checking
+    setTimeout(() => {
+      checkAndOfferImport();
+    }, 100);
   }
 
   function handleAmountInput(e) {
@@ -268,6 +351,7 @@
       }, 1000);
     }
   }
+
 </script>
 
 <div class="budget-page">

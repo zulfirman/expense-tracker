@@ -4,6 +4,7 @@
   const dispatch = createEventDispatcher();
 
   export let months = [];
+  export let hasMoreMonths = true;
 
   let scrollContainer;
   let isLoading = false;
@@ -60,6 +61,12 @@
   function handleScroll(e) {
     const container = e.target;
     savedScrollPosition = container.scrollTop;
+    
+    // Check if user scrolled near bottom (within 300px)
+    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (scrollBottom < 300 && hasMoreMonths) {
+      dispatch('loadMore', { direction: 'down' });
+    }
   }
 
   // Restore scroll position when months change (but not on initial load)
@@ -90,8 +97,18 @@
     
     <div class="month-card">
       <button class="month-header" on:click={() => handleMonthClick(month)}>
-        <h2>{formatMonthYear(month.month)}</h2>
-        <span class="total-amount">{formatCurrency(month.total)}</span>
+        <div class="month-header-content">
+          <div class="month-title-section">
+            <h2>{formatMonthYear(month.month)}</h2>
+            <span class="click-hint">Click for details</span>
+          </div>
+          <div class="total-amount-wrapper">
+            <span class="total-amount">{formatCurrency(month.total)}</span>
+            <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
       </button>
       
       <div class="dates-list">
@@ -155,46 +172,110 @@
 
   .month-header {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.25rem;
+    padding: 1.25rem 1.5rem;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     border: none;
+    border-radius: 0.875rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
     cursor: pointer;
-    border-radius: 0.75rem;
-    transition: all 0.2s;
-    margin-bottom: 1.25rem;
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .month-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
   }
 
   .month-header:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+  }
+
+  .month-header:hover::before {
+    left: 100%;
   }
 
   .month-header:active {
     transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+  }
+
+  .month-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .month-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
   .month-header h2 {
-    font-size: 1.375rem;
+    font-size: 1.5rem;
     color: white;
     margin: 0;
     text-transform: capitalize;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .click-hint {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
     letter-spacing: 0.3px;
+    opacity: 0.9;
+  }
+
+  .total-amount-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s;
+  }
+
+  .month-header:hover .total-amount-wrapper {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
   }
 
   .total-amount {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     font-weight: 700;
     color: white;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.375rem 0.875rem;
-    border-radius: 0.5rem;
-    backdrop-filter: blur(10px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
+
+  .arrow-icon {
+    color: white;
+    opacity: 0.9;
+    transition: transform 0.3s;
+  }
+
+  .month-header:hover .arrow-icon {
+    transform: translateX(4px);
+  }
+
 
   .dates-list {
     display: grid;
@@ -371,6 +452,7 @@
       font-size: 1rem;
       padding: 0.25rem 0.75rem;
     }
+
 
     .month-card {
       padding: 1.25rem;

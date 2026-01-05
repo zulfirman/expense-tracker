@@ -89,6 +89,7 @@ func main() {
 	// Budget routes
 	protected.GET("/budgets", budgetHandler.GetBudgets)
 	protected.POST("/budgets", budgetHandler.CreateBudget)
+	protected.POST("/budgets/copy", budgetHandler.CopyBudgets)
 	protected.DELETE("/budgets/:categoryId", budgetHandler.DeleteBudget)
 
 	// Start server
