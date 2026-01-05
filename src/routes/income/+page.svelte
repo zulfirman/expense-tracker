@@ -3,71 +3,37 @@
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
 
-  let categories = [];
-  let templates = [];
-  let selectedCategories = [];
   let expenseDate = new Date().toISOString().split('T')[0];
   let notes = '';
   let amount = '';
   let loading = false;
-  let categoriesLoading = true;
-  let templatesLoading = true;
-  let showTemplates = false;
+  let balance = { amount: 0, notes: '' };
+  let balanceLoading = true;
 
-  const quickAmounts = [10000, 25000, 50000, 75000, 100000];
+  // Simplified quick amounts for salary/income
+  const quickAmounts = [100000, 250000, 500000, 1000000, 2000000];
 
   onMount(async () => {
-    await Promise.all([loadCategories(), loadTemplates()]);
+    await loadBalance();
   });
 
-  async function loadCategories() {
+  async function loadBalance() {
     try {
-      const response = await axios.get('/api/categories');
-      categories = response.data.map(cat => ({
-        id: cat.slug,
-        label: cat.name
-      }));
+      const response = await axios.get('/api/income/balance');
+      balance = response.data;
     } catch (error) {
-      console.error('Error loading categories:', error);
-      // Fallback to default categories if API fails
-      categories = [
-        { id: 'daily', label: 'Daily' },
-        { id: 'monthly', label: 'Monthly' },
-        { id: 'others', label: 'Others' }
-      ];
+      console.error('Error loading balance:', error);
     } finally {
-      categoriesLoading = false;
+      balanceLoading = false;
     }
   }
-
-  async function loadTemplates() {
-    try {
-      const response = await axios.get('/api/templates');
-      templates = response.data;
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    } finally {
-      templatesLoading = false;
-    }
-  }
-
 
   function setQuickAmount(quickAmount) {
     amount = quickAmount.toString();
   }
 
-  function applyTemplate(template) {
-    selectedCategories = [...template.categories];
-    amount = template.amount.toString();
-    notes = template.notes || '';
-    showTemplates = false;
-  }
-
-
-
   function formatCurrency(value) {
     if (!value && value !== 0) return '';
-    // Convert to number if it's a string, or use the number directly
     let numericValue;
     if (typeof value === 'string') {
       numericValue = value.replace(/\D/g, '');
@@ -90,26 +56,7 @@
     amount = numericValue;
   }
 
-  function toggleCategory(categoryId) {
-    if (selectedCategories.includes(categoryId)) {
-      selectedCategories = selectedCategories.filter(id => id !== categoryId);
-    } else {
-      selectedCategories = [...selectedCategories, categoryId];
-    }
-    
-    // If category selected, scroll to date field
-    if (selectedCategories.length > 0) {
-      setTimeout(() => {
-        const dateInput = document.getElementById('date');
-        if (dateInput) {
-          dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-    }
-  }
-
   function handleDateChange() {
-    // After date selected, scroll to amount field (without focusing)
     setTimeout(() => {
       const amountInput = document.getElementById('amount');
       if (amountInput) {
@@ -119,20 +66,10 @@
   }
 
   async function handleSubmit() {
-    if (selectedCategories.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please select at least one category',
-        zIndex: 9999
-      });
-      return;
-    }
-
     if (!amount || parseFloat(amount) <= 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Warning',
+        title: 'Enter Amount',
         text: 'Please enter a valid amount',
         zIndex: 9999
       });
@@ -143,43 +80,35 @@
     
     try {
       const payload = {
-        categories: selectedCategories,
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await axios.post('/api/expenses', payload);
-      
-      const categoryNames = categories
-        .filter(cat => selectedCategories.includes(cat.id))
-        .map(cat => cat.label)
-        .join(', ');
+      await axios.post('/api/income', payload);
       
       Swal.fire({
         icon: 'success',
         title: 'Success!',
         html: `
           <div style="text-align: left;">
-            <p><strong>Type:</strong> Expense</p>
-            <p><strong>Categories:</strong> ${categoryNames}</p>
             <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
-            <p><strong>Notes:</strong> ${notes || '-'}</p>
+            ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
           </div>
         `,
         confirmButtonText: 'OK',
         zIndex: 9999
       });
-
+      await loadBalance();
+      
       // Reset form
-      selectedCategories = [];
       notes = '';
       amount = '';
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to save expense',
+        text: error.response?.data?.message || 'Failed to save income',
         zIndex: 9999
       });
     } finally {
@@ -188,7 +117,6 @@
   }
 
   function handleClear() {
-    selectedCategories = [];
     expenseDate = new Date().toISOString().split('T')[0];
     notes = '';
     amount = '';
@@ -202,58 +130,16 @@
   }
 </script>
 
-<form class="input-expenses" on:submit|preventDefault={handleSubmit}>
-  <h1>Input Expenses</h1>
+<form class="input-income" on:submit|preventDefault={handleSubmit}>
+  <h1>Record Income</h1>
 
-  <!-- Templates Section -->
-  {#if templates.length > 0}
-    <div class="form-group">
-      <div class="templates-header">
-        <label>Templates</label>
-        <button 
-          type="button" 
-          class="toggle-btn"
-          on:click={() => showTemplates = !showTemplates}
-        >
-          {showTemplates ? 'Hide' : 'Show'} ({templates.length})
-        </button>
-      </div>
-      {#if showTemplates}
-        <div class="templates-list">
-          {#each templates as template}
-            <button
-              type="button"
-              class="template-btn"
-              on:click={() => applyTemplate(template)}
-            >
-              <span class="template-name">{template.name}</span>
-              <span class="template-amount">{formatCurrency(template.amount)}</span>
-            </button>
-          {/each}
-        </div>
-      {/if}
+  <!-- Balance Display -->
+  {#if !balanceLoading}
+    <div class="balance-display">
+      <div class="balance-label">Current Balance</div>
+      <div class="balance-amount">{formatCurrency(balance.amount || 0)}</div>
     </div>
   {/if}
-
-  <div class="form-group">
-    <label>Category {#if selectedCategories.length > 0}<span class="selected-count">({selectedCategories.length} selected)</span>{/if}</label>
-    {#if categoriesLoading}
-      <div class="loading-categories">Loading categories...</div>
-    {:else}
-      <div class="checkbox-group">
-        {#each categories as category}
-          <label class="checkbox-label" class:selected={selectedCategories.includes(category.id)}>
-            <input
-              type="checkbox"
-              checked={selectedCategories.includes(category.id)}
-              on:change={() => toggleCategory(category.id)}
-            />
-            <span>{category.label}</span>
-          </label>
-        {/each}
-      </div>
-    {/if}
-  </div>
 
   <div class="form-group">
     <label for="date">Date</label>
@@ -282,7 +168,6 @@
       <div class="amount-preview">{formatCurrency(amount)}</div>
     {/if}
     
-    <!-- Quick Amount Buttons -->
     <div class="quick-amounts">
       <label class="quick-amounts-label">Quick Amount:</label>
       <div class="quick-amounts-buttons">
@@ -301,11 +186,11 @@
   </div>
 
   <div class="form-group">
-    <label for="notes">Notes</label>
+    <label for="notes">Notes (optional)</label>
     <textarea
       id="notes"
       bind:value={notes}
-      placeholder="Add notes (optional)"
+      placeholder="Add notes"
       class="form-textarea"
       rows="3"
       on:keydown={handleKeyDown}
@@ -316,16 +201,16 @@
     <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
     <button type="submit" class="btn btn-primary" disabled={loading}>
       {#if loading}
-        <span class="spinner"></span> Submitting...
+        <span class="spinner"></span> Saving...
       {:else}
-        Submit
+        Save
       {/if}
     </button>
   </div>
 </form>
 
 <style>
-  .input-expenses {
+  .input-income {
     max-width: 600px;
     margin: 0 auto;
   }
@@ -334,6 +219,31 @@
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
     color: var(--text-primary);
+  }
+
+  .balance-display {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  }
+
+  .balance-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .balance-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
   }
 
   .form-group {
@@ -345,55 +255,6 @@
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: var(--text-primary);
-  }
-
-  .checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.75rem;
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-  }
-
-  .checkbox-label:hover {
-    background-color: var(--background);
-    border-color: var(--primary-color);
-  }
-
-  .checkbox-label.selected {
-    background-color: rgba(79, 70, 229, 0.1);
-    border-color: var(--primary-color);
-  }
-
-  .selected-count {
-    font-size: 0.875rem;
-    font-weight: normal;
-    color: var(--text-secondary);
-  }
-
-  .loading-categories {
-    padding: 1rem;
-    text-align: center;
-    color: var(--text-secondary);
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-  }
-
-  .checkbox-label span {
-    flex: 1;
   }
 
   .form-input,
@@ -489,67 +350,6 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Templates */
-  .templates-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .toggle-btn {
-    padding: 0.25rem 0.75rem;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .toggle-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-  }
-
-  .templates-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .template-btn {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .template-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateX(4px);
-  }
-
-  .template-name {
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .template-amount {
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  /* Quick Amount Buttons */
   .quick-amounts {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -594,24 +394,14 @@
     border-color: var(--primary-color);
   }
 
-  /* Mobile Optimizations */
   @media (max-width: 768px) {
-    .input-expenses {
+    .input-income {
       padding: 0.5rem;
-    }
-
-    .checkbox-group {
-      gap: 0.5rem;
-    }
-
-    .checkbox-label {
-      padding: 1rem;
-      min-height: 56px; /* Better touch target */
     }
 
     .form-input,
     .form-textarea {
-      font-size: 16px; /* Prevents zoom on iOS */
+      font-size: 16px;
       padding: 1rem;
       min-height: 48px;
     }

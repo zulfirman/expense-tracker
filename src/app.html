@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#ffffff">
   <title>Expenses Tracker</title>
   <link rel="manifest" href="/manifest.webmanifest">
+  %sveltekit.head%
 </head>
-<body>
-  <div id="app"></div>
-  <script type="module" src="/src/main.js"></script>
+<body data-sveltekit-preload-data="hover">
+  <div style="display: contents">%sveltekit.body%</div>
 </body>
 </html>
 

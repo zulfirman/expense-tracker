@@ -23,12 +23,17 @@ body {
   overflow-x: hidden;
 }
 
-#app {
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+:global(body) {
   height: 100vh;
   max-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 80px;
   overflow: hidden;
   position: relative;
 }

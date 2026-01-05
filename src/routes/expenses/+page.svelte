@@ -2,22 +2,22 @@
   import axios from 'axios';
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
+  import InputExpenses from '$components/InputExpenses.svelte';
 
+  // Simplified for husband/wife budget tracking
   let categories = [];
-  let templates = [];
   let selectedCategories = [];
   let expenseDate = new Date().toISOString().split('T')[0];
   let notes = '';
   let amount = '';
   let loading = false;
   let categoriesLoading = true;
-  let templatesLoading = true;
-  let showTemplates = false;
 
-  const quickAmounts = [10000, 25000, 50000, 75000, 100000];
+  // Simplified quick amounts for common expenses
+  const quickAmounts = [10000, 25000, 50000, 100000, 200000];
 
   onMount(async () => {
-    await Promise.all([loadCategories(), loadTemplates()]);
+    await loadCategories();
   });
 
   async function loadCategories() {
@@ -29,10 +29,10 @@
       }));
     } catch (error) {
       console.error('Error loading categories:', error);
-      // Fallback to default categories if API fails
+      // Simple default categories for family budget
       categories = [
-        { id: 'daily', label: 'Daily' },
-        { id: 'monthly', label: 'Monthly' },
+        { id: 'daily', label: 'Daily Needs' },
+        { id: 'monthly', label: 'Monthly Bills' },
         { id: 'others', label: 'Others' }
       ];
     } finally {
@@ -40,34 +40,12 @@
     }
   }
 
-  async function loadTemplates() {
-    try {
-      const response = await axios.get('/api/templates');
-      templates = response.data;
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    } finally {
-      templatesLoading = false;
-    }
-  }
-
-
   function setQuickAmount(quickAmount) {
     amount = quickAmount.toString();
   }
 
-  function applyTemplate(template) {
-    selectedCategories = [...template.categories];
-    amount = template.amount.toString();
-    notes = template.notes || '';
-    showTemplates = false;
-  }
-
-
-
   function formatCurrency(value) {
     if (!value && value !== 0) return '';
-    // Convert to number if it's a string, or use the number directly
     let numericValue;
     if (typeof value === 'string') {
       numericValue = value.replace(/\D/g, '');
@@ -97,7 +75,6 @@
       selectedCategories = [...selectedCategories, categoryId];
     }
     
-    // If category selected, scroll to date field
     if (selectedCategories.length > 0) {
       setTimeout(() => {
         const dateInput = document.getElementById('date');
@@ -109,7 +86,6 @@
   }
 
   function handleDateChange() {
-    // After date selected, scroll to amount field (without focusing)
     setTimeout(() => {
       const amountInput = document.getElementById('amount');
       if (amountInput) {
@@ -122,7 +98,7 @@
     if (selectedCategories.length === 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Warning',
+        title: 'Select Category',
         text: 'Please select at least one category',
         zIndex: 9999
       });
@@ -132,7 +108,7 @@
     if (!amount || parseFloat(amount) <= 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'Warning',
+        title: 'Enter Amount',
         text: 'Please enter a valid amount',
         zIndex: 9999
       });
@@ -148,7 +124,7 @@
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await axios.post('/api/expenses', payload);
+      await axios.post('/api/expenses', payload);
       
       const categoryNames = categories
         .filter(cat => selectedCategories.includes(cat.id))
@@ -160,11 +136,10 @@
         title: 'Success!',
         html: `
           <div style="text-align: left;">
-            <p><strong>Type:</strong> Expense</p>
-            <p><strong>Categories:</strong> ${categoryNames}</p>
+            <p><strong>Category:</strong> ${categoryNames}</p>
             <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
-            <p><strong>Notes:</strong> ${notes || '-'}</p>
+            ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
           </div>
         `,
         confirmButtonText: 'OK',
@@ -203,37 +178,7 @@
 </script>
 
 <form class="input-expenses" on:submit|preventDefault={handleSubmit}>
-  <h1>Input Expenses</h1>
-
-  <!-- Templates Section -->
-  {#if templates.length > 0}
-    <div class="form-group">
-      <div class="templates-header">
-        <label>Templates</label>
-        <button 
-          type="button" 
-          class="toggle-btn"
-          on:click={() => showTemplates = !showTemplates}
-        >
-          {showTemplates ? 'Hide' : 'Show'} ({templates.length})
-        </button>
-      </div>
-      {#if showTemplates}
-        <div class="templates-list">
-          {#each templates as template}
-            <button
-              type="button"
-              class="template-btn"
-              on:click={() => applyTemplate(template)}
-            >
-              <span class="template-name">{template.name}</span>
-              <span class="template-amount">{formatCurrency(template.amount)}</span>
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
+  <h1>Record Expense</h1>
 
   <div class="form-group">
     <label>Category {#if selectedCategories.length > 0}<span class="selected-count">({selectedCategories.length} selected)</span>{/if}</label>
@@ -282,7 +227,6 @@
       <div class="amount-preview">{formatCurrency(amount)}</div>
     {/if}
     
-    <!-- Quick Amount Buttons -->
     <div class="quick-amounts">
       <label class="quick-amounts-label">Quick Amount:</label>
       <div class="quick-amounts-buttons">
@@ -301,11 +245,11 @@
   </div>
 
   <div class="form-group">
-    <label for="notes">Notes</label>
+    <label for="notes">Notes (optional)</label>
     <textarea
       id="notes"
       bind:value={notes}
-      placeholder="Add notes (optional)"
+      placeholder="Add notes"
       class="form-textarea"
       rows="3"
       on:keydown={handleKeyDown}
@@ -316,9 +260,9 @@
     <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
     <button type="submit" class="btn btn-primary" disabled={loading}>
       {#if loading}
-        <span class="spinner"></span> Submitting...
+        <span class="spinner"></span> Saving...
       {:else}
-        Submit
+        Save
       {/if}
     </button>
   </div>
@@ -489,67 +433,6 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Templates */
-  .templates-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .toggle-btn {
-    padding: 0.25rem 0.75rem;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .toggle-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-  }
-
-  .templates-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .template-btn {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .template-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateX(4px);
-  }
-
-  .template-name {
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .template-amount {
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  /* Quick Amount Buttons */
   .quick-amounts {
     margin-top: 1rem;
     padding-top: 1rem;
@@ -594,7 +477,6 @@
     border-color: var(--primary-color);
   }
 
-  /* Mobile Optimizations */
   @media (max-width: 768px) {
     .input-expenses {
       padding: 0.5rem;
@@ -606,12 +488,12 @@
 
     .checkbox-label {
       padding: 1rem;
-      min-height: 56px; /* Better touch target */
+      min-height: 56px;
     }
 
     .form-input,
     .form-textarea {
-      font-size: 16px; /* Prevents zoom on iOS */
+      font-size: 16px;
       padding: 1rem;
       min-height: 48px;
     }

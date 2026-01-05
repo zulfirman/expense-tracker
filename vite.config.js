@@ -1,10 +1,10 @@
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
-    svelte(),
+    sveltekit(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
@@ -39,4 +39,3 @@ export default defineConfig({
     allowedHosts: ['840c7bb5bc6a.ngrok-free.app']
   }
 });
-

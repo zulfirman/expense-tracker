@@ -12,7 +12,7 @@
   let previousMonthsLength = 0;
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
@@ -22,7 +22,7 @@
   function formatMonthYear(monthYear) {
     const [year, month] = monthYear.split('-');
     const date = new Date(year, month - 1);
-    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
   function getAllDaysInMonth(year, month) {

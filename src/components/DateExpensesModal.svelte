@@ -104,7 +104,7 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
@@ -113,7 +113,7 @@
 
   function formatDate(dateString) {
     const d = new Date(dateString);
-    return d.toLocaleDateString('id-ID', { 
+    return d.toLocaleDateString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 

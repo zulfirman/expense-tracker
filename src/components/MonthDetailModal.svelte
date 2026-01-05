@@ -178,7 +178,7 @@
               title: function(context) {
                 const index = context[0].dataIndex;
                 const date = new Date(sortedDaily[index].date);
-                return `Day ${date.getDate()} - ${date.toLocaleDateString('id-ID', { month: 'long' })}`;
+                return `Day ${date.getDate()} - ${date.toLocaleDateString('en-US', { month: 'long' })}`;
               }
             }
           }
@@ -318,7 +318,7 @@
   }
 
   function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
@@ -328,7 +328,7 @@
   function formatMonthYear(monthYear) {
     const [year, monthNum] = monthYear.split('-');
     const date = new Date(year, monthNum - 1);
-    return date.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
   function close() {
@@ -345,7 +345,10 @@
 <div class="modal-backdrop" on:click={handleBackdropClick}>
   <div class="modal-content">
     <div class="modal-header">
-      <h2>{formatMonthYear(month.month)}</h2>
+      <div>
+        <h2>Advanced Analytics & Insights</h2>
+        <p class="modal-subtitle">{formatMonthYear(month.month)}</p>
+      </div>
       <button class="close-btn" on:click={close}>×</button>
     </div>
 
@@ -355,7 +358,7 @@
       {:else if dailyExpenses.length > 0 || expensesByCategory.length > 0}
         {#if dailyExpenses.length > 0}
           <div class="chart-section">
-            <h3>Daily Income vs Expenses</h3>
+            <h3>Daily Income vs Expenses Trend</h3>
             <div class="chart-container">
               <canvas bind:this={chartCanvas}></canvas>
             </div>
@@ -427,6 +430,13 @@
     font-size: 1.5rem;
     color: var(--text-primary);
     margin: 0;
+    font-weight: 700;
+  }
+
+  .modal-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0 0;
     text-transform: capitalize;
   }
 
