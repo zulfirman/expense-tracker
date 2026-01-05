@@ -22,7 +22,7 @@
       const response = await api.get('/income/balance');
       balance = response.data;
     } catch (error) {
-      console.error('Error loading balance:', error);
+      // Balance failed to load
     } finally {
       balanceLoading = false;
     }

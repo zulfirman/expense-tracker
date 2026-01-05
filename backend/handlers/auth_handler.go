@@ -261,6 +261,13 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 
 func generateRandomString(length int) string {
 	b := make([]byte, length)
-	rand.Read(b)
-	return base64.URLEncoding.EncodeToString(b)[:length]
+	if _, err := rand.Read(b); err != nil {
+		// Fallback: use timestamp + random bytes as string
+		return time.Now().Format("20060102150405") + string(b)
+	}
+	encoded := base64.URLEncoding.EncodeToString(b)
+	if len(encoded) >= length {
+		return encoded[:length]
+	}
+	return encoded
 }

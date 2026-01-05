@@ -22,20 +22,15 @@ function createAccountsStore() {
           addedAt: new Date().toISOString()
         };
 
-        // Check if account already exists
         const existingIndex = state.accounts.findIndex(acc => acc.id === user.id);
         if (existingIndex >= 0) {
-          // Update existing account
           state.accounts[existingIndex] = account;
         } else {
-          // Add new account
           state.accounts.push(account);
         }
 
-        // Set as current account
         state.currentAccountId = user.id;
 
-        // Save to localStorage
         localStorage.setItem('accounts', JSON.stringify(state.accounts));
         localStorage.setItem('currentAccountId', user.id.toString());
         localStorage.setItem('auth_token', token);
@@ -50,7 +45,6 @@ function createAccountsStore() {
       update(state => {
         state.accounts = state.accounts.filter(acc => acc.id !== accountId);
         
-        // If removed account was current, switch to first available or null
         if (state.currentAccountId === accountId) {
           state.currentAccountId = state.accounts.length > 0 ? state.accounts[0].id : null;
           if (state.currentAccountId) {
@@ -101,7 +95,6 @@ function createAccountsStore() {
               currentAccountId: currentAccountId
             });
 
-            // Set current account token if exists
             if (currentAccountId) {
               const currentAccount = accounts.find(acc => acc.id === currentAccountId);
               if (currentAccount) {
@@ -111,7 +104,8 @@ function createAccountsStore() {
               }
             }
           } catch (e) {
-            console.error('Failed to parse accounts:', e);
+            localStorage.removeItem('accounts');
+            localStorage.removeItem('currentAccountId');
           }
         }
       }
@@ -140,5 +134,3 @@ function createAccountsStore() {
 }
 
 export const accounts = createAccountsStore();
-
-

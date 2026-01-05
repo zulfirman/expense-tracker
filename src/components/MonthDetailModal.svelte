@@ -111,7 +111,7 @@
         }
       }, 200);
     } catch (error) {
-      console.error('Error loading month details:', error);
+      // Month details failed to load
     } finally {
       loading = false;
     }

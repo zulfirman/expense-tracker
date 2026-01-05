@@ -51,7 +51,6 @@ function createAuthStore() {
             const user = JSON.parse(userStr);
             set({ user, token, refreshToken, isAuthenticated: true });
           } catch (e) {
-            console.error('Failed to parse user data:', e);
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_refresh_token');
             localStorage.removeItem('auth_user');
@@ -128,7 +127,6 @@ function createAuthStore() {
         
         return true;
       } catch (error) {
-        console.error('Failed to refresh token:', error);
         // Logout on refresh failure
         if (browser) {
           localStorage.removeItem('auth_token');

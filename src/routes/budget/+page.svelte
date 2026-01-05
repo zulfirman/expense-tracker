@@ -33,7 +33,6 @@
           slug: cat.slug
         }));
     } catch (error) {
-      console.error('Error loading categories:', error);
       categories = [];
     } finally {
       categoriesLoading = false;
@@ -49,7 +48,6 @@
         budgets[budget.categoryId] = budget.amount;
       });
     } catch (error) {
-      console.error('Error loading budgets:', error);
       budgets = {};
     }
   }
@@ -64,13 +62,10 @@
           const categoryId = item.categoryId;
           if (categoryId) {
             expensesByCategory[categoryId] = (expensesByCategory[categoryId] || 0) + item.total;
-          } else {
-            console.warn('Missing categoryId for expense category aggregate:', item);
           }
         });
       }
     } catch (error) {
-      console.error('Error loading expenses:', error);
       expensesByCategory = {};
     }
   }
@@ -229,7 +224,6 @@
   // Check for budget alerts
   function checkBudgetAlerts() {
     categories.forEach(category => {
-      const status = getBudgetStatus(category.id);
       const progress = getBudgetProgress(category.id);
       const budget = budgets[category.id] || 0;
       const spent = expensesByCategory[category.id] || 0;

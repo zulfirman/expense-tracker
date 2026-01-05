@@ -50,7 +50,6 @@
           slug: cat.slug
         }));
     } catch (error) {
-      console.error('Error loading categories:', error);
       categories = [];
     } finally {
       categoriesLoading = false;
@@ -62,7 +61,7 @@
       const response = await api.get('/templates');
       templates = response.data;
     } catch (error) {
-      console.error('Error loading templates:', error);
+      // Templates failed to load
     } finally {
       templatesLoading = false;
     }
@@ -75,7 +74,7 @@
       const response = await api.get(`/income/date/${date.date}`);
       incomes = response.data;
     } catch (error) {
-      console.error('Error loading incomes:', error);
+      // Incomes failed to load
     }
   }
 
@@ -87,7 +86,6 @@
       const response = await api.get(`/expenses/date/${date.date}`);
       expenses = response.data;
     } catch (error) {
-      console.error('Error loading expenses:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',

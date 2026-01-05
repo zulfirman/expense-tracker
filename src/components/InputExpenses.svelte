@@ -33,7 +33,6 @@
           slug: cat.slug
         }));
     } catch (error) {
-      console.error('Error loading categories:', error);
       categories = [];
     } finally {
       categoriesLoading = false;
@@ -45,7 +44,7 @@
       const response = await api.get('/templates');
       templates = response.data;
     } catch (error) {
-      console.error('Error loading templates:', error);
+      // Templates failed to load, continue without them
     } finally {
       templatesLoading = false;
     }

@@ -3,2206 +3,425 @@ Generate a professional conventional commit message based on these changes, and 
 # Repository: expenses-tracker
 # Changes: UNSTAGED
 # Date: 2026-01-05
-# Files changed: 24
+# Files changed: 12
 
-diff --git a/.svelte-kit/ambient.d.ts b/.svelte-kit/ambient.d.ts
-index 4b27446..0175512 100644
---- a/.svelte-kit/ambient.d.ts
-+++ b/.svelte-kit/ambient.d.ts
-@@ -30,23 +30,50 @@ declare module '$env/static/private' {
- 	export const APPDATA: string;
- 	export const ChocolateyInstall: string;
- 	export const ChocolateyLastPathUpdate: string;
--	export const COLORTERM: string;
-+	export const COLOR: string;
- 	export const CommonProgramFiles: string;
- 	export const CommonProgramW6432: string;
- 	export const COMPUTERNAME: string;
- 	export const ComSpec: string;
--	export const DEBUG_COLORS: string;
- 	export const DriverData: string;
-+	export const EDITOR: string;
- 	export const EFC_13456_1592913036: string;
--	export const FORCE_COLOR: string;
-+	export const FIG_TERM: string;
-+	export const GO111MODULE: string;
- 	export const GOPATH: string;
-+	export const GOROOT: string;
-+	export const HOME: string;
- 	export const HOMEDRIVE: string;
- 	export const HOMEPATH: string;
-+	export const INIT_CWD: string;
-+	export const INTELLIJ_TERMINAL_COMMAND_BLOCKS_REWORKED: string;
-+	export const JETBRAINS_INTELLIJ_COMMAND_END_MARKER: string;
- 	export const LOCALAPPDATA: string;
- 	export const LOGONSERVER: string;
--	export const MOCHA_COLORS: string;
-+	export const NODE: string;
- 	export const NODE_ENV: string;
--	export const npm_config_color: string;
-+	export const NODE_EXE: string;
-+	export const NPM_CLI_JS: string;
-+	export const npm_command: string;
-+	export const npm_config_cache: string;
-+	export const npm_config_globalconfig: string;
-+	export const npm_config_global_prefix: string;
-+	export const npm_config_init_module: string;
-+	export const npm_config_local_prefix: string;
-+	export const npm_config_node_gyp: string;
-+	export const npm_config_noproxy: string;
-+	export const npm_config_npm_version: string;
-+	export const npm_config_prefix: string;
-+	export const npm_config_userconfig: string;
-+	export const npm_config_user_agent: string;
-+	export const npm_execpath: string;
-+	export const npm_lifecycle_event: string;
-+	export const npm_lifecycle_script: string;
-+	export const npm_node_execpath: string;
-+	export const npm_package_json: string;
-+	export const npm_package_name: string;
-+	export const npm_package_version: string;
-+	export const NPM_PREFIX_NPM_CLI_JS: string;
- 	export const NUMBER_OF_PROCESSORS: string;
- 	export const OneDrive: string;
- 	export const OneDriveConsumer: string;
-@@ -59,15 +86,21 @@ declare module '$env/static/private' {
- 	export const PROCESSOR_IDENTIFIER: string;
- 	export const PROCESSOR_LEVEL: string;
- 	export const PROCESSOR_REVISION: string;
-+	export const PROCESS_LAUNCHED_BY_CW: string;
-+	export const PROCESS_LAUNCHED_BY_Q: string;
- 	export const ProgramData: string;
- 	export const ProgramFiles: string;
- 	export const ProgramW6432: string;
-+	export const PROMPT: string;
-+	export const PSExecutionPolicyPreference: string;
- 	export const PSModulePath: string;
- 	export const PUBLIC: string;
- 	export const SESSIONNAME: string;
- 	export const SystemDrive: string;
- 	export const SystemRoot: string;
- 	export const TEMP: string;
-+	export const TERMINAL_EMULATOR: string;
-+	export const TERM_SESSION_ID: string;
- 	export const TMP: string;
- 	export const USERDOMAIN: string;
- 	export const USERDOMAIN_ROAMINGPROFILE: string;
-@@ -108,23 +141,50 @@ declare module '$env/dynamic/private' {
- 		APPDATA: string;
- 		ChocolateyInstall: string;
- 		ChocolateyLastPathUpdate: string;
--		COLORTERM: string;
-+		COLOR: string;
- 		CommonProgramFiles: string;
- 		CommonProgramW6432: string;
- 		COMPUTERNAME: string;
- 		ComSpec: string;
--		DEBUG_COLORS: string;
- 		DriverData: string;
-+		EDITOR: string;
- 		EFC_13456_1592913036: string;
--		FORCE_COLOR: string;
-+		FIG_TERM: string;
-+		GO111MODULE: string;
- 		GOPATH: string;
-+		GOROOT: string;
-+		HOME: string;
- 		HOMEDRIVE: string;
- 		HOMEPATH: string;
-+		INIT_CWD: string;
-+		INTELLIJ_TERMINAL_COMMAND_BLOCKS_REWORKED: string;
-+		JETBRAINS_INTELLIJ_COMMAND_END_MARKER: string;
- 		LOCALAPPDATA: string;
- 		LOGONSERVER: string;
--		MOCHA_COLORS: string;
-+		NODE: string;
- 		NODE_ENV: string;
--		npm_config_color: string;
-+		NODE_EXE: string;
-+		NPM_CLI_JS: string;
-+		npm_command: string;
-+		npm_config_cache: string;
-+		npm_config_globalconfig: string;
-+		npm_config_global_prefix: string;
-+		npm_config_init_module: string;
-+		npm_config_local_prefix: string;
-+		npm_config_node_gyp: string;
-+		npm_config_noproxy: string;
-+		npm_config_npm_version: string;
-+		npm_config_prefix: string;
-+		npm_config_userconfig: string;
-+		npm_config_user_agent: string;
-+		npm_execpath: string;
-+		npm_lifecycle_event: string;
-+		npm_lifecycle_script: string;
-+		npm_node_execpath: string;
-+		npm_package_json: string;
-+		npm_package_name: string;
-+		npm_package_version: string;
-+		NPM_PREFIX_NPM_CLI_JS: string;
- 		NUMBER_OF_PROCESSORS: string;
- 		OneDrive: string;
- 		OneDriveConsumer: string;
-@@ -137,15 +197,21 @@ declare module '$env/dynamic/private' {
- 		PROCESSOR_IDENTIFIER: string;
- 		PROCESSOR_LEVEL: string;
- 		PROCESSOR_REVISION: string;
-+		PROCESS_LAUNCHED_BY_CW: string;
-+		PROCESS_LAUNCHED_BY_Q: string;
- 		ProgramData: string;
- 		ProgramFiles: string;
- 		ProgramW6432: string;
-+		PROMPT: string;
-+		PSExecutionPolicyPreference: string;
- 		PSModulePath: string;
- 		PUBLIC: string;
- 		SESSIONNAME: string;
- 		SystemDrive: string;
- 		SystemRoot: string;
- 		TEMP: string;
-+		TERMINAL_EMULATOR: string;
-+		TERM_SESSION_ID: string;
- 		TMP: string;
- 		USERDOMAIN: string;
- 		USERDOMAIN_ROAMINGPROFILE: string;
 diff --git a/.svelte-kit/generated/server/internal.js b/.svelte-kit/generated/server/internal.js
-index 1ffbba5..9edb7b5 100644
+index ae02ad7..3420af9 100644
 --- a/.svelte-kit/generated/server/internal.js
 +++ b/.svelte-kit/generated/server/internal.js
-@@ -21,10 +21,10 @@ export const options = {
- 	service_worker: false,
- 	service_worker_options: undefined,
- 	templates: {
--		app: ({ head, body, assets, nonce, env }) => "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n  <meta charset=\"UTF-8\">\r\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">\r\n  <meta name=\"theme-color\" content=\"#ffffff\">\r\n  <title>Expenses Tracker</title>\r\n  <link rel=\"manifest\" href=\"/manifest.webmanifest\">\r\n  " + head + "\r\n</head>\r\n<body data-sveltekit-preload-data=\"hover\">\r\n  <div style=\"display: contents\">" + body + "</div>\r\n</body>\r\n</html>\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
-+		app: ({ head, body, assets, nonce, env }) => "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n  <meta charset=\"UTF-8\">\r\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">\r\n  <meta name=\"theme-color\" content=\"#ffffff\">\r\n  <title>Expenses Tracker</title>\r\n  <link rel=\"manifest\" href=\"/manifest.webmanifest\">\r\n  " + head + "\r\n</head>\r\n<body data-sveltekit-preload-data=\"hover\">\r\n  <div style=\"display: contents\">" + body + "</div>\r\n</body>\r\n</html>\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+@@ -24,7 +24,7 @@ export const options = {
+ 		app: ({ head, body, assets, nonce, env }) => "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n  <meta charset=\"UTF-8\">\r\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">\r\n  <meta name=\"theme-color\" content=\"#ffffff\">\r\n  <title>Expenses Tracker</title>\r\n  <link rel=\"manifest\" href=\"/manifest.webmanifest\">\r\n  " + head + "\r\n</head>\r\n<body data-sveltekit-preload-data=\"hover\">\r\n  <div style=\"display: contents\">" + body + "</div>\r\n</body>\r\n</html>\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
  		error: ({ status, message }) => "<!doctype html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<title>" + message + "</title>\n\n\t\t<style>\n\t\t\tbody {\n\t\t\t\t--bg: white;\n\t\t\t\t--fg: #222;\n\t\t\t\t--divider: #ccc;\n\t\t\t\tbackground: var(--bg);\n\t\t\t\tcolor: var(--fg);\n\t\t\t\tfont-family:\n\t\t\t\t\tsystem-ui,\n\t\t\t\t\t-apple-system,\n\t\t\t\t\tBlinkMacSystemFont,\n\t\t\t\t\t'Segoe UI',\n\t\t\t\t\tRoboto,\n\t\t\t\t\tOxygen,\n\t\t\t\t\tUbuntu,\n\t\t\t\t\tCantarell,\n\t\t\t\t\t'Open Sans',\n\t\t\t\t\t'Helvetica Neue',\n\t\t\t\t\tsans-serif;\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t\tjustify-content: center;\n\t\t\t\theight: 100vh;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.error {\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t\tmax-width: 32rem;\n\t\t\t\tmargin: 0 1rem;\n\t\t\t}\n\n\t\t\t.status {\n\t\t\t\tfont-weight: 200;\n\t\t\t\tfont-size: 3rem;\n\t\t\t\tline-height: 1;\n\t\t\t\tposition: relative;\n\t\t\t\ttop: -0.05rem;\n\t\t\t}\n\n\t\t\t.message {\n\t\t\t\tborder-left: 1px solid var(--divider);\n\t\t\t\tpadding: 0 0 0 1rem;\n\t\t\t\tmargin: 0 0 0 1rem;\n\t\t\t\tmin-height: 2.5rem;\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t}\n\n\t\t\t.message h1 {\n\t\t\t\tfont-weight: 400;\n\t\t\t\tfont-size: 1em;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t@media (prefers-color-scheme: dark) {\n\t\t\t\tbody {\n\t\t\t\t\t--bg: #222;\n\t\t\t\t\t--fg: #ddd;\n\t\t\t\t\t--divider: #666;\n\t\t\t\t}\n\t\t\t}\n\t\t</style>\n\t</head>\n\t<body>\n\t\t<div class=\"error\">\n\t\t\t<span class=\"status\">" + status + "</span>\n\t\t\t<div class=\"message\">\n\t\t\t\t<h1>" + message + "</h1>\n\t\t\t</div>\n\t\t</div>\n\t</body>\n</html>\n"
  	},
--	version_hash: "wx9m7l"
-+	version_hash: "jtlwr8"
+-	version_hash: "3ncrld"
++	version_hash: "rh4pbk"
  };
  
  export async function get_hooks() {
-@@ -33,7 +33,7 @@ export async function get_hooks() {
- 	let handleError;
- 	let handleValidationError;
- 	let init;
--	
-+	({ handle, handleFetch, handleError, handleValidationError, init } = await import("../../../src/hooks.server.js"));
- 
- 	let reroute;
- 	let transport;
 diff --git a/backend/handlers/auth_handler.go b/backend/handlers/auth_handler.go
-index 48b3519..d187530 100644
+index d187530..f870a1e 100644
 --- a/backend/handlers/auth_handler.go
 +++ b/backend/handlers/auth_handler.go
-@@ -1,6 +1,8 @@
- package handlers
+@@ -261,6 +261,13 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
  
- import (
-+	"crypto/rand"
-+	"encoding/base64"
- 	"expenses-tracker/middleware"
- 	"expenses-tracker/models"
- 	"net/http"
-@@ -33,8 +35,18 @@ type LoginRequest struct {
+ func generateRandomString(length int) string {
+ 	b := make([]byte, length)
+-	rand.Read(b)
+-	return base64.URLEncoding.EncodeToString(b)[:length]
++	if _, err := rand.Read(b); err != nil {
++		// Fallback: use timestamp + random bytes as string
++		return time.Now().Format("20060102150405") + string(b)
++	}
++	encoded := base64.URLEncoding.EncodeToString(b)
++	if len(encoded) >= length {
++		return encoded[:length]
++	}
++	return encoded
  }
- 
- type AuthResponse struct {
--	Token string        `json:"token"`
--	User  models.M_user `json:"user"`
-+	Token        string        `json:"token"`
-+	RefreshToken string        `json:"refreshToken"`
-+	User         models.M_user `json:"user"`
-+}
-+
-+type RefreshTokenRequest struct {
-+	RefreshToken string `json:"refreshToken" validate:"required"`
-+}
-+
-+type RefreshTokenResponse struct {
-+	Token        string `json:"token"`
-+	RefreshToken string `json:"refreshToken"`
- }
- 
- func (h *AuthHandler) Signup(c echo.Context) error {
-@@ -66,15 +78,21 @@ func (h *AuthHandler) Signup(c echo.Context) error {
- 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create user"})
- 	}
- 
--	// Generate JWT token
--	token, err := h.generateToken(user.ID, user.Email)
-+	// Generate access token (3 minutes) and refresh token (7 days)
-+	accessToken, err := h.generateAccessToken(user.ID, user.Email)
- 	if err != nil {
--		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate token"})
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate access token"})
-+	}
-+
-+	refreshToken, err := h.generateRefreshToken(user.ID)
-+	if err != nil {
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate refresh token"})
- 	}
- 
- 	return c.JSON(http.StatusCreated, AuthResponse{
--		Token: token,
--		User:  user,
-+		Token:        accessToken,
-+		RefreshToken: refreshToken,
-+		User:         user,
- 	})
- }
- 
-@@ -95,15 +113,21 @@ func (h *AuthHandler) Login(c echo.Context) error {
- 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid email or password"})
- 	}
- 
--	// Generate JWT token
--	token, err := h.generateToken(user.ID, user.Email)
-+	// Generate access token (3 minutes) and refresh token (7 days)
-+	accessToken, err := h.generateAccessToken(user.ID, user.Email)
- 	if err != nil {
--		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate token"})
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate access token"})
-+	}
-+
-+	refreshToken, err := h.generateRefreshToken(user.ID)
-+	if err != nil {
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate refresh token"})
- 	}
- 
- 	return c.JSON(http.StatusOK, AuthResponse{
--		Token: token,
--		User:  user,
-+		Token:        accessToken,
-+		RefreshToken: refreshToken,
-+		User:         user,
- 	})
- }
- 
-@@ -158,7 +182,7 @@ func (h *AuthHandler) UpdateProfile(c echo.Context) error {
- 	return c.JSON(http.StatusOK, user)
- }
- 
--func (h *AuthHandler) generateToken(userID uint, email string) (string, error) {
-+func (h *AuthHandler) generateAccessToken(userID uint, email string) (string, error) {
- 	secret := os.Getenv("JWT_SECRET")
- 	if secret == "" {
- 		secret = "your-secret-key-change-in-production"
-@@ -167,9 +191,76 @@ func (h *AuthHandler) generateToken(userID uint, email string) (string, error) {
- 	claims := jwt.MapClaims{
- 		"userId": userID,
- 		"email":  email,
--		"exp":    time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
-+		"exp":    time.Now().Add(time.Minute * 15).Unix(), // 15 minutes
-+		"type":   "access",
- 	}
- 
- 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
- 	return token.SignedString([]byte(secret))
- }
-+
-+func (h *AuthHandler) generateRefreshToken(userID uint) (string, error) {
-+	secret := os.Getenv("JWT_SECRET")
-+	if secret == "" {
-+		secret = "your-secret-key-change-in-production"
-+	}
-+
-+	// Generate a random token string
-+	tokenString := generateRandomString(32)
-+
-+	// Store refresh token in database
-+	refreshToken := models.RefreshToken{
-+		UserID:    userID,
-+		Token:     tokenString,
-+		ExpiresAt: time.Now().Add(time.Hour * 24 * 7), // 7 days
-+	}
-+
-+	if err := h.db.Create(&refreshToken).Error; err != nil {
-+		return "", err
-+	}
-+
-+	return tokenString, nil
-+}
-+
-+func (h *AuthHandler) RefreshToken(c echo.Context) error {
-+	var req RefreshTokenRequest
-+	if err := c.Bind(&req); err != nil {
-+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
-+	}
-+
-+	// Find refresh token in database
-+	var refreshToken models.RefreshToken
-+	if err := h.db.Where("token = ? AND expires_at > ?", req.RefreshToken, time.Now()).First(&refreshToken).Error; err != nil {
-+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid or expired refresh token"})
-+	}
-+
-+	// Get user
-+	var user models.M_user
-+	if err := h.db.First(&user, refreshToken.UserID).Error; err != nil {
-+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "User not found"})
-+	}
-+
-+	// Generate new access token
-+	accessToken, err := h.generateAccessToken(user.ID, user.Email)
-+	if err != nil {
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate access token"})
-+	}
-+
-+	// Optionally rotate refresh token (delete old, create new)
-+	h.db.Unscoped().Delete(&refreshToken)
-+	newRefreshToken, err := h.generateRefreshToken(user.ID)
-+	if err != nil {
-+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to generate refresh token"})
-+	}
-+
-+	return c.JSON(http.StatusOK, RefreshTokenResponse{
-+		Token:        accessToken,
-+		RefreshToken: newRefreshToken,
-+	})
-+}
-+
-+func generateRandomString(length int) string {
-+	b := make([]byte, length)
-+	rand.Read(b)
-+	return base64.URLEncoding.EncodeToString(b)[:length]
-+}
-diff --git a/backend/main.go b/backend/main.go
-index 960422b..78315b5 100644
---- a/backend/main.go
-+++ b/backend/main.go
-@@ -26,7 +26,7 @@ func main() {
- 	}
- 
- 	// Auto migrate
--	if err := db.AutoMigrate(&models.M_user{}, &models.T_expense{}, &models.M_category{}, &models.M_expense_template{}, &models.T_income{}, &models.Balance{}, &models.R_budget{}); err != nil {
-+	if err := db.AutoMigrate(&models.M_user{}, &models.T_expense{}, &models.M_category{}, &models.M_expense_template{}, &models.T_income{}, &models.Balance{}, &models.R_budget{}, &models.RefreshToken{}); err != nil {
- 		log.Fatal("Failed to migrate database:", err)
- 	}
- 
-@@ -48,6 +48,7 @@ func main() {
- 	api := e.Group("/api")
- 	api.POST("/auth/signup", authHandler.Signup)
- 	api.POST("/auth/login", authHandler.Login)
-+	api.POST("/auth/refresh", authHandler.RefreshToken)
- 
- 	// Protected routes (authentication required)
- 	protected := api.Group("")
-diff --git a/backend/models/custom_context.go b/backend/models/custom_context.go
-index 8fbcc7d..d8e7d49 100644
---- a/backend/models/custom_context.go
-+++ b/backend/models/custom_context.go
-@@ -13,3 +13,5 @@ type CustomContext struct {
- 
- 
- 
-+
-+
-diff --git a/src/app.css b/src/app.css
-index 07d5d54..26c5021 100644
---- a/src/app.css
-+++ b/src/app.css
-@@ -55,3 +55,57 @@ html, body {
-   z-index: 9999 !important;
- }
- 
-+/* Dark mode for SweetAlert */
-+:root.dark .swal2-popup {
-+  background-color: var(--surface) !important;
-+  color: var(--text-primary) !important;
-+  border: 1px solid var(--border) !important;
-+}
-+
-+:root.dark .swal2-title {
-+  color: var(--text-primary) !important;
-+}
-+
-+:root.dark .swal2-content {
-+  color: var(--text-secondary) !important;
-+}
-+
-+:root.dark .swal2-confirm {
-+  background-color: var(--primary-color) !important;
-+  color: white !important;
-+}
-+
-+:root.dark .swal2-cancel {
-+  background-color: var(--surface) !important;
-+  color: var(--text-primary) !important;
-+  border: 1px solid var(--border) !important;
-+}
-+
-+:root.dark .swal2-cancel:hover {
-+  background-color: var(--background) !important;
-+}
-+
-+:root.dark .swal2-html-container {
-+  color: var(--text-primary) !important;
-+}
-+
-+:root.dark .swal2-icon.swal2-warning {
-+  border-color: #f59e0b !important;
-+  color: #f59e0b !important;
-+}
-+
-+:root.dark .swal2-icon.swal2-error {
-+  border-color: var(--danger) !important;
-+  color: var(--danger) !important;
-+}
-+
-+:root.dark .swal2-icon.swal2-success {
-+  border-color: var(--success) !important;
-+  color: var(--success) !important;
-+}
-+
-+:root.dark .swal2-icon.swal2-info {
-+  border-color: var(--primary-color) !important;
-+  color: var(--primary-color) !important;
-+}
-+
-diff --git a/src/app.d.ts b/src/app.d.ts
-index c77a096..47c64b3 100644
---- a/src/app.d.ts
-+++ b/src/app.d.ts
-@@ -18,3 +18,5 @@ export {};
- 
- 
- 
-+
-+
-diff --git a/src/app.html b/src/app.html
-index d155210..59d637e 100644
---- a/src/app.html
-+++ b/src/app.html
-@@ -20,3 +20,5 @@
- 
- 
- 
-+
-+
-diff --git a/src/components/CalendarView.svelte b/src/components/CalendarView.svelte
-index 71afa87..138d36a 100644
---- a/src/components/CalendarView.svelte
-+++ b/src/components/CalendarView.svelte
-@@ -141,10 +141,16 @@
- 
-   .month-card {
-     background: var(--surface);
--    border-radius: 0.75rem;
--    margin-bottom: 1rem;
--    padding: 1rem;
--    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-+    border-radius: 1rem;
-+    margin-bottom: 1.5rem;
-+    padding: 1.5rem;
-+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-+    border: 1px solid var(--border);
-+    transition: box-shadow 0.2s;
-+  }
-+
-+  .month-card:hover {
-+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-   }
- 
-   .month-header {
-@@ -152,127 +158,224 @@
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
--    padding: 0.75rem;
--    background: none;
-+    padding: 1rem 1.25rem;
-+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-     border: none;
-     cursor: pointer;
--    border-radius: 0.5rem;
--    transition: background-color 0.2s;
--    margin-bottom: 0.75rem;
-+    border-radius: 0.75rem;
-+    transition: all 0.2s;
-+    margin-bottom: 1.25rem;
-+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
-   }
- 
-   .month-header:hover {
--    background-color: var(--background);
-+    transform: translateY(-1px);
-+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-+  }
-+
-+  .month-header:active {
-+    transform: translateY(0);
-   }
- 
-   .month-header h2 {
--    font-size: 1.25rem;
--    color: var(--text-primary);
-+    font-size: 1.375rem;
-+    color: white;
-     margin: 0;
-     text-transform: capitalize;
-+    font-weight: 600;
-+    letter-spacing: 0.3px;
-   }
- 
-   .total-amount {
--    font-size: 1.125rem;
--    font-weight: 600;
--    color: var(--primary-color);
-+    font-size: 1.25rem;
-+    font-weight: 700;
-+    color: white;
-+    background: rgba(255, 255, 255, 0.2);
-+    padding: 0.375rem 0.875rem;
-+    border-radius: 0.5rem;
-+    backdrop-filter: blur(10px);
-   }
- 
-   .dates-list {
-     display: grid;
--    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
--    gap: 0.5rem;
-+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-+    gap: 0.75rem;
-   }
- 
-   .date-item {
-     display: flex;
-     flex-direction: column;
-     align-items: center;
--    padding: 0.75rem 0.5rem;
-+    padding: 0.875rem 0.5rem;
-     background: var(--background);
-     border: 2px solid var(--border);
--    border-radius: 0.5rem;
-+    border-radius: 0.75rem;
-     cursor: pointer;
--    transition: all 0.2s;
-+    transition: all 0.2s ease;
-     font-size: 0.875rem;
--    min-height: 70px;
-+    min-height: 80px;
-     justify-content: center;
-+    position: relative;
-+    overflow: hidden;
-+  }
-+
-+  .date-item::before {
-+    content: '';
-+    position: absolute;
-+    top: 0;
-+    left: 0;
-+    right: 0;
-+    height: 3px;
-+    background: transparent;
-+    transition: background 0.2s;
-   }
- 
-   .date-item:hover {
-     background: var(--surface);
-     border-color: var(--primary-color);
--    transform: translateY(-2px);
-+    transform: translateY(-3px);
-+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
-   }
- 
-   .date-item:active {
--    transform: scale(0.95);
-+    transform: translateY(-1px) scale(0.98);
-   }
- 
-   .date-item.has-data {
--    background: rgba(79, 70, 229, 0.05);
-+    background: rgba(79, 70, 229, 0.08);
-     border-color: var(--primary-color);
-+    border-width: 2px;
-+  }
-+
-+  .date-item.has-data::before {
-+    background: var(--primary-color);
-   }
- 
-   .date-item.is-today {
-     border-color: var(--success);
--    border-width: 2px;
--    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-+    border-width: 3px;
-+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-+    background: rgba(16, 185, 129, 0.05);
-+  }
-+
-+  .date-item.is-today::before {
-+    background: var(--success);
-+    height: 4px;
-   }
- 
-   .date-item.no-data {
--    opacity: 0.6;
-+    opacity: 0.5;
-+    border-style: dashed;
-   }
- 
-   .date-item.no-data:hover {
--    opacity: 1;
-+    opacity: 0.8;
-+    border-style: solid;
-   }
- 
-   .date-number {
--    font-weight: 600;
-+    font-weight: 700;
-     color: var(--text-primary);
--    margin-bottom: 0.25rem;
-+    margin-bottom: 0.375rem;
-+    font-size: 1rem;
-+  }
-+
-+  .date-item.is-today .date-number {
-+    color: var(--success);
-+    font-size: 1.125rem;
-   }
- 
-   .date-amount {
--    font-size: 0.75rem;
-+    font-size: 0.7rem;
-     color: var(--text-secondary);
-     font-weight: 600;
-+    text-align: center;
-+    line-height: 1.2;
-+    word-break: break-word;
-   }
- 
-   .date-amount.empty {
-     color: var(--text-secondary);
--    opacity: 0.5;
-+    opacity: 0.4;
-+    font-size: 0.65rem;
-   }
- 
-   .date-item.income-only {
--    background: rgba(16, 185, 129, 0.1);
-+    background: rgba(16, 185, 129, 0.12);
-     border-color: #10b981;
-+    border-width: 2px;
-+  }
-+
-+  .date-item.income-only::before {
-+    background: #10b981;
-   }
- 
-   .date-item.expense-only {
--    background: rgba(239, 68, 68, 0.1);
-+    background: rgba(239, 68, 68, 0.12);
-     border-color: #ef4444;
-+    border-width: 2px;
-+  }
-+
-+  .date-item.expense-only::before {
-+    background: #ef4444;
-   }
- 
-   .date-item.both {
--    background: rgba(59, 130, 246, 0.1);
-+    background: rgba(59, 130, 246, 0.12);
-     border-color: #3b82f6;
-+    border-width: 2px;
-+  }
-+
-+  .date-item.both::before {
-+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #ef4444 100%);
-   }
- 
-   .date-item.income-only .date-amount {
-     color: #10b981;
-     font-weight: 700;
-+    font-size: 0.75rem;
-   }
- 
-   .date-item.expense-only .date-amount {
-     color: #ef4444;
-     font-weight: 700;
-+    font-size: 0.75rem;
-   }
- 
-   .date-item.both .date-amount {
-     color: #3b82f6;
-     font-weight: 700;
-+    font-size: 0.75rem;
-+  }
-+
-+  @media (max-width: 768px) {
-+    .dates-list {
-+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-+      gap: 0.5rem;
-+    }
-+
-+    .date-item {
-+      min-height: 70px;
-+      padding: 0.75rem 0.375rem;
-+    }
-+
-+    .month-header {
-+      padding: 0.875rem 1rem;
-+    }
-+
-+    .month-header h2 {
-+      font-size: 1.125rem;
-+    }
-+
-+    .total-amount {
-+      font-size: 1rem;
-+      padding: 0.25rem 0.75rem;
-+    }
-+
-+    .month-card {
-+      padding: 1.25rem;
-+      margin-bottom: 1.25rem;
-+    }
-   }
- </style>
- 
 diff --git a/src/components/DateExpensesModal.svelte b/src/components/DateExpensesModal.svelte
-index 83664d5..7550484 100644
+index 7550484..6c10f74 100644
 --- a/src/components/DateExpensesModal.svelte
 +++ b/src/components/DateExpensesModal.svelte
-@@ -397,6 +397,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Delete',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       confirmButtonColor: '#ef4444',
-       zIndex: 9999
-     });
-@@ -433,6 +434,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Delete',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       confirmButtonColor: '#ef4444',
-       zIndex: 9999
-     });
+@@ -50,7 +50,6 @@
+           slug: cat.slug
+         }));
+     } catch (error) {
+-      console.error('Error loading categories:', error);
+       categories = [];
+     } finally {
+       categoriesLoading = false;
+@@ -62,7 +61,7 @@
+       const response = await api.get('/templates');
+       templates = response.data;
+     } catch (error) {
+-      console.error('Error loading templates:', error);
++      // Templates failed to load
+     } finally {
+       templatesLoading = false;
+     }
+@@ -75,7 +74,7 @@
+       const response = await api.get(`/income/date/${date.date}`);
+       incomes = response.data;
+     } catch (error) {
+-      console.error('Error loading incomes:', error);
++      // Incomes failed to load
+     }
+   }
+ 
+@@ -87,7 +86,6 @@
+       const response = await api.get(`/expenses/date/${date.date}`);
+       expenses = response.data;
+     } catch (error) {
+-      console.error('Error loading expenses:', error);
+       Swal.fire({
+         icon: 'error',
+         title: 'Error',
 diff --git a/src/components/ExpensesHistory.svelte b/src/components/ExpensesHistory.svelte
-index c28b452..802efe3 100644
+index 802efe3..e5c765e 100644
 --- a/src/components/ExpensesHistory.svelte
 +++ b/src/components/ExpensesHistory.svelte
-@@ -6,6 +6,7 @@
-   import MonthDetailModal from './MonthDetailModal.svelte';
-   import DateExpensesModal from './DateExpensesModal.svelte';
-   import DatePicker from '$lib/components/DatePicker.svelte';
-+  import '$lib/styles/shared.css';
- 
-   let months = [];
-   let selectedMonth = null;
-@@ -53,11 +54,14 @@
-   async function loadCategories() {
-     try {
-       const response = await api.get('/categories');
--      categories = response.data.map(cat => ({
--        id: cat.id,
--        label: cat.name,
--        slug: cat.slug
--      }));
-+      // Only show active categories in history filter
-+      categories = response.data
-+        .filter(cat => cat.isActive !== false)
-+        .map(cat => ({
-+          id: cat.id,
-+          label: cat.name,
-+          slug: cat.slug
-+        }));
+@@ -63,7 +63,6 @@
+           slug: cat.slug
+         }));
      } catch (error) {
-       console.error('Error loading categories:', error);
+-      console.error('Error loading categories:', error);
        categories = [];
-@@ -219,75 +223,6 @@
-     </button>
-   </div>
- 
--  {#if showSearch}
--    <div class="search-panel">
--      <div class="search-form">
--        <div class="form-group">
--          <label for="search-query">Search (notes)</label>
--          <input
--            id="search-query"
--            type="text"
--            bind:value={searchQuery}
--            placeholder="Search expenses..."
--            class="form-input"
--            on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
--          />
--        </div>
--        <div class="form-group">
--          <label for="search-category">Category</label>
--          <select id="search-category" bind:value={searchCategory} class="form-input">
--            <option value="">All Categories</option>
--            {#each categories as category}
--              <option value={category.id}>{category.label}</option>
--            {/each}
--          </select>
--        </div>
--        <div class="date-range">
--          <div class="form-group">
--            <label for="date-from">From Date</label>
--            <DatePicker
--              id="date-from"
--              bind:value={dateFrom}
--              placeholder="From date"
--            />
--          </div>
--          <div class="form-group">
--            <label for="date-to">To Date</label>
--            <DatePicker
--              id="date-to"
--              bind:value={dateTo}
--              placeholder="To date"
--            />
--          </div>
--        </div>
--        <button class="btn-clear" on:click={clearSearch}>Clear</button>
--      </div>
--      
--      {#if searchLoading}
--        <div class="search-loading">Searching...</div>
--      {:else if filteredExpenses.length > 0}
--        <div class="search-results">
--          <h3>Search Results ({filteredExpenses.length})</h3>
--          <div class="expenses-list">
--            {#each filteredExpenses as expense}
--              <div class="expense-item">
--                <div class="expense-info">
--                  <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
--                  <div class="expense-category">{expense.category}</div>
--                  {#if expense.notes}
--                    <div class="expense-notes">{expense.notes}</div>
--                  {/if}
--                </div>
--                <div class="expense-amount">{formatCurrency(expense.amount)}</div>
--              </div>
--            {/each}
--          </div>
--        </div>
--      {:else if searchQuery || searchCategory || dateFrom || dateTo}
--        <div class="no-results">No expenses found matching your search criteria.</div>
--      {/if}
--    </div>
--  {/if}
- 
-   <!-- Balance Display -->
-   {#if !balanceLoading && !loading}
-@@ -339,6 +274,87 @@
-   />
- {/if}
- 
-+{#if showSearch}
-+  <div class="modal-backdrop" on:click={() => showSearch = false}>
-+    <div class="modal-content search-modal" on:click|stopPropagation>
-+      <div class="modal-header">
-+        <h2>Search Expenses</h2>
-+        <button class="close-btn" on:click={() => showSearch = false}>×</button>
-+      </div>
-+      <div class="modal-body">
-+        <div class="search-form">
-+          <div class="form-group">
-+            <label for="search-query">Search (notes)</label>
-+            <input
-+              id="search-query"
-+              type="text"
-+              bind:value={searchQuery}
-+              placeholder="Search expenses..."
-+              class="form-input"
-+              on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
-+            />
-+          </div>
-+          <div class="form-group">
-+            <label for="search-category">Category</label>
-+            <select id="search-category" bind:value={searchCategory} class="form-input">
-+              <option value="">All Categories</option>
-+              {#each categories as category}
-+                <option value={category.id}>{category.label}</option>
-+              {/each}
-+            </select>
-+          </div>
-+          <div class="date-range">
-+            <div class="form-group">
-+              <label for="date-from">From Date</label>
-+              <DatePicker
-+                id="date-from"
-+                bind:value={dateFrom}
-+                placeholder="From date"
-+              />
-+            </div>
-+            <div class="form-group">
-+              <label for="date-to">To Date</label>
-+              <DatePicker
-+                id="date-to"
-+                bind:value={dateTo}
-+                placeholder="To date"
-+              />
-+            </div>
-+          </div>
-+          <div class="button-group">
-+            <button type="button" class="btn btn-secondary" on:click={clearSearch}>Clear</button>
-+            <button type="button" class="btn btn-primary" on:click={searchExpenses}>Search</button>
-+          </div>
-+        </div>
-+        
-+        {#if searchLoading}
-+          <div class="search-loading">Searching...</div>
-+        {:else if filteredExpenses.length > 0}
-+          <div class="search-results">
-+            <h3>Search Results ({filteredExpenses.length})</h3>
-+            <div class="expenses-list">
-+              {#each filteredExpenses as expense}
-+                <div class="expense-item">
-+                  <div class="expense-info">
-+                    <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-+                    <div class="expense-category">{expense.category}</div>
-+                    {#if expense.notes}
-+                      <div class="expense-notes">{expense.notes}</div>
-+                    {/if}
-+                  </div>
-+                  <div class="expense-amount">{formatCurrency(expense.amount)}</div>
-+                </div>
-+              {/each}
-+            </div>
-+          </div>
-+        {:else if searchQuery || searchCategory || dateFrom || dateTo}
-+          <div class="no-results">No expenses found matching your search criteria.</div>
-+        {/if}
-+      </div>
-+    </div>
-+  </div>
-+{/if}
-+
- <style>
-   .expenses-history {
-     max-width: 100%;
-@@ -391,7 +407,7 @@
+     }
    }
- 
-   .balance-amount {
--    font-size: 2.5rem;
-+    font-size: 1.75rem;
-     font-weight: 700;
-     color: white;
-     line-height: 1.2;
-@@ -452,13 +468,10 @@
-     border-color: var(--primary-color);
-   }
- 
--  .search-panel {
--    background: var(--surface);
--    border: 1px solid var(--border);
--    border-radius: 0.75rem;
--    padding: 1.5rem;
--    margin-bottom: 1.5rem;
--    flex-shrink: 0;
-+  .search-modal {
-+    max-width: 600px;
-+    max-height: 90vh;
-+    overflow-y: auto;
-   }
- 
-   .search-form {
-@@ -467,56 +480,12 @@
-     gap: 1rem;
-   }
- 
--  .form-group {
--    display: flex;
--    flex-direction: column;
--    gap: 0.5rem;
--  }
--
--  .form-group label {
--    font-size: 0.875rem;
--    font-weight: 500;
--    color: var(--text-primary);
--  }
--
--  .form-input {
--    padding: 0.75rem;
--    border: 1px solid var(--border);
--    border-radius: 0.5rem;
--    font-size: 1rem;
--    font-family: inherit;
--    background: var(--background);
--    color: var(--text-primary);
--  }
--
--  .form-input:focus {
--    outline: none;
--    border-color: var(--primary-color);
--  }
--
-   .date-range {
-     display: grid;
-     grid-template-columns: 1fr 1fr;
-     gap: 1rem;
-   }
- 
--  .btn-clear {
--    padding: 0.75rem;
--    background: var(--surface);
--    border: 1px solid var(--border);
--    border-radius: 0.5rem;
--    color: var(--text-primary);
--    cursor: pointer;
--    font-size: 0.875rem;
--    transition: all 0.2s;
--  }
--
--  .btn-clear:hover {
--    background: var(--background);
--    border-color: var(--danger);
--    color: var(--danger);
--  }
--
-   .search-loading, .no-results {
-     text-align: center;
-     padding: 2rem;
+@@ -85,7 +84,6 @@
+       const response = await api.get(`/expenses/search?${params.toString()}`);
+       filteredExpenses = response.data || [];
+     } catch (error) {
+-      console.error('Error searching expenses:', error);
+       filteredExpenses = [];
+     } finally {
+       searchLoading = false;
+@@ -117,7 +115,7 @@
+       const response = await api.get('/income/balance');
+       balance = response.data;
+     } catch (error) {
+-      console.error('Error loading balance:', error);
++      // Balance failed to load
+     } finally {
+       balanceLoading = false;
+     }
+@@ -131,7 +129,7 @@
+       const response = await api.get('/expenses/months');
+       months = response.data;
+     } catch (error) {
+-      console.error('Error loading months:', error);
++      // Months failed to load
+     } finally {
+       if (!silent) {
+         loading = false;
 diff --git a/src/components/InputExpenses.svelte b/src/components/InputExpenses.svelte
-index e45b916..f4ade27 100644
+index f4ade27..1887b8b 100644
 --- a/src/components/InputExpenses.svelte
 +++ b/src/components/InputExpenses.svelte
-@@ -239,16 +239,16 @@
-     {#if categoriesLoading}
-       <div class="loading-categories">Loading categories...</div>
-     {:else}
--      <div class="checkbox-group">
-+      <div class="category-pills">
-         {#each categories as category}
--          <label class="checkbox-label" class:selected={selectedCategoryIds.includes(category.id)}>
--            <input
--              type="checkbox"
--              checked={selectedCategoryIds.includes(category.id)}
--              on:change={() => toggleCategory(category.id)}
--            />
--            <span>{category.label}</span>
--          </label>
-+          <button
-+            type="button"
-+            class="category-pill"
-+            class:selected={selectedCategoryIds.includes(category.id)}
-+            on:click={() => toggleCategory(category.id)}
-+          >
-+            {category.label}
-+          </button>
-         {/each}
-       </div>
-     {/if}
-@@ -345,30 +345,33 @@
-     color: var(--text-primary);
-   }
- 
--  .checkbox-group {
-+  .category-pills {
-     display: flex;
--    flex-direction: column;
--    gap: 0.75rem;
-+    flex-wrap: wrap;
-+    gap: 0.5rem;
-   }
- 
--  .checkbox-label {
--    display: flex;
--    align-items: center;
--    gap: 0.5rem;
--    cursor: pointer;
--    padding: 0.75rem;
-+  .category-pill {
-+    padding: 0.5rem 1rem;
-     border: 2px solid var(--border);
--    border-radius: 0.5rem;
-+    border-radius: 2rem;
-+    background: var(--surface);
-+    color: var(--text-primary);
-+    font-size: 0.875rem;
-+    font-weight: 500;
-+    cursor: pointer;
-     transition: all 0.2s;
-+    white-space: nowrap;
-   }
- 
--  .checkbox-label:hover {
-+  .category-pill:hover {
-     background-color: var(--background);
-     border-color: var(--primary-color);
-   }
- 
--  .checkbox-label.selected {
--    background-color: rgba(79, 70, 229, 0.1);
-+  .category-pill.selected {
-+    background-color: var(--primary-color);
-+    color: white;
-     border-color: var(--primary-color);
-   }
- 
-@@ -384,16 +387,6 @@
-     color: var(--text-secondary);
-   }
- 
--  .checkbox-label input[type="checkbox"] {
--    width: 20px;
--    height: 20px;
--    cursor: pointer;
--  }
--
--  .checkbox-label span {
--    flex: 1;
--  }
--
-   .form-input,
-   .form-textarea {
-     width: 100%;
-@@ -598,13 +591,14 @@
-       padding: 0.5rem;
+@@ -33,7 +33,6 @@
+           slug: cat.slug
+         }));
+     } catch (error) {
+-      console.error('Error loading categories:', error);
+       categories = [];
+     } finally {
+       categoriesLoading = false;
+@@ -45,7 +44,7 @@
+       const response = await api.get('/templates');
+       templates = response.data;
+     } catch (error) {
+-      console.error('Error loading templates:', error);
++      // Templates failed to load, continue without them
+     } finally {
+       templatesLoading = false;
      }
- 
--    .checkbox-group {
-+    .category-pills {
-       gap: 0.5rem;
+diff --git a/src/components/InputIncome.svelte b/src/components/InputIncome.svelte
+index 01a063e..5a2a12e 100644
+--- a/src/components/InputIncome.svelte
++++ b/src/components/InputIncome.svelte
+@@ -22,7 +22,7 @@
+       const response = await api.get('/income/balance');
+       balance = response.data;
+     } catch (error) {
+-      console.error('Error loading balance:', error);
++      // Balance failed to load
+     } finally {
+       balanceLoading = false;
      }
- 
--    .checkbox-label {
--      padding: 1rem;
--      min-height: 56px; /* Better touch target */
-+    .category-pill {
-+      padding: 0.625rem 1rem;
-+      font-size: 0.875rem;
-+      min-height: 40px; /* Better touch target */
+diff --git a/src/components/MonthDetailModal.svelte b/src/components/MonthDetailModal.svelte
+index fb49a5a..3749676 100644
+--- a/src/components/MonthDetailModal.svelte
++++ b/src/components/MonthDetailModal.svelte
+@@ -111,7 +111,7 @@
+         }
+       }, 200);
+     } catch (error) {
+-      console.error('Error loading month details:', error);
++      // Month details failed to load
+     } finally {
+       loading = false;
      }
- 
-     .form-input,
-diff --git a/src/lib/api.js b/src/lib/api.js
-index 9612032..42bfa9a 100644
---- a/src/lib/api.js
-+++ b/src/lib/api.js
-@@ -24,16 +24,72 @@ api.interceptors.request.use(
-   }
- );
- 
--// Handle auth errors
-+// Handle auth errors and auto-refresh tokens
-+let isRefreshing = false;
-+let failedQueue = [];
-+
-+const processQueue = (error, token = null) => {
-+  failedQueue.forEach(prom => {
-+    if (error) {
-+      prom.reject(error);
-+    } else {
-+      prom.resolve(token);
-+    }
-+  });
-+  failedQueue = [];
-+};
-+
- api.interceptors.response.use(
-   (response) => response,
--  (error) => {
--    if (error.response?.status === 401) {
--      auth.logout();
--      if (browser) {
--        goto('/login');
-+  async (error) => {
-+    const originalRequest = error.config;
-+
-+    // If error is 401 and we haven't tried to refresh yet
-+    if (error.response?.status === 401 && !originalRequest._retry) {
-+      if (isRefreshing) {
-+        // If already refreshing, queue this request
-+        return new Promise((resolve, reject) => {
-+          failedQueue.push({ resolve, reject });
-+        })
-+          .then(token => {
-+            originalRequest.headers.Authorization = `Bearer ${token}`;
-+            return api(originalRequest);
-+          })
-+          .catch(err => {
-+            return Promise.reject(err);
-+          });
-+      }
-+
-+      originalRequest._retry = true;
-+      isRefreshing = true;
-+
-+      try {
-+        const refreshed = await auth.refreshAccessToken();
-+        if (refreshed) {
-+          const newToken = auth.getToken();
-+          processQueue(null, newToken);
-+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-+          return api(originalRequest);
-+        } else {
-+          processQueue(new Error('Token refresh failed'), null);
-+          auth.logout();
-+          if (browser) {
-+            goto('/login');
-+          }
-+          return Promise.reject(error);
-+        }
-+      } catch (refreshError) {
-+        processQueue(refreshError, null);
-+        auth.logout();
-+        if (browser) {
-+          goto('/login');
-+        }
-+        return Promise.reject(refreshError);
-+      } finally {
-+        isRefreshing = false;
-       }
-     }
-+
-     return Promise.reject(error);
-   }
- );
 diff --git a/src/lib/stores/accounts.js b/src/lib/stores/accounts.js
-index f912285..cd0a126 100644
+index cd0a126..98e2910 100644
 --- a/src/lib/stores/accounts.js
 +++ b/src/lib/stores/accounts.js
-@@ -9,7 +9,7 @@ function createAccountsStore() {
- 
-   return {
-     subscribe,
--    addAccount: (user, token) => {
-+    addAccount: (user, token, refreshToken) => {
-       if (!browser) return;
-       
-       update(state => {
-@@ -18,6 +18,7 @@ function createAccountsStore() {
-           name: user.name,
-           email: user.email,
-           token: token,
-+          refreshToken: refreshToken,
+@@ -22,20 +22,15 @@ function createAccountsStore() {
            addedAt: new Date().toISOString()
          };
  
-@@ -55,9 +56,11 @@ function createAccountsStore() {
+-        // Check if account already exists
+         const existingIndex = state.accounts.findIndex(acc => acc.id === user.id);
+         if (existingIndex >= 0) {
+-          // Update existing account
+           state.accounts[existingIndex] = account;
+         } else {
+-          // Add new account
+           state.accounts.push(account);
+         }
+ 
+-        // Set as current account
+         state.currentAccountId = user.id;
+ 
+-        // Save to localStorage
+         localStorage.setItem('accounts', JSON.stringify(state.accounts));
+         localStorage.setItem('currentAccountId', user.id.toString());
+         localStorage.setItem('auth_token', token);
+@@ -50,7 +45,6 @@ function createAccountsStore() {
+       update(state => {
+         state.accounts = state.accounts.filter(acc => acc.id !== accountId);
+         
+-        // If removed account was current, switch to first available or null
+         if (state.currentAccountId === accountId) {
+           state.currentAccountId = state.accounts.length > 0 ? state.accounts[0].id : null;
            if (state.currentAccountId) {
-             const currentAccount = state.accounts.find(acc => acc.id === state.currentAccountId);
-             localStorage.setItem('auth_token', currentAccount.token);
-+            localStorage.setItem('auth_refresh_token', currentAccount.refreshToken);
-             localStorage.setItem('auth_user', JSON.stringify({ id: currentAccount.id, name: currentAccount.name, email: currentAccount.email }));
-           } else {
-             localStorage.removeItem('auth_token');
-+            localStorage.removeItem('auth_refresh_token');
-             localStorage.removeItem('auth_user');
-           }
-         }
-@@ -77,6 +80,7 @@ function createAccountsStore() {
-           state.currentAccountId = accountId;
-           localStorage.setItem('currentAccountId', accountId.toString());
-           localStorage.setItem('auth_token', account.token);
-+          localStorage.setItem('auth_refresh_token', account.refreshToken);
-           localStorage.setItem('auth_user', JSON.stringify({ id: account.id, name: account.name, email: account.email }));
-         }
-         return state;
-@@ -102,6 +106,7 @@ function createAccountsStore() {
+@@ -101,7 +95,6 @@ function createAccountsStore() {
+               currentAccountId: currentAccountId
+             });
+ 
+-            // Set current account token if exists
+             if (currentAccountId) {
                const currentAccount = accounts.find(acc => acc.id === currentAccountId);
                if (currentAccount) {
-                 localStorage.setItem('auth_token', currentAccount.token);
-+                localStorage.setItem('auth_refresh_token', currentAccount.refreshToken);
-                 localStorage.setItem('auth_user', JSON.stringify({ id: currentAccount.id, name: currentAccount.name, email: currentAccount.email }));
+@@ -111,7 +104,8 @@ function createAccountsStore() {
                }
              }
-diff --git a/src/lib/stores/auth.js b/src/lib/stores/auth.js
-index c839dbc..3e446b1 100644
---- a/src/lib/stores/auth.js
-+++ b/src/lib/stores/auth.js
-@@ -6,12 +6,13 @@ function createAuthStore() {
-   const { subscribe, set, update } = writable({
-     user: null,
-     token: null,
-+    refreshToken: null,
-     isAuthenticated: false
-   });
- 
-   return {
-     subscribe,
--    login: (user, token, clearExisting = false) => {
-+    login: (user, token, refreshToken, clearExisting = false) => {
-       if (browser) {
-         // Clear existing accounts if requested (for fresh login/signup)
-         if (clearExisting) {
-@@ -19,21 +20,23 @@ function createAuthStore() {
-         }
-         
-         // Add to accounts store
--        accounts.addAccount(user, token);
-+        accounts.addAccount(user, token, refreshToken);
-         
-         localStorage.setItem('auth_token', token);
-+        localStorage.setItem('auth_refresh_token', refreshToken);
-         localStorage.setItem('auth_user', JSON.stringify(user));
-       }
--      set({ user, token, isAuthenticated: true });
-+      set({ user, token, refreshToken, isAuthenticated: true });
-     },
-     logout: () => {
-       if (browser) {
-         localStorage.removeItem('auth_token');
-+        localStorage.removeItem('auth_refresh_token');
-         localStorage.removeItem('auth_user');
-         // Clear accounts when logging out (user wants fresh start)
-         accounts.clearAccounts();
-       }
--      set({ user: null, token: null, isAuthenticated: false });
-+      set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
-     },
-     init: () => {
-       if (browser) {
-@@ -41,14 +44,16 @@ function createAuthStore() {
-         accounts.init();
-         
-         const token = localStorage.getItem('auth_token');
-+        const refreshToken = localStorage.getItem('auth_refresh_token');
-         const userStr = localStorage.getItem('auth_user');
--        if (token && userStr) {
-+        if (token && refreshToken && userStr) {
-           try {
-             const user = JSON.parse(userStr);
--            set({ user, token, isAuthenticated: true });
-+            set({ user, token, refreshToken, isAuthenticated: true });
            } catch (e) {
-             console.error('Failed to parse user data:', e);
-             localStorage.removeItem('auth_token');
-+            localStorage.removeItem('auth_refresh_token');
-             localStorage.removeItem('auth_user');
+-            console.error('Failed to parse accounts:', e);
++            localStorage.removeItem('accounts');
++            localStorage.removeItem('currentAccountId');
            }
          }
-@@ -60,12 +65,79 @@ function createAuthStore() {
        }
-       return null;
-     },
-+    getRefreshToken: () => {
-+      if (browser) {
-+        return localStorage.getItem('auth_refresh_token');
-+      }
-+      return null;
-+    },
-+    setToken: (token, refreshToken) => {
-+      if (browser) {
-+        if (token) localStorage.setItem('auth_token', token);
-+        if (refreshToken) localStorage.setItem('auth_refresh_token', refreshToken);
-+        update(state => ({ ...state, token, refreshToken }));
-+      }
-+    },
-     switchAccount: (accountId) => {
-       accounts.switchAccount(accountId);
-       const account = accounts.getCurrentAccount();
-       if (account) {
-         const user = { id: account.id, name: account.name, email: account.email };
--        set({ user, token: account.token, isAuthenticated: true });
-+        set({ user, token: account.token, refreshToken: account.refreshToken || null, isAuthenticated: true });
-+      }
-+    },
-+    refreshAccessToken: async function() {
-+      if (!browser) return false;
-+      
-+      const refreshToken = localStorage.getItem('auth_refresh_token');
-+      if (!refreshToken) {
-+        return false;
-+      }
-+
-+      try {
-+        const response = await fetch('/api/auth/refresh', {
-+          method: 'POST',
-+          headers: {
-+            'Content-Type': 'application/json'
-+          },
-+          body: JSON.stringify({ refreshToken })
-+        });
-+
-+        if (!response.ok) {
-+          throw new Error('Failed to refresh token');
-+        }
-+
-+        const data = await response.json();
-+        
-+        // Update tokens in store and localStorage
-+        if (browser) {
-+          localStorage.setItem('auth_token', data.token);
-+          localStorage.setItem('auth_refresh_token', data.refreshToken);
-+        }
-+        update(state => ({ ...state, token: data.token, refreshToken: data.refreshToken }));
-+        
-+        // Update accounts store
-+        const account = accounts.getCurrentAccount();
-+        if (account) {
-+          accounts.addAccount(
-+            { id: account.id, name: account.name, email: account.email },
-+            data.token,
-+            data.refreshToken
-+          );
-+        }
-+        
-+        return true;
-+      } catch (error) {
-+        console.error('Failed to refresh token:', error);
-+        // Logout on refresh failure
-+        if (browser) {
-+          localStorage.removeItem('auth_token');
-+          localStorage.removeItem('auth_refresh_token');
-+          localStorage.removeItem('auth_user');
-+          accounts.clearAccounts();
-+        }
-+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
-+        return false;
-       }
-     }
-   };
-diff --git a/src/lib/stores/theme.js b/src/lib/stores/theme.js
-index 463a76a..9ed610c 100644
---- a/src/lib/stores/theme.js
-+++ b/src/lib/stores/theme.js
-@@ -66,3 +66,5 @@ export const theme = createThemeStore();
+@@ -140,5 +134,3 @@ function createAccountsStore() {
+ }
  
- 
- 
-+
-+
+ export const accounts = createAccountsStore();
+-
+-
+diff --git a/src/lib/stores/auth.js b/src/lib/stores/auth.js
+index 3e446b1..1029262 100644
+--- a/src/lib/stores/auth.js
++++ b/src/lib/stores/auth.js
+@@ -51,7 +51,6 @@ function createAuthStore() {
+             const user = JSON.parse(userStr);
+             set({ user, token, refreshToken, isAuthenticated: true });
+           } catch (e) {
+-            console.error('Failed to parse user data:', e);
+             localStorage.removeItem('auth_token');
+             localStorage.removeItem('auth_refresh_token');
+             localStorage.removeItem('auth_user');
+@@ -128,7 +127,6 @@ function createAuthStore() {
+         
+         return true;
+       } catch (error) {
+-        console.error('Failed to refresh token:', error);
+         // Logout on refresh failure
+         if (browser) {
+           localStorage.removeItem('auth_token');
 diff --git a/src/routes/+layout.svelte b/src/routes/+layout.svelte
-index 2840f67..badee97 100644
+index badee97..cb9b4c5 100644
 --- a/src/routes/+layout.svelte
 +++ b/src/routes/+layout.svelte
-@@ -19,14 +19,51 @@
+@@ -14,22 +14,23 @@
+   let addAccountEmail = '';
+   let addAccountPassword = '';
+   let addAccountLoading = false;
++  let authInitialized = false;
+ 
+   onMount(() => {
      theme.init();
      accounts.init();
      auth.init();
-+    
-+    // Check authentication and redirect if needed
-+    const { pathname } = window.location;
-+    const publicRoutes = ['/login', '/signup'];
-+    const isPublicRoute = publicRoutes.includes(pathname);
-+    
-+    if (!isPublicRoute && !$auth.isAuthenticated && pathname !== '/') {
-+      goto('/login');
-+    }
-+    
-+    if (isPublicRoute && $auth.isAuthenticated) {
-+      goto('/expenses');
-+    }
-+    
-+    // Close profile menu when clicking outside
-+    function handleClickOutside(event) {
-+      const profileContainer = event.target.closest('.profile-menu-container');
-+      if (!profileContainer && showProfileMenu) {
-+        showProfileMenu = false;
-+      }
-+    }
-+    
-+    document.addEventListener('click', handleClickOutside);
-+    
-+    return () => {
-+      document.removeEventListener('click', handleClickOutside);
-+    };
-   });
++    authInitialized = true;
+     
+-    // Check authentication and redirect if needed
+-    const { pathname } = window.location;
++    // Check authentication and redirect if needed (only after initialization)
++    const pathname = $page.url.pathname;
+     const publicRoutes = ['/login', '/signup'];
+-    const isPublicRoute = publicRoutes.includes(pathname);
+     
+-    if (!isPublicRoute && !$auth.isAuthenticated && pathname !== '/') {
++    if (!$auth.isAuthenticated && !publicRoutes.includes(pathname) && pathname !== '/') {
+       goto('/login');
+     }
+     
+-    if (isPublicRoute && $auth.isAuthenticated) {
++    if ($auth.isAuthenticated && publicRoutes.includes(pathname)) {
+       goto('/expenses');
+     }
+     
+@@ -50,14 +51,24 @@
  
    $: isAuthenticated = $auth.isAuthenticated;
+   
+-  // Watch for auth changes and redirect
+-  $: if (!isAuthenticated && typeof window !== 'undefined') {
+-    const { pathname } = window.location;
++  // Watch for auth changes and redirect (only after initialization)
++  $: if (authInitialized && !isAuthenticated && $page && $page.url) {
++    const pathname = $page.url.pathname;
+     const publicRoutes = ['/login', '/signup'];
+     if (!publicRoutes.includes(pathname) && pathname !== '/') {
+       goto('/login');
+     }
+   }
 +  
-+  // Watch for auth changes and redirect
-+  $: if (!isAuthenticated && typeof window !== 'undefined') {
-+    const { pathname } = window.location;
-+    const publicRoutes = ['/login', '/signup'];
-+    if (!publicRoutes.includes(pathname) && pathname !== '/') {
-+      goto('/login');
++  // Redirect authenticated users away from login/signup (only after initialization)
++  // Only redirect if explicitly on login/signup pages, never redirect from other pages
++  $: if (authInitialized && isAuthenticated && $page && $page.url) {
++    const pathname = $page.url.pathname;
++    // Only redirect from login/signup pages, don't interfere with other pages like /budget
++    if (pathname === '/login' || pathname === '/signup') {
++      goto('/expenses');
 +    }
 +  }
    $: currentUser = $auth.user;
    $: accountList = $accounts.accounts;
    $: currentAccountId = $accounts.currentAccountId;
+@@ -416,53 +427,6 @@
+   </div>
+ {/if}
  
--  function toggleProfileMenu() {
-+  function toggleProfileMenu(event) {
-+    event.stopPropagation();
-     showProfileMenu = !showProfileMenu;
-   }
- 
-@@ -61,6 +98,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Remove',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       zIndex: 9999
-     }).then((result) => {
-       if (result.isConfirmed) {
-@@ -120,7 +158,7 @@
-       
-       // Add account to accounts store (this is explicitly adding a new account)
-       // Don't clear existing accounts when using "Add Account" modal
--      auth.login(data.user, data.token);
-+      auth.login(data.user, data.token, data.refreshToken, false);
-       
-       Swal.fire({
-         icon: 'success',
-@@ -153,7 +191,7 @@
-   }
- </script>
- 
--{#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup'}
-+{#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup' || $page.url.pathname === '/'}
- <div class="app-container">
-   <header class="top-header">
-     <div class="header-actions">
+-{#if showAddAccountModal}
+-  <div class="modal-backdrop" on:click={closeAddAccountModal}>
+-    <div class="modal-content" on:click|stopPropagation>
+-      <div class="modal-header">
+-        <h2>Add Account</h2>
+-        <button class="close-btn" on:click={closeAddAccountModal}>×</button>
+-      </div>
+-      <div class="modal-body">
+-        <div class="form-group">
+-          <label for="add-account-email">Email</label>
+-          <input
+-            id="add-account-email"
+-            type="email"
+-            bind:value={addAccountEmail}
+-            placeholder="your@email.com"
+-            class="form-input"
+-            on:keydown={handleAddAccountKeyDown}
+-            disabled={addAccountLoading}
+-          />
+-        </div>
+-        <div class="form-group">
+-          <label for="add-account-password">Password</label>
+-          <input
+-            id="add-account-password"
+-            type="password"
+-            bind:value={addAccountPassword}
+-            placeholder="Enter password"
+-            class="form-input"
+-            on:keydown={handleAddAccountKeyDown}
+-            disabled={addAccountLoading}
+-          />
+-        </div>
+-        <div class="button-group">
+-          <button class="btn btn-secondary" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
+-          <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
+-            {#if addAccountLoading}
+-              <span class="spinner"></span> Logging in...
+-            {:else}
+-              Add Account
+-            {/if}
+-          </button>
+-        </div>
+-      </div>
+-    </div>
+-  </div>
+-{/if}
+-
+ <style>
+   .app-container {
+     height: 100vh;
 diff --git a/src/routes/+page.svelte b/src/routes/+page.svelte
-index 53ef4cf..c4c12d4 100644
+index c4c12d4..c10e51c 100644
 --- a/src/routes/+page.svelte
 +++ b/src/routes/+page.svelte
-@@ -1,9 +1,15 @@
- <script>
-   import { goto } from '$app/navigation';
-   import { onMount } from 'svelte';
-+  import { auth } from '$lib/stores/auth';
- 
-   onMount(() => {
--    goto('/expenses');
-+    auth.init();
-+    if ($auth.isAuthenticated) {
-+      goto('/expenses');
-+    } else {
-+      goto('/login');
-+    }
+@@ -12,13 +12,3 @@
+     }
    });
  </script>
- 
-@@ -14,3 +20,5 @@
- 
- 
- 
-+
-+
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
 diff --git a/src/routes/budget/+page.svelte b/src/routes/budget/+page.svelte
-index 4273ecb..a441b36 100644
+index a441b36..56767b0 100644
 --- a/src/routes/budget/+page.svelte
 +++ b/src/routes/budget/+page.svelte
-@@ -2,6 +2,7 @@
-     import api from '$lib/api';
-     import Swal from 'sweetalert2';
-     import {onMount} from 'svelte';
-+    import '$lib/styles/shared.css';
- 
-     let categories = [];
-   let budgets = {};
-@@ -23,11 +24,14 @@
-   async function loadCategories() {
-     try {
-       const response = await api.get('/categories');
--      categories = response.data.map(cat => ({
--        id: cat.id,
--        label: cat.name,
--        slug: cat.slug
--      }));
-+      // Only show active categories in budget page
-+      categories = response.data
-+        .filter(cat => cat.isActive !== false)
-+        .map(cat => ({
-+          id: cat.id,
-+          label: cat.name,
-+          slug: cat.slug
-+        }));
+@@ -33,7 +33,6 @@
+           slug: cat.slug
+         }));
      } catch (error) {
-       console.error('Error loading categories:', error);
+-      console.error('Error loading categories:', error);
        categories = [];
-@@ -165,6 +169,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Delete',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       zIndex: 9999
-     });
- 
-@@ -305,18 +310,16 @@
-             <div class="budget-actions">
-               {#if card.budget > 0}
-                 <button
--                  class="btn-icon"
-+                  class="btn-text btn-edit"
-                   on:click={() => openBudgetForm(card.category.id)}
--                  title="Edit Budget"
-                 >
--                  ✏️
-+                  Edit
-                 </button>
-                 <button
--                  class="btn-icon"
-+                  class="btn-text btn-delete"
-                   on:click={() => deleteBudget(card.category.id)}
--                  title="Delete Budget"
-                 >
--                  🗑️
-+                  Delete
-                 </button>
-               {:else}
-                 <button
-@@ -355,6 +358,7 @@
-       {/each}
-     </div>
-   {/if}
-+  <br><br>
- </div>
- 
- {#if showBudgetForm}
-@@ -485,18 +489,10 @@
-     align-items: center;
+     } finally {
+       categoriesLoading = false;
+@@ -49,7 +48,6 @@
+         budgets[budget.categoryId] = budget.amount;
+       });
+     } catch (error) {
+-      console.error('Error loading budgets:', error);
+       budgets = {};
+     }
    }
- 
--  .btn-icon {
--    background: none;
--    border: none;
--    font-size: 1.25rem;
--    cursor: pointer;
--    padding: 0.25rem;
--    opacity: 0.7;
--    transition: opacity 0.2s;
--  }
--
--  .btn-icon:hover {
--    opacity: 1;
-+  .budget-actions {
-+    display: flex;
-+    gap: 0.5rem;
-+    align-items: center;
+@@ -64,13 +62,10 @@
+           const categoryId = item.categoryId;
+           if (categoryId) {
+             expensesByCategory[categoryId] = (expensesByCategory[categoryId] || 0) + item.total;
+-          } else {
+-            console.warn('Missing categoryId for expense category aggregate:', item);
+           }
+         });
+       }
+     } catch (error) {
+-      console.error('Error loading expenses:', error);
+       expensesByCategory = {};
+     }
    }
- 
-   .btn-add {
-@@ -572,151 +568,11 @@
-     text-align: right;
-   }
- 
--  .modal-backdrop {
--    position: fixed;
--    top: 0;
--    left: 0;
--    right: 0;
--    bottom: 0;
--    background: rgba(0, 0, 0, 0.5);
--    display: flex;
--    align-items: center;
--    justify-content: center;
--    z-index: 2000;
--    padding: 1rem;
--  }
--
--  .modal-content {
--    background: var(--surface);
--    border-radius: 1rem;
--    width: 100%;
--    max-width: 500px;
--    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
--  }
--
--  .modal-header {
--    display: flex;
--    justify-content: space-between;
--    align-items: center;
--    padding: 1.5rem;
--    border-bottom: 1px solid var(--border);
--  }
--
--  .modal-header h2 {
--    font-size: 1.25rem;
--    color: var(--text-primary);
--    margin: 0;
--  }
--
--  .close-btn {
--    background: none;
--    border: none;
--    font-size: 2rem;
--    color: var(--text-secondary);
--    cursor: pointer;
--    line-height: 1;
--    padding: 0;
--    width: 32px;
--    height: 32px;
--    display: flex;
--    align-items: center;
--    justify-content: center;
--  }
--
--  .close-btn:hover {
--    color: var(--text-primary);
--  }
--
--  .modal-body {
--    padding: 1.5rem;
--  }
--
--  .form-group {
--    margin-bottom: 1.5rem;
--  }
--
--  .form-group label {
--    display: block;
--    margin-bottom: 0.5rem;
--    font-weight: 500;
--    color: var(--text-primary);
--  }
--
--  .form-input {
--    width: 100%;
--    padding: 0.75rem;
--    border: 1px solid var(--border);
--    border-radius: 0.5rem;
--    font-size: 1rem;
--    font-family: inherit;
--  }
--
--  .form-input:focus {
--    outline: none;
--    border-color: var(--primary-color);
--  }
--
-   .amount-preview {
-     margin-top: 0.5rem;
-     font-size: 1.125rem;
-     font-weight: 600;
-     color: var(--primary-color);
-   }
--
--  .button-group {
--    display: flex;
--    gap: 1rem;
--  }
--
--  .btn {
--    flex: 1;
--    padding: 0.875rem;
--    border: none;
--    border-radius: 0.5rem;
--    font-size: 1rem;
--    font-weight: 500;
--    cursor: pointer;
--    transition: all 0.2s;
--  }
--
--  .btn-primary {
--    background-color: var(--primary-color);
--    color: white;
--  }
--
--  .btn-primary:hover:not(:disabled) {
--    background-color: #4338ca;
--  }
--
--  .btn-secondary {
--    background-color: var(--surface);
--    color: var(--text-primary);
--    border: 1px solid var(--border);
--  }
--
--  .btn-secondary:hover:not(:disabled) {
--    background-color: var(--background);
--  }
--
--  .btn:disabled {
--    opacity: 0.6;
--    cursor: not-allowed;
--  }
--
--  .spinner {
--    display: inline-block;
--    width: 14px;
--    height: 14px;
--    border: 2px solid rgba(255, 255, 255, 0.3);
--    border-radius: 50%;
--    border-top-color: white;
--    animation: spin 0.6s linear infinite;
--    margin-right: 0.5rem;
--    vertical-align: middle;
--  }
--
--  @keyframes spin {
--    to { transform: rotate(360deg); }
--  }
- </style>
- 
-diff --git a/src/routes/categories/+page.svelte b/src/routes/categories/+page.svelte
-index 7366f99..9432c59 100644
---- a/src/routes/categories/+page.svelte
-+++ b/src/routes/categories/+page.svelte
-@@ -3,6 +3,7 @@
-   import api from '$lib/api';
-   import Swal from 'sweetalert2';
-   import { auth } from '$lib/stores/auth';
-+  import '$lib/styles/shared.css';
- 
-   let categories = [];
-   let loading = false;
-@@ -145,6 +146,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Delete',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       zIndex: 9999
-     });
- 
-@@ -231,12 +233,8 @@
-               />
-               <span class="toggle-slider"></span>
-             </label>
--            <button class="btn-icon" on:click={() => openEditForm(category)} title="Edit">
--              ✏️
--            </button>
--            <button class="btn-icon" on:click={() => handleDelete(category)} title="Delete">
--              🗑️
--            </button>
-+            <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
-+            <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
-           </div>
-         </div>
-       {/each}
-@@ -427,88 +425,10 @@
-     transform: translateX(26px);
-   }
- 
--  .btn-icon {
--    background: none;
--    border: none;
--    font-size: 1.25rem;
--    cursor: pointer;
--    padding: 0.25rem;
--    opacity: 0.7;
--    transition: opacity 0.2s;
--  }
--
--  .btn-icon:hover {
--    opacity: 1;
--  }
--
--  .modal-backdrop {
--    position: fixed;
--    top: 0;
--    left: 0;
--    right: 0;
--    bottom: 0;
--    background: rgba(0, 0, 0, 0.5);
--    display: flex;
--    align-items: center;
--    justify-content: center;
--    z-index: 2000;
--    padding: 1rem;
--  }
--
--  .modal-content {
--    background: var(--surface);
--    border-radius: 1rem;
--    width: 100%;
--    max-width: 500px;
--    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
--  }
--
--  .modal-header {
--    display: flex;
--    justify-content: space-between;
--    align-items: center;
--    padding: 1.5rem;
--    border-bottom: 1px solid var(--border);
--  }
--
--  .modal-header h2 {
--    font-size: 1.25rem;
--    color: var(--text-primary);
--    margin: 0;
--  }
--
--  .close-btn {
--    background: none;
--    border: none;
--    font-size: 2rem;
--    color: var(--text-secondary);
--    cursor: pointer;
--    line-height: 1;
--    padding: 0;
--    width: 32px;
--    height: 32px;
-+  .category-actions {
-     display: flex;
-     align-items: center;
--    justify-content: center;
--  }
--
--  .close-btn:hover {
--    color: var(--text-primary);
--  }
--
--  .modal-body {
--    padding: 1.5rem;
--  }
--
--  .form-group {
--    margin-bottom: 1.5rem;
--  }
--
--  .form-group label {
--    display: block;
--    margin-bottom: 0.5rem;
--    font-weight: 500;
--    color: var(--text-primary);
-+    gap: 0.75rem;
-   }
- 
-   .checkbox-label {
-@@ -517,83 +437,6 @@
-     gap: 0.5rem;
-     cursor: pointer;
-   }
--
--  .form-input {
--    width: 100%;
--    padding: 0.75rem;
--    border: 1px solid var(--border);
--    border-radius: 0.5rem;
--    font-size: 1rem;
--    font-family: inherit;
--    background: var(--background);
--    color: var(--text-primary);
--  }
--
--  .form-input:focus {
--    outline: none;
--    border-color: var(--primary-color);
--  }
--
--  .form-input:disabled {
--    opacity: 0.6;
--    cursor: not-allowed;
--  }
--
--  .button-group {
--    display: flex;
--    gap: 1rem;
--  }
--
--  .btn {
--    flex: 1;
--    padding: 0.875rem;
--    border: none;
--    border-radius: 0.5rem;
--    font-size: 1rem;
--    font-weight: 500;
--    cursor: pointer;
--    transition: all 0.2s;
--  }
--
--  .btn-primary {
--    background-color: var(--primary-color);
--    color: white;
--  }
--
--  .btn-primary:hover:not(:disabled) {
--    background-color: #4338ca;
--  }
--
--  .btn-secondary {
--    background-color: var(--surface);
--    color: var(--text-primary);
--    border: 1px solid var(--border);
--  }
--
--  .btn-secondary:hover:not(:disabled) {
--    background-color: var(--background);
--  }
--
--  .btn:disabled {
--    opacity: 0.6;
--    cursor: not-allowed;
--  }
--
--  .spinner {
--    display: inline-block;
--    width: 14px;
--    height: 14px;
--    border: 2px solid rgba(255, 255, 255, 0.3);
--    border-radius: 50%;
--    border-top-color: white;
--    animation: spin 0.6s linear infinite;
--    margin-right: 0.5rem;
--    vertical-align: middle;
--  }
--
--  @keyframes spin {
--    to { transform: rotate(360deg); }
--  }
- </style>
- 
- 
+@@ -229,7 +224,6 @@
+   // Check for budget alerts
+   function checkBudgetAlerts() {
+     categories.forEach(category => {
+-      const status = getBudgetStatus(category.id);
+       const progress = getBudgetProgress(category.id);
+       const budget = budgets[category.id] || 0;
+       const spent = expensesByCategory[category.id] || 0;
 diff --git a/src/routes/expenses/+page.svelte b/src/routes/expenses/+page.svelte
-index 75689ee..f0d7f6f 100644
+index f0d7f6f..05f294e 100644
 --- a/src/routes/expenses/+page.svelte
 +++ b/src/routes/expenses/+page.svelte
-@@ -24,10 +24,13 @@
-   async function loadCategories() {
-     try {
-       const response = await api.get('/categories');
--      categories = response.data.map(cat => ({
--        id: cat.slug,
--        label: cat.name
--      }));
-+      // Only show active categories in expense input
-+      categories = response.data
-+        .filter(cat => cat.isActive !== false)
-+        .map(cat => ({
-+          id: cat.slug,
-+          label: cat.name
-+        }));
+@@ -32,7 +32,6 @@
+           label: cat.name
+         }));
      } catch (error) {
-       console.error('Error loading categories:', error);
+-      console.error('Error loading categories:', error);
        // Simple default categories for family budget
-@@ -185,16 +188,16 @@
-     {#if categoriesLoading}
-       <div class="loading-categories">Loading categories...</div>
-     {:else}
--      <div class="checkbox-group">
-+      <div class="category-pills">
-         {#each categories as category}
--          <label class="checkbox-label" class:selected={selectedCategories.includes(category.id)}>
--            <input
--              type="checkbox"
--              checked={selectedCategories.includes(category.id)}
--              on:change={() => toggleCategory(category.id)}
--            />
--            <span>{category.label}</span>
--          </label>
-+          <button
-+            type="button"
-+            class="category-pill"
-+            class:selected={selectedCategories.includes(category.id)}
-+            on:click={() => toggleCategory(category.id)}
-+          >
-+            {category.label}
-+          </button>
-         {/each}
-       </div>
-     {/if}
-@@ -291,30 +294,33 @@
-     color: var(--text-primary);
-   }
- 
--  .checkbox-group {
-+  .category-pills {
-     display: flex;
--    flex-direction: column;
--    gap: 0.75rem;
-+    flex-wrap: wrap;
-+    gap: 0.5rem;
-   }
- 
--  .checkbox-label {
--    display: flex;
--    align-items: center;
--    gap: 0.5rem;
--    cursor: pointer;
--    padding: 0.75rem;
-+  .category-pill {
-+    padding: 0.5rem 1rem;
-     border: 2px solid var(--border);
--    border-radius: 0.5rem;
-+    border-radius: 2rem;
-+    background: var(--surface);
-+    color: var(--text-primary);
-+    font-size: 0.875rem;
-+    font-weight: 500;
-+    cursor: pointer;
-     transition: all 0.2s;
-+    white-space: nowrap;
-   }
- 
--  .checkbox-label:hover {
-+  .category-pill:hover {
-     background-color: var(--background);
-     border-color: var(--primary-color);
-   }
- 
--  .checkbox-label.selected {
--    background-color: rgba(79, 70, 229, 0.1);
-+  .category-pill.selected {
-+    background-color: var(--primary-color);
-+    color: white;
-     border-color: var(--primary-color);
-   }
- 
-@@ -330,16 +336,6 @@
-     color: var(--text-secondary);
-   }
- 
--  .checkbox-label input[type="checkbox"] {
--    width: 20px;
--    height: 20px;
--    cursor: pointer;
--  }
--
--  .checkbox-label span {
--    flex: 1;
--  }
--
-   .form-input,
-   .form-textarea {
-     width: 100%;
-@@ -482,13 +478,14 @@
-       padding: 0.5rem;
-     }
- 
--    .checkbox-group {
-+    .category-pills {
-       gap: 0.5rem;
-     }
- 
--    .checkbox-label {
--      padding: 1rem;
--      min-height: 56px;
-+    .category-pill {
-+      padding: 0.625rem 1rem;
-+      font-size: 0.875rem;
-+      min-height: 40px;
-     }
- 
-     .form-input,
-diff --git a/src/routes/history/+page.svelte b/src/routes/history/+page.svelte
-index 09fe07e..3da7c1d 100644
---- a/src/routes/history/+page.svelte
-+++ b/src/routes/history/+page.svelte
-@@ -11,3 +11,5 @@
- 
- 
- 
-+
-+
-diff --git a/src/routes/login/+page.svelte b/src/routes/login/+page.svelte
-index 74034f2..568075b 100644
---- a/src/routes/login/+page.svelte
-+++ b/src/routes/login/+page.svelte
-@@ -42,7 +42,7 @@
- 
-       // Add account to accounts store (handles multiple accounts)
-       // clearExisting=true means start fresh, false means add to existing
--      auth.login(response.data.user, response.data.token, shouldClear);
-+      auth.login(response.data.user, response.data.token, response.data.refreshToken, shouldClear);
-       
-       Swal.fire({
-         icon: 'success',
-diff --git a/src/routes/profile/+page.svelte b/src/routes/profile/+page.svelte
-index df52f0d..c55c5b7 100644
---- a/src/routes/profile/+page.svelte
-+++ b/src/routes/profile/+page.svelte
-@@ -86,6 +86,7 @@
-       showCancelButton: true,
-       confirmButtonText: 'Logout',
-       cancelButtonText: 'Cancel',
-+      reverseButtons: true,
-       zIndex: 9999
-     }).then((result) => {
-       if (result.isConfirmed) {
-diff --git a/src/routes/signup/+page.svelte b/src/routes/signup/+page.svelte
-index 713afc1..217de1a 100644
---- a/src/routes/signup/+page.svelte
-+++ b/src/routes/signup/+page.svelte
-@@ -60,7 +60,7 @@
- 
-       // Signup is always a fresh start - clear any existing accounts
-       // clearExisting=true means start fresh
--      auth.login(response.data.user, response.data.token, true);
-+      auth.login(response.data.user, response.data.token, response.data.refreshToken, true);
-       
-       Swal.fire({
-         icon: 'success',
+       categories = [
+         { id: 'daily', label: 'Daily Needs' },

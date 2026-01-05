@@ -14,22 +14,23 @@
   let addAccountEmail = '';
   let addAccountPassword = '';
   let addAccountLoading = false;
+  let authInitialized = false;
 
   onMount(() => {
     theme.init();
     accounts.init();
     auth.init();
+    authInitialized = true;
     
-    // Check authentication and redirect if needed
-    const { pathname } = window.location;
+    // Check authentication and redirect if needed (only after initialization)
+    const pathname = $page.url.pathname;
     const publicRoutes = ['/login', '/signup'];
-    const isPublicRoute = publicRoutes.includes(pathname);
     
-    if (!isPublicRoute && !$auth.isAuthenticated && pathname !== '/') {
+    if (!$auth.isAuthenticated && !publicRoutes.includes(pathname) && pathname !== '/') {
       goto('/login');
     }
     
-    if (isPublicRoute && $auth.isAuthenticated) {
+    if ($auth.isAuthenticated && publicRoutes.includes(pathname)) {
       goto('/expenses');
     }
     
@@ -50,12 +51,22 @@
 
   $: isAuthenticated = $auth.isAuthenticated;
   
-  // Watch for auth changes and redirect
-  $: if (!isAuthenticated && typeof window !== 'undefined') {
-    const { pathname } = window.location;
+  // Watch for auth changes and redirect (only after initialization)
+  $: if (authInitialized && !isAuthenticated && $page && $page.url) {
+    const pathname = $page.url.pathname;
     const publicRoutes = ['/login', '/signup'];
     if (!publicRoutes.includes(pathname) && pathname !== '/') {
       goto('/login');
+    }
+  }
+  
+  // Redirect authenticated users away from login/signup (only after initialization)
+  // Only redirect if explicitly on login/signup pages, never redirect from other pages
+  $: if (authInitialized && isAuthenticated && $page && $page.url) {
+    const pathname = $page.url.pathname;
+    // Only redirect from login/signup pages, don't interfere with other pages like /budget
+    if (pathname === '/login' || pathname === '/signup') {
+      goto('/expenses');
     }
   }
   $: currentUser = $auth.user;
@@ -367,53 +378,6 @@
     </a>
   </nav>
 </div>
-{/if}
-
-{#if showAddAccountModal}
-  <div class="modal-backdrop" on:click={closeAddAccountModal}>
-    <div class="modal-content" on:click|stopPropagation>
-      <div class="modal-header">
-        <h2>Add Account</h2>
-        <button class="close-btn" on:click={closeAddAccountModal}>×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="add-account-email">Email</label>
-          <input
-            id="add-account-email"
-            type="email"
-            bind:value={addAccountEmail}
-            placeholder="your@email.com"
-            class="form-input"
-            on:keydown={handleAddAccountKeyDown}
-            disabled={addAccountLoading}
-          />
-        </div>
-        <div class="form-group">
-          <label for="add-account-password">Password</label>
-          <input
-            id="add-account-password"
-            type="password"
-            bind:value={addAccountPassword}
-            placeholder="Enter password"
-            class="form-input"
-            on:keydown={handleAddAccountKeyDown}
-            disabled={addAccountLoading}
-          />
-        </div>
-        <div class="button-group">
-          <button class="btn btn-secondary" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
-          <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
-            {#if addAccountLoading}
-              <span class="spinner"></span> Logging in...
-            {:else}
-              Add Account
-            {/if}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 {/if}
 
 {#if showAddAccountModal}

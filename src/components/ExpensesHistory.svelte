@@ -63,7 +63,6 @@
           slug: cat.slug
         }));
     } catch (error) {
-      console.error('Error loading categories:', error);
       categories = [];
     }
   }
@@ -85,7 +84,6 @@
       const response = await api.get(`/expenses/search?${params.toString()}`);
       filteredExpenses = response.data || [];
     } catch (error) {
-      console.error('Error searching expenses:', error);
       filteredExpenses = [];
     } finally {
       searchLoading = false;
@@ -117,7 +115,7 @@
       const response = await api.get('/income/balance');
       balance = response.data;
     } catch (error) {
-      console.error('Error loading balance:', error);
+      // Balance failed to load
     } finally {
       balanceLoading = false;
     }
@@ -131,7 +129,7 @@
       const response = await api.get('/expenses/months');
       months = response.data;
     } catch (error) {
-      console.error('Error loading months:', error);
+      // Months failed to load
     } finally {
       if (!silent) {
         loading = false;

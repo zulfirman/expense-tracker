@@ -32,7 +32,6 @@
           label: cat.name
         }));
     } catch (error) {
-      console.error('Error loading categories:', error);
       // Simple default categories for family budget
       categories = [
         { id: 'daily', label: 'Daily Needs' },
