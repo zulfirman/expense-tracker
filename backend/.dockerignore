@@ -1,0 +1,12 @@
+bin
+tmp
+.git
+.gitignore
+node_modules
+vendor
+*.log
+*.tmp
+.env
+.env.*
+Dockerfile
+

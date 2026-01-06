@@ -337,7 +337,13 @@
                 <div class="transaction-info">
                   <div class="transaction-categories">
                     {#each expense.categories as cat}
-                      <span class="category-badge">{cat}</span>
+                      <span class="category-badge">
+                        {#if typeof cat === 'string'}
+                          {cat}
+                        {:else}
+                          {cat?.name}
+                        {/if}
+                      </span>
                     {/each}
                   </div>
                   <div class="transaction-amount expense-amount">{formatCurrency(expense.amount)}</div>

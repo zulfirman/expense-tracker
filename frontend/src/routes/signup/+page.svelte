@@ -52,7 +52,7 @@
 
     loading = true;
     try {
-      const response = await axios.post('/api/auth/signup', {
+      const response = await axios.post('/api/apps/auth/signup', {
         name,
         email,
         password

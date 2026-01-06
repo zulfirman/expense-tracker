@@ -97,7 +97,9 @@
             <span class="click-hint">Click for details</span>
           </div>
           <div class="total-amount-wrapper">
-            <span class="total-amount">{formatCurrency(month.total)}</span>
+            <span class="total-amount">
+              {formatCurrency(month.netTotal ?? month.total)}
+            </span>
             <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
