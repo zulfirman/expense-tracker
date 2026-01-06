@@ -427,14 +427,6 @@
   />
 {/if}
 
-<!-- Analytics Modal -->
-{#if showAnalytics && analyticsMonth}
-  <AdvancedAnalyticsModal
-    month={analyticsMonth}
-    on:close={closeAnalytics}
-  />
-{/if}
-
 <!-- Search Modal -->
 {#if showSearch}
   <div class="modal-backdrop" on:click={() => showSearch = false}>

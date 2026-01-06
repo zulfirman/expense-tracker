@@ -116,8 +116,3 @@ html, body {
 .space-lg { margin-bottom: 24px; }
 .space-xl { margin-bottom: 32px; }
 .space-2xl { margin-bottom: 48px; }
-
-.btn.ghost {
-    background: transparent;
-    color: var(--text-primary);
-}

@@ -430,37 +430,6 @@
     scroll-behavior: smooth;
   }
 
-  .loading,
-  .no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-  }
-
-  .no-data button {
-    margin-top: 1rem;
-  }
-
-  .list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .list-header h3 {
-    font-size: 1.125rem;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-
-  .expenses-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
   .date-summary {
     display: flex;
     flex-direction: column;
@@ -658,17 +627,6 @@
     border: 1px solid var(--border);
   }
 
-  .expense-info {
-    flex: 1;
-  }
-
-  .expense-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
   .category-badge {
     padding: 0.25rem 0.75rem;
     background: var(--primary-color);
@@ -683,17 +641,6 @@
     font-weight: 600;
     color: var(--primary-color);
     margin-bottom: 0.25rem;
-  }
-
-  .expense-notes {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-  }
-
-  .expense-actions {
-    display: flex;
-    gap: 0.5rem;
   }
 
   .edit-btn {
@@ -714,104 +661,6 @@
     background: #dc2626;
   }
 
-  .add-form,
-  .edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .add-form h3,
-  .edit-form h3 {
-    font-size: 1.125rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-group label {
-    font-weight: 500;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .selected-count {
-    font-size: 0.875rem;
-    font-weight: normal;
-    color: var(--text-secondary);
-  }
-
-  .loading-categories {
-    padding: 1rem;
-    text-align: center;
-    color: var(--text-secondary);
-  }
-
-  .category-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .category-pill {
-    padding: 0.5rem 1rem;
-    border: 2px solid var(--border);
-    border-radius: 2rem;
-    background: var(--surface);
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .category-pill:hover {
-    background-color: var(--background);
-    border-color: var(--primary-color);
-  }
-
-  .category-pill.selected {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  .form-input,
-  .form-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-
-  .form-input:focus,
-  .form-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  .amount-preview {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
-  }
-
   .btn {
     flex: 1;
     padding: 0.75rem;
@@ -828,174 +677,9 @@
     color: white;
   }
 
-  .btn-primary:hover {
-    background-color: #4338ca;
-  }
-
-  .btn-secondary {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--background);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
 
-  /* Templates */
-  .templates-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
 
-  .toggle-btn {
-    padding: 0.25rem 0.75rem;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .toggle-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-  }
-
-  .templates-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .template-btn {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-  }
-
-  .template-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateX(4px);
-  }
-
-  .template-name {
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .template-amount {
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  /* Suggestions */
-  .suggestions-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-  }
-
-  .suggestions-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .suggestion-btn {
-    padding: 0.5rem 1rem;
-    background: rgba(79, 70, 229, 0.1);
-    border: 1px solid var(--primary-color);
-    border-radius: 1.5rem;
-    color: var(--primary-color);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .suggestion-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: scale(1.05);
-  }
-
-  /* Quick Amount Buttons */
-  .quick-amounts {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .quick-amounts-label {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-  }
-
-  .quick-amounts-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .quick-amount-btn {
-    padding: 0.75rem 0.5rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-  }
-
-  .quick-amount-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-  }
-
-  .quick-amount-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
 </style>

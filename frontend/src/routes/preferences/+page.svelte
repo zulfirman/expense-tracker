@@ -136,10 +136,6 @@
     background: var(--background);
   }
 
-  .nav-card.active {
-    border-color: var(--primary-color);
-  }
-
   .nav-card h3 {
     margin: 0;
     font-size: 1rem;
@@ -171,44 +167,6 @@
     color: var(--text-secondary);
     margin-bottom: 1rem;
   }
-
-  .currency-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .currency-option {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .currency-option:hover {
-    background: var(--background);
-    border-color: var(--primary-color);
-  }
-
-  .currency-option input[type="radio"] {
-    cursor: pointer;
-  }
-
-  .currency-option input[type="radio"]:checked + span {
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  .currency-option:has(input[type="radio"]:checked) {
-    border-color: var(--primary-color);
-    background: rgba(79, 70, 229, 0.05);
-  }
-
 
   .theme-toggle-section {
     display: flex;
