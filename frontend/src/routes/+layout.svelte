@@ -5,6 +5,7 @@
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
+  import { currency } from '$lib/stores/currency';
   import { onMount } from 'svelte';
   import Swal from 'sweetalert2';
 
@@ -16,10 +17,11 @@
   let addAccountLoading = false;
   let authInitialized = false;
 
-  onMount(() => {
+  onMount(async () => {
     theme.init();
     accounts.init();
     auth.init();
+    await currency.init();
     authInitialized = true;
     
     // Check authentication and redirect if needed (only after initialization)
@@ -70,7 +72,13 @@
     }
   }
   $: currentUser = $auth.user;
-  $: accountList = $accounts.accounts;
+  $: accountList = $accounts.accounts.sort((a, b) => {
+    // Active user first
+    if (a.id === $accounts.currentAccountId) return -1;
+    if (b.id === $accounts.currentAccountId) return 1;
+    // Then sort alphabetically by name
+    return a.name.localeCompare(b.name);
+  });
   $: currentAccountId = $accounts.currentAccountId;
 
   function toggleProfileMenu(event) {
@@ -81,6 +89,16 @@
   function handleProfileClick() {
     showProfileMenu = false;
     goto('/profile');
+  }
+
+  function handlePreferencesClick() {
+    showProfileMenu = false;
+    goto('/preferences');
+  }
+
+  function handleChangePasswordClick() {
+    showProfileMenu = false;
+    goto('/change-password');
   }
 
   function handleLogout() {
@@ -206,22 +224,6 @@
 <div class="app-container">
   <header class="top-header">
     <div class="header-actions">
-      <button class="theme-toggle" on:click={() => theme.toggle()} title="Toggle Dark Mode">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
       {#if isAuthenticated}
         {#if accountList.length > 1}
           <div class="account-menu-container">
@@ -292,6 +294,20 @@
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
                 Profile
+              </button>
+              <button class="profile-menu-item" on:click={handlePreferencesClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                </svg>
+                Preferences
+              </button>
+              <button class="profile-menu-item" on:click={handleChangePasswordClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Change Password
               </button>
               <button class="profile-menu-item" on:click={openAddAccountModal}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -451,42 +467,6 @@
     align-items: center;
   }
 
-  .theme-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .theme-toggle:hover {
-    background: var(--background);
-    transform: scale(1.05);
-  }
-
-  .theme-toggle svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .moon-icon {
-    display: none;
-  }
-
-  :global(.dark) .sun-icon {
-    display: none;
-  }
-
-  :global(.dark) .moon-icon {
-    display: block;
-  }
 
   .profile-menu-container {
     position: relative;

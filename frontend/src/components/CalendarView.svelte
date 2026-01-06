@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, afterUpdate } from 'svelte';
+  import { formatCurrency } from '$lib/utils/currency';
 
   const dispatch = createEventDispatcher();
 
@@ -11,13 +12,6 @@
   let savedScrollPosition = 0;
   let isInitialLoad = true;
   let previousMonthsLength = 0;
-
-  function formatCurrency(amount) {
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
 
   function formatMonthYear(monthYear) {
     const [year, month] = monthYear.split('-');

@@ -1,53 +1,43 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import { onMount } from 'svelte';
+  import { formatCurrency } from '$lib/utils/currency';
 
-  let expenseDate = new Date().toISOString().split('T')[0];
+  const dispatch = createEventDispatcher();
+
+  // Props
+  export let incomeId = null; // If provided, component is in edit mode
+  export let initialData = null; // Initial data for edit mode: { date, notes, amount }
+  export let fixedDate = null; // If provided, date field is fixed and not editable
+  export let showTitle = true; // Whether to show the "Input Income" title
+  export let showCancel = false; // Whether to show cancel button
+  export let submitLabel = 'Submit'; // Label for submit button
+  export let onSuccess = null; // Optional callback on success
+  export let onCancel = null; // Optional callback on cancel
+
+  let expenseDate = fixedDate || new Date().toISOString().split('T')[0];
   let notes = '';
   let amount = '';
   let loading = false;
-  let balance = { amount: 0, notes: '' };
-  let balanceLoading = true;
 
   const quickAmounts = [100000, 250000, 500000, 750000, 1000000];
 
   onMount(async () => {
-    await loadBalance();
-  });
-
-  async function loadBalance() {
-    try {
-      const response = await api.get('/income/balance');
-      balance = response.data;
-    } catch (error) {
-      // Balance failed to load
-    } finally {
-      balanceLoading = false;
+    // If in edit mode, populate form with initial data
+    if (incomeId && initialData) {
+      expenseDate = initialData.date || expenseDate;
+      notes = initialData.notes || '';
+      amount = initialData.amount ? initialData.amount.toString() : '';
     }
-  }
+  });
 
   function setQuickAmount(quickAmount) {
     amount = quickAmount.toString();
   }
 
-  function formatCurrency(value) {
-    if (!value && value !== 0) return '';
-    let numericValue;
-    if (typeof value === 'string') {
-      numericValue = value.replace(/\D/g, '');
-      if (!numericValue) return '';
-      numericValue = parseFloat(numericValue);
-    } else {
-      numericValue = value;
-    }
-    if (isNaN(numericValue)) return '';
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(numericValue);
-  }
 
   function handleAmountInput(e) {
     const value = e.target.value;
@@ -83,32 +73,65 @@
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await api.post('/income', payload);
+
+      if (incomeId) {
+        // Edit mode
+        await api.put(`/income/${incomeId}`, payload);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Income updated successfully',
+          zIndex: 9999,
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        // Add mode
+        const response = await api.post('/income', payload);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Type:</strong> Income</p>
+              <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Notes:</strong> ${notes || '-'}</p>
+            </div>
+          `,
+          confirmButtonText: 'OK',
+          zIndex: 9999
+        });
+
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Dispatch success event
+        dispatch('success', { incomeId: response?.data?.id });
+      }
+
+      // For edit mode, call success callback and dispatch event
+      if (incomeId) {
+        if (onSuccess) {
+          onSuccess();
+        }
+        dispatch('success', { incomeId });
+      }
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        html: `
-          <div style="text-align: left;">
-            <p><strong>Type:</strong> Income</p>
-            <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
-            <p><strong>Notes:</strong> ${notes || '-'}</p>
-          </div>
-        `,
-        confirmButtonText: 'OK',
-        zIndex: 9999
-      });
-      await loadBalance();
-      
-      // Reset form
-      notes = '';
-      amount = '';
+      // Reset form only if not in edit mode
+      if (!incomeId) {
+        notes = '';
+        amount = '';
+      }
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to save income',
+        text: error.response?.data?.message || (incomeId ? 'Failed to update income' : 'Failed to save income'),
         zIndex: 9999
       });
     } finally {
@@ -117,9 +140,16 @@
   }
 
   function handleClear() {
-    expenseDate = new Date().toISOString().split('T')[0];
+    expenseDate = fixedDate || new Date().toISOString().split('T')[0];
     notes = '';
     amount = '';
+  }
+
+  function handleCancel() {
+    if (onCancel) {
+      onCancel();
+    }
+    dispatch('cancel');
   }
 
   function handleKeyDown(e) {
@@ -131,25 +161,21 @@
 </script>
 
 <form class="input-income" on:submit|preventDefault={handleSubmit}>
-  <h1>Input Income</h1>
-
-  <!-- Balance Display -->
-  {#if !balanceLoading}
-    <div class="balance-display">
-      <div class="balance-label">Current Balance</div>
-      <div class="balance-amount">{formatCurrency(balance.amount || 0)}</div>
-    </div>
+  {#if showTitle}
+    <h1>{incomeId ? 'Edit Income' : 'Input Income'}</h1>
   {/if}
 
-  <div class="form-group">
-    <label for="date">Date</label>
-    <DatePicker
-      id="date"
-      bind:value={expenseDate}
-      placeholder="Select date"
-      on:dateChange={handleDateChange}
-    />
-  </div>
+  {#if !fixedDate}
+    <div class="form-group">
+      <label for="date">Date</label>
+      <DatePicker
+        id="date"
+        bind:value={expenseDate}
+        placeholder="Select date"
+        on:dateChange={handleDateChange}
+      />
+    </div>
+  {/if}
 
   <div class="form-group">
     <label for="amount">Amount (Rp.)</label>
@@ -198,15 +224,20 @@
   </div>
 
   <div class="button-group">
-    <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
+    {#if showCancel}
+      <button type="button" class="btn btn-secondary" on:click={handleCancel} disabled={loading}>Cancel</button>
+    {:else if !incomeId}
+      <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
+    {/if}
     <button type="submit" class="btn btn-primary" disabled={loading}>
       {#if loading}
-        <span class="spinner"></span> Submitting...
+        <span class="spinner"></span> {incomeId ? 'Updating...' : 'Submitting...'}
       {:else}
-        Submit
+        {submitLabel}
       {/if}
     </button>
   </div>
+  <div class="space-xl"></div>
 </form>
 
 <style>
@@ -219,31 +250,6 @@
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
     color: var(--text-primary);
-  }
-
-  .balance-display {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-  }
-
-  .balance-label {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .balance-amount {
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-    line-height: 1.2;
   }
 
   .form-group {

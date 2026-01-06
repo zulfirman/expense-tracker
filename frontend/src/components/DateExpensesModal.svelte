@@ -2,6 +2,9 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
+  import { formatCurrency } from '$lib/utils/currency';
+  import InputExpenses from './InputExpenses.svelte';
+  import InputIncome from './InputIncome.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -17,54 +20,9 @@
   let showAddExpenseForm = false;
   let showAddIncomeForm = false;
 
-  let categories = [];
-  let templates = [];
-  let categoriesLoading = true;
-  let templatesLoading = true;
-  let showTemplates = false;
-
-  let selectedCategories = [];
-  let expenseDate = '';
-  let notes = '';
-  let amount = '';
-  let submitting = false;
-
-  const quickAmounts = [10000, 25000, 50000, 75000, 100000];
-
   onMount(async () => {
-    if (date) {
-      expenseDate = date.date;
-    }
-    await Promise.all([loadExpenses(), loadIncomes(), loadCategories(), loadTemplates()]);
+    await Promise.all([loadExpenses(), loadIncomes()]);
   });
-
-  async function loadCategories() {
-    try {
-      const response = await api.get('/categories');
-      // Only show active categories in expense input
-      categories = response.data
-        .filter(cat => cat.isActive !== false)
-        .map(cat => ({
-          id: cat.id,
-          label: cat.name
-        }));
-    } catch (error) {
-      categories = [];
-    } finally {
-      categoriesLoading = false;
-    }
-  }
-
-  async function loadTemplates() {
-    try {
-      const response = await api.get('/templates');
-      templates = response.data;
-    } catch (error) {
-      // Templates failed to load
-    } finally {
-      templatesLoading = false;
-    }
-  }
 
   async function loadIncomes() {
     if (!date) return;
@@ -100,12 +58,6 @@
     await Promise.all([loadExpenses(), loadIncomes()]);
   }
 
-  function formatCurrency(amount) {
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
 
   function formatDate(dateString) {
     const d = new Date(dateString);
@@ -132,12 +84,6 @@
     showAddIncomeForm = false;
     showEditExpenseForm = false;
     showEditIncomeForm = false;
-    selectedCategories = [];
-    notes = '';
-    amount = '';
-    if (date) {
-      expenseDate = date.date;
-    }
   }
 
   function startAddIncome() {
@@ -145,19 +91,11 @@
     showAddExpenseForm = false;
     showEditExpenseForm = false;
     showEditIncomeForm = false;
-    notes = '';
-    amount = '';
-    if (date) {
-      expenseDate = date.date;
-    }
   }
 
   function cancelAdd() {
     showAddExpenseForm = false;
     showAddIncomeForm = false;
-    selectedCategories = [];
-    notes = '';
-    amount = '';
   }
 
   function startEditExpense(expense) {
@@ -167,11 +105,6 @@
     showEditIncomeForm = false;
     showAddExpenseForm = false;
     showAddIncomeForm = false;
-    editExpenseForm = {
-      categories: [...(expense.categoryIds || expense.categories || [])],
-      notes: expense.notes || '',
-      amount: expense.amount.toString()
-    };
   }
 
   function startEditIncome(income) {
@@ -181,10 +114,6 @@
     showEditExpenseForm = false;
     showAddExpenseForm = false;
     showAddIncomeForm = false;
-    editIncomeForm = {
-      notes: income.notes || '',
-      amount: income.amount.toString()
-    };
   }
 
   function cancelEdit() {
@@ -192,198 +121,6 @@
     editingIncome = null;
     showEditExpenseForm = false;
     showEditIncomeForm = false;
-    editExpenseForm = {
-      categories: [],
-      notes: '',
-      amount: ''
-    };
-    editIncomeForm = {
-      notes: '',
-      amount: ''
-    };
-  }
-
-  function toggleCategory(categoryId) {
-    if (selectedCategories.includes(categoryId)) {
-      selectedCategories = selectedCategories.filter(id => id !== categoryId);
-    } else {
-      selectedCategories = [...selectedCategories, categoryId];
-    }
-  }
-
-
-  function setQuickAmount(quickAmount) {
-    amount = quickAmount.toString();
-  }
-
-  function applyTemplate(template) {
-    selectedCategories = [...(template.categoryIds || template.categories || [])];
-    amount = template.amount.toString();
-    notes = template.notes || '';
-    showTemplates = false;
-  }
-
-  function handleAmountInput(e) {
-    const value = e.target.value;
-    const numericValue = value.replace(/\D/g, '');
-    amount = numericValue;
-  }
-
-  async function handleAdd() {
-    if (selectedCategories.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please select at least one category',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please enter a valid amount',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    submitting = true;
-    try {
-      await api.post('/expenses', {
-        categoryIds: selectedCategories,
-        date: expenseDate,
-        notes: notes,
-        amount: parseFloat(amount)
-      });
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: 'Expense added successfully',
-        zIndex: 9999
-      });
-
-      cancelAdd();
-      await loadAll();
-      dispatch('refresh');
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to add expense',
-        zIndex: 9999
-      });
-    } finally {
-      submitting = false;
-    }
-  }
-
-  let editExpenseForm = {
-    categories: [],
-    notes: '',
-    amount: ''
-  };
-
-  let editIncomeForm = {
-    notes: '',
-    amount: ''
-  };
-
-  function toggleEditCategory(categoryId) {
-    if (editExpenseForm.categories.includes(categoryId)) {
-      editExpenseForm.categories = editExpenseForm.categories.filter(id => id !== categoryId);
-    } else {
-      editExpenseForm.categories = [...editExpenseForm.categories, categoryId];
-    }
-  }
-
-  async function handleUpdateExpense() {
-    if (editExpenseForm.categories.length === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please select at least one category',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    if (!editExpenseForm.amount || parseFloat(editExpenseForm.amount) <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please enter a valid amount',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    try {
-      await api.put(`/expenses/${editingExpense.id}`, {
-        categoryIds: editExpenseForm.categories,
-        notes: editExpenseForm.notes,
-        amount: parseFloat(editExpenseForm.amount)
-      });
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: 'Expense updated successfully',
-        zIndex: 9999
-      });
-
-      cancelEdit();
-      await loadAll();
-      dispatch('refresh');
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to update expense',
-        zIndex: 9999
-      });
-    }
-  }
-
-  async function handleUpdateIncome() {
-    if (!editIncomeForm.amount || parseFloat(editIncomeForm.amount) <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please enter a valid amount',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    try {
-      await api.put(`/income/${editingIncome.id}`, {
-        date: date.date,
-        notes: editIncomeForm.notes,
-        amount: parseFloat(editIncomeForm.amount)
-      });
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: 'Income updated successfully',
-        zIndex: 9999
-      });
-
-      cancelEdit();
-      await loadAll();
-      dispatch('refresh');
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to update income',
-        zIndex: 9999
-      });
-    }
   }
 
   async function handleDeleteExpense(expenseId) {
@@ -460,72 +197,20 @@
     }
   }
 
-  async function handleAddIncome() {
-    if (!amount || parseFloat(amount) <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Warning',
-        text: 'Please enter a valid amount',
-        zIndex: 9999
-      });
-      return;
-    }
-
-    submitting = true;
-    try {
-      await api.post('/income', {
-        date: expenseDate,
-        notes: notes,
-        amount: parseFloat(amount)
-      });
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: 'Income added successfully',
-        zIndex: 9999
-      });
-
-      cancelAdd();
-      await loadAll();
-      dispatch('refresh');
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to add income',
-        zIndex: 9999
-      });
-    } finally {
-      submitting = false;
-    }
+  async function handleExpenseSuccess() {
+    await loadAll();
+    dispatch('refresh');
+    showAddExpenseForm = false;
+    showEditExpenseForm = false;
+    editingExpense = null;
   }
 
-  function handleEditExpenseAmountInput(e) {
-    const value = e.target.value;
-    const numericValue = value.replace(/\D/g, '');
-    editExpenseForm.amount = numericValue;
-  }
-
-  function handleEditIncomeAmountInput(e) {
-    const value = e.target.value;
-    const numericValue = value.replace(/\D/g, '');
-    editIncomeForm.amount = numericValue;
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (showAddExpenseForm) {
-        handleAdd();
-      } else if (showAddIncomeForm) {
-        handleAddIncome();
-      } else if (showEditExpenseForm) {
-        handleUpdateExpense();
-      } else if (showEditIncomeForm) {
-        handleUpdateIncome();
-      }
-    }
+  async function handleIncomeSuccess() {
+    await loadAll();
+    dispatch('refresh');
+    showAddIncomeForm = false;
+    showEditIncomeForm = false;
+    editingIncome = null;
   }
 </script>
 
@@ -540,269 +225,56 @@
       {#if loading}
         <div class="loading">Loading...</div>
       {:else if showAddExpenseForm}
-        <form class="add-form" on:submit|preventDefault={handleAdd}>
-          <h3>Add Expense</h3>
-
-          <!-- Templates Section -->
-          {#if templates.length > 0}
-            <div class="form-group">
-              <div class="templates-header">
-                <label>Templates</label>
-                <button 
-                  type="button" 
-                  class="toggle-btn"
-                  on:click={() => showTemplates = !showTemplates}
-                >
-                  {showTemplates ? 'Hide' : 'Show'} ({templates.length})
-                </button>
-              </div>
-              {#if showTemplates}
-                <div class="templates-list">
-                  {#each templates as template}
-                    <button
-                      type="button"
-                      class="template-btn"
-                      on:click={() => applyTemplate(template)}
-                    >
-                      <span class="template-name">{template.name}</span>
-                      <span class="template-amount">{formatCurrency(template.amount)}</span>
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-          {/if}
-
-          <div class="form-group">
-            <label>Category {#if selectedCategories.length > 0}<span class="selected-count">({selectedCategories.length} selected)</span>{/if}</label>
-            {#if categoriesLoading}
-              <div class="loading-categories">Loading categories...</div>
-            {:else}
-              <div class="checkbox-group">
-                {#each categories as category}
-                  <label class="checkbox-label" class:selected={selectedCategories.includes(category.id)}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      on:change={() => toggleCategory(category.id)}
-                    />
-                    <span>{category.label}</span>
-                  </label>
-                {/each}
-              </div>
-            {/if}
-          </div>
-
-          <div class="form-group">
-            <label for="add-amount">Amount (Rp.)</label>
-            <input
-              id="add-amount"
-              type="text"
-              bind:value={amount}
-              on:input={handleAmountInput}
-              placeholder="0"
-              class="form-input"
-              on:keydown={handleKeyDown}
-              inputmode="numeric"
-            />
-            {#if amount}
-              <div class="amount-preview">{formatCurrency(amount)}</div>
-            {/if}
-            
-            <!-- Quick Amount Buttons -->
-            <div class="quick-amounts">
-              <label class="quick-amounts-label">Quick Amount:</label>
-              <div class="quick-amounts-buttons">
-                {#each quickAmounts as quickAmount}
-                  <button
-                    type="button"
-                    class="quick-amount-btn"
-                    class:active={amount === quickAmount.toString()}
-                    on:click={() => setQuickAmount(quickAmount)}
-                  >
-                    {formatCurrency(quickAmount.toString())}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="add-notes">Notes</label>
-            <textarea
-              id="add-notes"
-              bind:value={notes}
-              placeholder="Add notes (optional)"
-              class="form-textarea"
-              rows="3"
-              on:keydown={handleKeyDown}
-            ></textarea>
-          </div>
-
-          <div class="button-group">
-            <button type="button" class="btn btn-secondary" on:click={cancelAdd}>Cancel</button>
-            <button type="submit" class="btn btn-primary" disabled={submitting}>
-              {#if submitting}
-                <span class="spinner"></span> Adding...
-              {:else}
-                Add
-              {/if}
-            </button>
-          </div>
-        </form>
+        <InputExpenses
+          fixedDate={date?.date}
+          showTitle={false}
+          showCancel={true}
+          submitLabel="Add"
+          onSuccess={handleExpenseSuccess}
+          onCancel={cancelAdd}
+        />
       {:else if showAddIncomeForm}
-        <form class="add-form" on:submit|preventDefault={handleAddIncome}>
-          <h3>Add Income</h3>
-
-          <div class="form-group">
-            <label for="add-income-amount">Amount (Rp.)</label>
-            <input
-              id="add-income-amount"
-              type="text"
-              bind:value={amount}
-              on:input={handleAmountInput}
-              placeholder="0"
-              class="form-input"
-              on:keydown={handleKeyDown}
-              inputmode="numeric"
-            />
-            {#if amount}
-              <div class="amount-preview">{formatCurrency(amount)}</div>
-            {/if}
-            
-            <!-- Quick Amount Buttons -->
-            <div class="quick-amounts">
-              <label class="quick-amounts-label">Quick Amount:</label>
-              <div class="quick-amounts-buttons">
-                {#each quickAmounts as quickAmount}
-                  <button
-                    type="button"
-                    class="quick-amount-btn"
-                    class:active={amount === quickAmount.toString()}
-                    on:click={() => setQuickAmount(quickAmount)}
-                  >
-                    {formatCurrency(quickAmount.toString())}
-                  </button>
-                {/each}
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="add-income-notes">Notes</label>
-            <textarea
-              id="add-income-notes"
-              bind:value={notes}
-              placeholder="Add notes (optional)"
-              class="form-textarea"
-              rows="3"
-              on:keydown={handleKeyDown}
-            ></textarea>
-          </div>
-
-          <div class="button-group">
-            <button type="button" class="btn btn-secondary" on:click={cancelAdd}>Cancel</button>
-            <button type="submit" class="btn btn-primary" disabled={submitting}>
-              {#if submitting}
-                <span class="spinner"></span> Adding...
-              {:else}
-                Add
-              {/if}
-            </button>
-          </div>
-        </form>
+        <InputIncome
+          fixedDate={date?.date}
+          showTitle={false}
+          showBalance={false}
+          showCancel={true}
+          submitLabel="Add"
+          onSuccess={handleIncomeSuccess}
+          onCancel={cancelAdd}
+        />
       {:else if showEditExpenseForm && editingExpense}
-        <form class="edit-form" on:submit|preventDefault={handleUpdateExpense}>
-          <h3>Edit Expense</h3>
-          
-          <div class="form-group">
-            <label>Category {#if editExpenseForm.categories.length > 0}<span class="selected-count">({editExpenseForm.categories.length} selected)</span>{/if}</label>
-            {#if categoriesLoading}
-              <div class="loading-categories">Loading categories...</div>
-            {:else}
-              <div class="checkbox-group">
-                {#each categories as category}
-                  <label class="checkbox-label" class:selected={editExpenseForm.categories.includes(category.id)}>
-                    <input
-                      type="checkbox"
-                      checked={editExpenseForm.categories.includes(category.id)}
-                      on:change={() => toggleEditCategory(category.id)}
-                    />
-                    <span>{category.label}</span>
-                  </label>
-                {/each}
-              </div>
-            {/if}
-          </div>
-
-          <div class="form-group">
-            <label for="edit-expense-amount">Amount (Rp.)</label>
-            <input
-              id="edit-expense-amount"
-              type="text"
-              bind:value={editExpenseForm.amount}
-              on:input={handleEditExpenseAmountInput}
-              on:keydown={handleKeyDown}
-              class="form-input"
-              inputmode="numeric"
-            />
-            {#if editExpenseForm.amount}
-              <div class="amount-preview">{formatCurrency(editExpenseForm.amount)}</div>
-            {/if}
-          </div>
-
-          <div class="form-group">
-            <label for="edit-expense-notes">Notes</label>
-            <textarea
-              id="edit-expense-notes"
-              bind:value={editExpenseForm.notes}
-              on:keydown={handleKeyDown}
-              class="form-textarea"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="button-group">
-            <button type="button" class="btn btn-secondary" on:click={cancelEdit}>Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-          </div>
-        </form>
+        <InputExpenses
+          expenseId={editingExpense.id}
+          initialData={{
+            categoryIds: editingExpense.categoryIds || editingExpense.categories?.map(c => typeof c === 'object' ? c.id : c) || [],
+            date: date?.date || editingExpense.date,
+            notes: editingExpense.notes || '',
+            amount: editingExpense.amount
+          }}
+          fixedDate={date?.date}
+          showTitle={false}
+          showCancel={true}
+          submitLabel="Update"
+          onSuccess={handleExpenseSuccess}
+          onCancel={cancelEdit}
+        />
       {:else if showEditIncomeForm && editingIncome}
-        <form class="edit-form" on:submit|preventDefault={handleUpdateIncome}>
-          <h3>Edit Income</h3>
-
-          <div class="form-group">
-            <label for="edit-income-amount">Amount (Rp.)</label>
-            <input
-              id="edit-income-amount"
-              type="text"
-              bind:value={editIncomeForm.amount}
-              on:input={handleEditIncomeAmountInput}
-              on:keydown={handleKeyDown}
-              class="form-input"
-              inputmode="numeric"
-            />
-            {#if editIncomeForm.amount}
-              <div class="amount-preview">{formatCurrency(editIncomeForm.amount)}</div>
-            {/if}
-          </div>
-
-          <div class="form-group">
-            <label for="edit-income-notes">Notes</label>
-            <textarea
-              id="edit-income-notes"
-              bind:value={editIncomeForm.notes}
-              on:keydown={handleKeyDown}
-              class="form-textarea"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="button-group">
-            <button type="button" class="btn btn-secondary" on:click={cancelEdit}>Cancel</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-          </div>
-        </form>
+        <InputIncome
+          incomeId={editingIncome.id}
+          initialData={{
+            date: date?.date || editingIncome.date,
+            notes: editingIncome.notes || '',
+            amount: editingIncome.amount
+          }}
+          fixedDate={date?.date}
+          showTitle={false}
+          showBalance={false}
+          showCancel={true}
+          submitLabel="Update"
+          onSuccess={handleIncomeSuccess}
+          onCancel={cancelEdit}
+        />
       {:else}
         {@const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0)}
         {@const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)}
@@ -1282,37 +754,34 @@
     color: var(--text-secondary);
   }
 
-  .checkbox-group {
+  .category-pills {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.5rem;
   }
 
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
+  .category-pill {
+    padding: 0.5rem 1rem;
     border: 2px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 2rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
 
-  .checkbox-label:hover {
+  .category-pill:hover {
     background-color: var(--background);
     border-color: var(--primary-color);
   }
 
-  .checkbox-label.selected {
-    background-color: rgba(79, 70, 229, 0.1);
+  .category-pill.selected {
+    background-color: var(--primary-color);
+    color: white;
     border-color: var(--primary-color);
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
   }
 
   .form-input,

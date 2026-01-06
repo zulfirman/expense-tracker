@@ -6,6 +6,7 @@
   import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
   import '$lib/styles/shared.css';
+  import { formatCurrency } from '$lib/utils/currency';
 
   // ============================================================================
   // STATE VARIABLES
@@ -46,16 +47,6 @@
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  /**
-   * Format number as Indonesian Rupiah currency
-   */
-  function formatCurrency(amount) {
-    if (!amount && amount !== 0) return '';
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
 
   /**
    * Calculate budget progress percentage (0-100)

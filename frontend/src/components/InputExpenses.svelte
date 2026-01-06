@@ -1,13 +1,27 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import { onMount } from 'svelte';
+  import { formatCurrency } from '$lib/utils/currency';
+
+  const dispatch = createEventDispatcher();
+
+  // Props
+  export let expenseId = null; // If provided, component is in edit mode
+  export let initialData = null; // Initial data for edit mode: { categoryIds, date, notes, amount }
+  export let fixedDate = null; // If provided, date field is fixed and not editable
+  export let showTitle = true; // Whether to show the "Input Expenses" title
+  export let showCancel = false; // Whether to show cancel button
+  export let submitLabel = 'Submit'; // Label for submit button
+  export let onSuccess = null; // Optional callback on success
+  export let onCancel = null; // Optional callback on cancel
 
   let categories = [];
   let templates = [];
-  let selectedCategoryIds = [];
-  let expenseDate = new Date().toISOString().split('T')[0];
+  let selectedCategoryIds = []; // Array of category IDs (numbers)
+  let expenseDate = fixedDate || new Date().toISOString().split('T')[0];
   let notes = '';
   let amount = '';
   let loading = false;
@@ -19,6 +33,18 @@
 
   onMount(async () => {
     await Promise.all([loadCategories(), loadTemplates()]);
+    
+    // If in edit mode, populate form with initial data
+    if (expenseId && initialData) {
+      // Ensure categoryIds are numbers for consistent comparison and filter out invalid ones
+      const categoryIds = (initialData.categoryIds || [])
+        .map(id => Number(id))
+        .filter(id => !isNaN(id) && id > 0);
+      selectedCategoryIds = [...categoryIds];
+      expenseDate = initialData.date || expenseDate;
+      notes = initialData.notes || '';
+      amount = initialData.amount ? initialData.amount.toString() : '';
+    }
   });
 
   async function loadCategories() {
@@ -55,30 +81,14 @@
   }
 
   function applyTemplate(template) {
-    selectedCategoryIds = [...(template.categoryIds || template.categories || [])];
+    // Normalize category IDs to numbers and filter out invalid ones
+    const templateIds = (template.categoryIds || template.categories || [])
+      .map(id => Number(id))
+      .filter(id => !isNaN(id) && id > 0);
+    selectedCategoryIds = [...templateIds];
     amount = template.amount.toString();
     notes = template.notes || '';
     showTemplates = false;
-  }
-
-
-
-  function formatCurrency(value) {
-    if (!value && value !== 0) return '';
-    // Convert to number if it's a string, or use the number directly
-    let numericValue;
-    if (typeof value === 'string') {
-      numericValue = value.replace(/\D/g, '');
-      if (!numericValue) return '';
-      numericValue = parseFloat(numericValue);
-    } else {
-      numericValue = value;
-    }
-    if (isNaN(numericValue)) return '';
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(numericValue);
   }
 
   function handleAmountInput(e) {
@@ -87,22 +97,45 @@
     amount = numericValue;
   }
 
-  function toggleCategory(categoryId) {
-    if (selectedCategoryIds.includes(categoryId)) {
-      selectedCategoryIds = selectedCategoryIds.filter(id => id !== categoryId);
+  function toggleCategory(categoryId, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    // Ensure categoryId is valid
+    if (!categoryId && categoryId !== 0) {
+      console.error('Invalid categoryId:', categoryId);
+      return;
+    }
+    
+    // Normalize to number for consistent comparison
+    const id = Number(categoryId);
+    
+    // Check if ID is valid number
+    if (isNaN(id)) {
+      console.error('Category ID is not a valid number:', categoryId);
+      return;
+    }
+    
+    // Check if already selected
+    const isSelected = selectedCategoryIds.some(cid => Number(cid) === id);
+    
+    if (isSelected) {
+      // Remove if already selected
+      selectedCategoryIds = selectedCategoryIds.filter(cid => Number(cid) !== id);
     } else {
-      selectedCategoryIds = [...selectedCategoryIds, categoryId];
+      // Add if not selected
+      selectedCategoryIds = [...selectedCategoryIds, id];
     }
     
     // If category selected, scroll to date field
-    if (selectedCategoryIds.length > 0) {
+    /*if (selectedCategoryIds.length > 0) {
       setTimeout(() => {
         const dateInput = document.getElementById('date');
         if (dateInput) {
           dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }, 100);
-    }
+    }*/
   }
 
   function handleDateChange() {
@@ -139,44 +172,94 @@
     loading = true;
     
     try {
+      // Filter out any invalid IDs and ensure they're numbers
+      const validCategoryIds = selectedCategoryIds
+        .map(id => Number(id))
+        .filter(id => !isNaN(id) && id > 0);
+      
+      if (validCategoryIds.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Warning',
+          text: 'Please select at least one valid category',
+          zIndex: 9999
+        });
+        loading = false;
+        return;
+      }
+      
       const payload = {
-        categoryIds: selectedCategoryIds,
+        categoryIds: validCategoryIds,
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
       };
-      const response = await api.post('/expenses', payload);
-      
-      const categoryNames = categories
-        .filter(cat => selectedCategoryIds.includes(cat.id))
-        .map(cat => cat.label)
-        .join(', ');
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        html: `
-          <div style="text-align: left;">
-            <p><strong>Type:</strong> Expense</p>
-            <p><strong>Categories:</strong> ${categoryNames}</p>
-            <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
-            <p><strong>Notes:</strong> ${notes || '-'}</p>
-          </div>
-        `,
-        confirmButtonText: 'OK',
-        zIndex: 9999
-      });
 
-      // Reset form
-      selectedCategoryIds = [];
-      notes = '';
-      amount = '';
+      if (expenseId) {
+        // Edit mode
+        await api.put(`/expenses/${expenseId}`, payload);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Expense updated successfully',
+          zIndex: 9999,
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } else {
+        // Add mode
+        const response = await api.post('/expenses', payload);
+        
+        const categoryNames = categories
+          .filter(cat => selectedCategoryIds.includes(cat.id))
+          .map(cat => cat.label)
+          .join(', ');
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Type:</strong> Expense</p>
+              <p><strong>Categories:</strong> ${categoryNames}</p>
+              <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Notes:</strong> ${notes || '-'}</p>
+            </div>
+          `,
+          confirmButtonText: 'OK',
+          zIndex: 9999
+        });
+
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Dispatch success event
+        dispatch('success', { expenseId: response?.data?.id });
+      }
+
+      // For edit mode, call success callback and dispatch event
+      if (expenseId) {
+        if (onSuccess) {
+          onSuccess();
+        }
+        dispatch('success', { expenseId });
+      }
+
+      // Reset form only if not in edit mode
+      if (!expenseId) {
+        selectedCategoryIds = [];
+        notes = '';
+        amount = '';
+      }
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to save expense',
+        text: error.response?.data?.message || (expenseId ? 'Failed to update expense' : 'Failed to save expense'),
         zIndex: 9999
       });
     } finally {
@@ -186,9 +269,16 @@
 
   function handleClear() {
     selectedCategoryIds = [];
-    expenseDate = new Date().toISOString().split('T')[0];
+    expenseDate = fixedDate || new Date().toISOString().split('T')[0];
     notes = '';
     amount = '';
+  }
+
+  function handleCancel() {
+    if (onCancel) {
+      onCancel();
+    }
+    dispatch('cancel');
   }
 
   function handleKeyDown(e) {
@@ -200,7 +290,9 @@
 </script>
 
 <form class="input-expenses" on:submit|preventDefault={handleSubmit}>
-  <h1>Input Expenses</h1>
+  {#if showTitle}
+    <h1>{expenseId ? 'Edit Expense' : 'Input Expenses'}</h1>
+  {/if}
 
   <!-- Templates Section -->
   {#if templates.length > 0}
@@ -242,8 +334,12 @@
           <button
             type="button"
             class="category-pill"
-            class:selected={selectedCategoryIds.includes(category.id)}
-            on:click={() => toggleCategory(category.id)}
+            class:selected={selectedCategoryIds.some(id => {
+              const selectedId = Number(id);
+              const catId = Number(category.id);
+              return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
+            })}
+            on:click={(e) => toggleCategory(category.id, e)}
           >
             {category.label}
           </button>
@@ -252,15 +348,17 @@
     {/if}
   </div>
 
-  <div class="form-group">
-    <label for="date">Date</label>
-    <DatePicker
-      id="date"
-      bind:value={expenseDate}
-      placeholder="Select date"
-      on:dateChange={handleDateChange}
-    />
-  </div>
+  {#if !fixedDate}
+    <div class="form-group">
+      <label for="date">Date</label>
+      <DatePicker
+        id="date"
+        bind:value={expenseDate}
+        placeholder="Select date"
+        on:dateChange={handleDateChange}
+      />
+    </div>
+  {/if}
 
   <div class="form-group">
     <label for="amount">Amount (Rp.)</label>
@@ -309,15 +407,20 @@
   </div>
 
   <div class="button-group">
-    <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
+    {#if showCancel}
+      <button type="button" class="btn btn-secondary" on:click={handleCancel} disabled={loading}>Cancel</button>
+    {:else if !expenseId}
+      <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
+    {/if}
     <button type="submit" class="btn btn-primary" disabled={loading}>
       {#if loading}
-        <span class="spinner"></span> Submitting...
+        <span class="spinner"></span> {expenseId ? 'Updating...' : 'Submitting...'}
       {:else}
-        Submit
+        {submitLabel}
       {/if}
     </button>
   </div>
+  <div class="space-xl"></div>
 </form>
 
 <style>

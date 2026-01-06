@@ -10,6 +10,7 @@
   import DatePicker from '$lib/components/DatePicker.svelte';
   import '$lib/styles/shared.css';
   import '$lib/styles/modals.css';
+  import { formatCurrency } from '$lib/utils/currency';
 
   // ============================================================================
   // STATE VARIABLES - Calendar & Months
@@ -45,36 +46,6 @@
   let filteredExpenses = [];             // Filtered search results
   let categories = [];                   // Available categories for filter
   let searchLoading = false;             // Search loading state
-
-  // ============================================================================
-  // UTILITY FUNCTIONS
-  // ============================================================================
-  
-  /**
-   * Format currency value to Indonesian Rupiah format
-   * @param {number|string} value - Value to format
-   * @returns {string} Formatted currency string
-   */
-  function formatCurrency(value) {
-    if (!value && value !== 0) return '';
-    
-    // Convert string to number if needed
-    let numericValue;
-    if (typeof value === 'string') {
-      numericValue = value.replace(/\D/g, '');
-      if (!numericValue) return '';
-      numericValue = parseFloat(numericValue);
-    } else {
-      numericValue = value;
-    }
-    
-    if (isNaN(numericValue)) return '';
-    
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(numericValue);
-  }
 
   // ============================================================================
   // DATA LOADING FUNCTIONS
@@ -399,7 +370,6 @@
 
   <!-- Balance Display (not sticky) -->
   {#if !balanceLoading && !loading}
-    {@const totalExpenses = getTotalExpenses()}
     {@const remainingBalance = getRemainingBalance()}
     <div class="balance-section">
       <div class="balance-card">
@@ -596,8 +566,6 @@
   .balance-section {
     margin-bottom: 1.5rem;
     flex-shrink: 0;
-    position: relative;
-    z-index: 1;
   }
 
   .balance-card {

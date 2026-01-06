@@ -3,6 +3,8 @@
   import api from '$lib/api';
   import { Chart, registerables } from 'chart.js';
   import '$lib/styles/charts.css';
+  import { formatCurrency } from '$lib/utils/currency';
+  import { currency } from '$lib/stores/currency';
 
   Chart.register(...registerables);
 
@@ -198,6 +200,7 @@
     }
 
     const ctx = chartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     // Sort daily expenses by date
     const sortedDaily = [...dailyExpenses].sort((a, b) => {
@@ -289,7 +292,7 @@
                 if (label) {
                   label += ': ';
                 }
-                label += formatCurrency(context.parsed.y);
+                label += formatCurrency(context.parsed.y, currentCurrency);
                 return label;
               },
               title: function(context) {
@@ -355,6 +358,7 @@
     }
 
     const ctx = categoryChartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     // Sort categories by total (descending)
     const sortedCategories = [...expensesByCategory].sort((a, b) => b.total - a.total);
@@ -391,7 +395,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return formatCurrency(context.parsed.y);
+                return formatCurrency(context.parsed.y, currentCurrency);
               }
             }
           }
@@ -414,7 +418,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Amount (IDR)',
+              text: `Amount (${currentCurrency})`,
               font: {
                 size: 12,
                 weight: 'bold'
@@ -422,12 +426,7 @@
             },
             ticks: {
               callback: function(value) {
-                if (value >= 1000000) {
-                  return (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return (value / 1000).toFixed(0) + 'K';
-                }
-                return value.toString();
+                return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
@@ -440,13 +439,6 @@
     });
   }
 
-  function formatCurrency(amount) {
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
-
   function createPieChart() {
     if (!pieChartCanvas || expensesByCategory.length === 0) return;
 
@@ -457,6 +449,7 @@
     }
 
     const ctx = pieChartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     // Sort categories by total (descending)
     const sortedCategories = [...expensesByCategory].sort((a, b) => b.total - a.total);
@@ -526,7 +519,7 @@
                 const label = context.label || '';
                 const value = context.parsed || 0;
                 const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                return `${label}: ${formatCurrency(value, currentCurrency)} (${percentage}%)`;
               }
             }
           }
@@ -545,6 +538,7 @@
     }
 
     const ctx = cumulativeChartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     const labels = cumulativeData.map(item => {
       const date = new Date(item.date);
@@ -590,7 +584,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `Cumulative: ${formatCurrency(context.parsed.y)}`;
+                return `Cumulative: ${formatCurrency(context.parsed.y, currentCurrency)}`;
               },
               title: function(context) {
                 const index = context[0].dataIndex;
@@ -619,7 +613,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Cumulative Amount (IDR)',
+              text: `Cumulative Amount (${currentCurrency})`,
               font: {
                 size: 12,
                 weight: 'bold'
@@ -627,12 +621,7 @@
             },
             ticks: {
               callback: function(value) {
-                if (value >= 1000000) {
-                  return (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return (value / 1000).toFixed(0) + 'K';
-                }
-                return value.toString();
+                return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
@@ -655,6 +644,7 @@
     }
 
     const ctx = weeklyChartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     const labels = weeklyData.map(item => item.week);
     const expenseData = weeklyData.map(item => item.expense);
@@ -701,7 +691,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                return `${context.dataset.label}: ${formatCurrency(context.parsed.y, currentCurrency)}`;
               }
             }
           }
@@ -724,7 +714,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Amount (IDR)',
+              text: `Amount (${currentCurrency})`,
               font: {
                 size: 12,
                 weight: 'bold'
@@ -732,12 +722,7 @@
             },
             ticks: {
               callback: function(value) {
-                if (value >= 1000000) {
-                  return (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return (value / 1000).toFixed(0) + 'K';
-                }
-                return value.toString();
+                return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
@@ -760,6 +745,7 @@
     }
 
     const ctx = budgetChartCanvas.getContext('2d');
+    const currentCurrency = $currency || 'IDR';
     
     // Create expense map for quick lookup
     const expenseMap = new Map();
@@ -824,7 +810,7 @@
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                return `${context.dataset.label}: ${formatCurrency(context.parsed.y, currentCurrency)}`;
               }
             }
           }
@@ -847,7 +833,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Amount (IDR)',
+              text: `Amount (${currentCurrency})`,
               font: {
                 size: 12,
                 weight: 'bold'
@@ -855,12 +841,7 @@
             },
             ticks: {
               callback: function(value) {
-                if (value >= 1000000) {
-                  return (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return (value / 1000).toFixed(0) + 'K';
-                }
-                return value.toString();
+                return formatCurrency(value, currentCurrency);
               }
             },
             grid: {

@@ -368,11 +368,6 @@
     color: var(--text-primary);
   }
 
-  .category-slug {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-  }
-
   .category-actions {
     display: flex;
     align-items: center;
