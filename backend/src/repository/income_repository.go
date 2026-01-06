@@ -7,6 +7,7 @@ import (
 	"expenses-tracker/src/model"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type IncomeRepository struct {
@@ -50,51 +51,59 @@ func (r *IncomeRepository) GetByDate(userID uint, date time.Time) ([]model.T_inc
 
 func (r *IncomeRepository) GetBalance(userID uint) (*model.R_balance, error) {
 	var b model.R_balance
-	if err := r.db.Where("user_id = ?", userID).First(&b).Error; err != nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
 
-		// No stored balance yet: derive it from total income minus total expenses
+	// Always derive the latest balance from income and expenses, and upsert it atomically.
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		var incomeTotal float64
 		var expenseTotal float64
 
-		if err := r.db.
+		if err := tx.
 			Model(&model.T_income{}).
 			Where("user_id = ?", userID).
 			Select("COALESCE(SUM(amount), 0)").
 			Scan(&incomeTotal).Error; err != nil {
-			return nil, err
+			return err
 		}
 
-		if err := r.db.
+		if err := tx.
 			Model(&model.T_expense{}).
 			Where("user_id = ?", userID).
 			Select("COALESCE(SUM(amount), 0)").
 			Scan(&expenseTotal).Error; err != nil {
-			return nil, err
+			return err
 		}
 
-		// Return a synthetic balance object without persisting it
 		b = model.R_balance{
 			UserID: userID,
 			Amount: incomeTotal - expenseTotal,
 		}
-		return &b, nil
+
+		// Upsert by user_id (requires unique index on user_id).
+		return tx.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"amount", "updated_at"}),
+		}).Create(&b).Error
+	}); err != nil {
+		return nil, err
 	}
+
 	return &b, nil
 }
 
 func (r *IncomeRepository) UpsertBalance(b *model.R_balance) error {
-	// simple upsert based on user_id
-	var existing model.R_balance
-	if err := r.db.Where("user_id = ?", b.UserID).First(&existing).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return r.db.Create(b).Error
+	// upsert based on user_id with row-level locking to avoid races
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var existing model.R_balance
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("user_id = ?", b.UserID).
+			First(&existing).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return tx.Create(b).Error
+			}
+			return err
 		}
-		return err
-	}
-	existing.Amount = b.Amount
-	existing.Notes = b.Notes
-	return r.db.Save(&existing).Error
+		existing.Amount = b.Amount
+		existing.Notes = b.Notes
+		return tx.Save(&existing).Error
+	})
 }

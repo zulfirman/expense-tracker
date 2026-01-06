@@ -158,19 +158,16 @@
    * @returns {number} Total expense amount
    */
   function getTotalExpenses() {
+    // Kept for potential display, but overall balance is computed on the backend now
     if (!months || months.length === 0) {
       return 0;
     }
-    
-    const total = months.reduce((sum, month) => {
-      // Ensure month.total is parsed as a number
-      const monthTotal = typeof month.total === 'number' 
-        ? month.total 
+    return months.reduce((sum, month) => {
+      const monthTotal = typeof month.total === 'number'
+        ? month.total
         : parseFloat(month.total) || 0;
       return sum + monthTotal;
     }, 0);
-    
-    return total;
   }
 
   /**
@@ -181,13 +178,10 @@
     if (balanceLoading || !balance) {
       return 0;
     }
-    
-    const totalExpenses = getTotalExpenses();
-    const balanceAmount = typeof balance.amount === 'number' 
-      ? balance.amount 
+    const balanceAmount = typeof balance.amount === 'number'
+      ? balance.amount
       : parseFloat(balance.amount) || 0;
-    
-    return balanceAmount - totalExpenses;
+    return balanceAmount;
   }
 
   // ============================================================================
@@ -370,11 +364,10 @@
 
   <!-- Balance Display (compact) -->
   {#if !balanceLoading && !loading}
-    {@const remainingBalance = getRemainingBalance()}
     <div class="balance-section compact">
       <div class="balance-card compact">
         <div class="balance-label">Balance</div>
-        <div class="balance-amount">{formatCurrency(remainingBalance)}</div>
+        <div class="balance-amount">{formatCurrency(balance.amount)}</div>
       </div>
     </div>
   {/if}
