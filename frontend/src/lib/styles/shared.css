@@ -9,38 +9,50 @@
 
 /* ===== Buttons ===== */
 .btn {
-  flex: 1;
-  padding: 0.875rem;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid transparent;
   border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
+.btn.primary,
 .btn-primary {
   background-color: var(--primary-color);
+  border-color: var(--primary-color);
   color: white;
 }
 
+.btn.primary:hover:not(:disabled),
 .btn-primary:hover:not(:disabled) {
   background-color: #4338ca;
 }
 
+.btn.secondary,
 .btn-secondary {
   background-color: var(--surface);
   color: var(--text-primary);
-  border: 1px solid var(--border);
+  border-color: var(--border);
 }
 
+.btn.secondary:hover:not(:disabled),
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--background);
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn.ghost,
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-primary);
 }
 
 .btn-text {
@@ -75,6 +87,11 @@
 
 .btn-delete:hover {
   background: rgba(239, 68, 68, 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== Forms ===== */
@@ -117,6 +134,10 @@
 .button-group {
   display: flex;
   gap: 1rem;
+}
+
+.button-group .btn {
+  flex: 1;
 }
 
 /* ===== Modals ===== */

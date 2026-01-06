@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
@@ -204,9 +205,12 @@
 <div class="categories-page">
   <div class="header-section">
     <h1>My Categories</h1>
-    <button class="btn btn-primary" style="max-width: 50%" on:click={openAddForm} disabled={loading}>
-      + Add Category
-    </button>
+    <div class="header-actions">
+      <button class="btn ghost" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn primary" style="max-width: 50%" on:click={openAddForm} disabled={loading}>
+        + Add Category
+      </button>
+    </div>
   </div>
 
   {#if loading && categories.length === 0}
@@ -328,6 +332,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
   }
 
   h1 {

@@ -1,60 +1,22 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { currency } from '$lib/stores/currency';
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
-  import api from '$lib/api';
-  import Swal from 'sweetalert2';
+  import '$lib/styles/shared.css';
 
-  let selectedCurrency = 'IDR';
   let currentTheme = 'light';
-  let loading = false;
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
       goto('/login');
       return;
     }
-
-    // Initialize currency store
-    await currency.init();
-    selectedCurrency = $currency;
     currentTheme = $theme;
   });
 
-  $: if ($currency) {
-    selectedCurrency = $currency;
-  }
-
   $: if ($theme) {
     currentTheme = $theme;
-  }
-
-  async function handleSaveCurrency() {
-    if (selectedCurrency === $currency) return;
-    
-    loading = true;
-    try {
-      await currency.setCurrency(selectedCurrency);
-      Swal.fire({
-        icon: 'success',
-        title: 'Currency Updated',
-        text: 'Your currency preference has been saved',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: error.response?.data?.message || 'Failed to update currency',
-        zIndex: 9999
-      });
-    } finally {
-      loading = false;
-    }
   }
 
   function handleThemeToggle() {
@@ -63,57 +25,32 @@
 </script>
 
 <div class="preferences-page">
-  <h1>Preferences</h1>
+  <div class="header">
+    <h1>Preferences</h1>
+  </div>
 
-  <!-- Currency Selection -->
-  <div class="preference-section">
-    <h2>Currency</h2>
-    <p class="preference-description">Choose your preferred currency for displaying amounts</p>
-    <div class="currency-options">
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="IDR"
-          disabled={loading}
-        />
-        <span>Indonesian Rupiah (Rp.)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="USD"
-          disabled={loading}
-        />
-        <span>US Dollar ($)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="EUR"
-          disabled={loading}
-        />
-        <span>Euro (€)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="JPY"
-          disabled={loading}
-        />
-        <span>Japanese Yen (¥)</span>
-      </label>
-    </div>
-    <button
-      class="btn btn-primary"
-      on:click={handleSaveCurrency}
-      disabled={loading || selectedCurrency === $currency}
-    >
-      {loading ? 'Saving...' : 'Save Currency'}
-    </button>
+  <div class="nav-grid">
+    <a class="nav-card" href="/preferences/categories">
+      <div>
+        <h3>Categories</h3>
+        <p>Manage and reorder your expense categories.</p>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
+    <a class="nav-card" href="/preferences/currency">
+      <div>
+        <h3>Currency & Quick Amount</h3>
+        <p>Configure currency and quick amount shortcuts.</p>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
+    <a class="nav-card" href="/preferences/change-password">
+      <div>
+        <h3>Change Password</h3>
+        <p>Update your account password securely.</p>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
   </div>
 
   <!-- Theme Toggle -->
@@ -152,6 +89,14 @@
     margin: 0 auto;
   }
 
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
   h1 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
@@ -164,6 +109,51 @@
     padding: 1.5rem;
     border: 1px solid var(--border);
     margin-bottom: 1.5rem;
+  }
+
+  .nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .nav-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .nav-card:hover {
+    border-color: var(--primary-color);
+    background: var(--background);
+  }
+
+  .nav-card.active {
+    border-color: var(--primary-color);
+  }
+
+  .nav-card h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .nav-card p {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .nav-arrow {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
   }
 
   .preference-section:last-child {
@@ -219,29 +209,6 @@
     background: rgba(79, 70, 229, 0.05);
   }
 
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #4338ca;
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 
   .theme-toggle-section {
     display: flex;

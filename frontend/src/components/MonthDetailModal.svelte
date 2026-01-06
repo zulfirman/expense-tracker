@@ -322,7 +322,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Amount (IDR)',
+              text: `Amount (${currentCurrency})`,
               font: {
                 size: 12,
                 weight: 'bold'
@@ -330,12 +330,7 @@
             },
             ticks: {
               callback: function(value) {
-                if (value >= 1000000) {
-                  return (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return (value / 1000).toFixed(0) + 'K';
-                }
-                return value.toString();
+                return formatCurrency(value, currentCurrency);
               }
             },
             grid: {

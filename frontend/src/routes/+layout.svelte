@@ -36,11 +36,15 @@
       goto('/expenses');
     }
     
-    // Close profile menu when clicking outside
+    // Close profile and account menus when clicking outside
     function handleClickOutside(event) {
       const profileContainer = event.target.closest('.profile-menu-container');
+      const accountContainer = event.target.closest('.account-menu-container');
       if (!profileContainer && showProfileMenu) {
         showProfileMenu = false;
+      }
+      if (!accountContainer && showAccountMenu) {
+        showAccountMenu = false;
       }
     }
     
@@ -112,6 +116,11 @@
   }
 
   function handleSwitchAccount(accountId) {
+    if (accountId === currentAccountId) {
+      // Clicking current account: just close menu, no reload
+      showAccountMenu = false;
+      return;
+    }
     auth.switchAccount(accountId);
     showAccountMenu = false;
     // Reload page to refresh data
@@ -167,7 +176,7 @@
 
     addAccountLoading = true;
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/apps/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -277,17 +286,6 @@
           </button>
           {#if showProfileMenu}
             <div class="profile-menu">
-              <a href="/categories" class="profile-menu-item" on:click={() => showProfileMenu = false}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="8" y1="6" x2="21" y2="6"></line>
-                  <line x1="8" y1="12" x2="21" y2="12"></line>
-                  <line x1="8" y1="18" x2="21" y2="18"></line>
-                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                Categories
-              </a>
               <button class="profile-menu-item" on:click={handleProfileClick}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -301,13 +299,6 @@
                   <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
                 </svg>
                 Preferences
-              </button>
-              <button class="profile-menu-item" on:click={handleChangePasswordClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                Change Password
               </button>
               <button class="profile-menu-item" on:click={openAddAccountModal}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -477,8 +468,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--primary-color);
     background: var(--surface);
     color: var(--text-primary);
     cursor: pointer;
@@ -495,6 +486,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: 700;
+    color: var(--text-primary);
   }
 
   .profile-menu {

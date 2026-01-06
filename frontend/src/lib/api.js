@@ -4,7 +4,7 @@ import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/apps',
   headers: {
     'Content-Type': 'application/json'
   }

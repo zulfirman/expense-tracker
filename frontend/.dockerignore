@@ -1,0 +1,13 @@
+node_modules
+.svelte-kit
+build
+dist
+.git
+.gitignore
+*.log
+*.tmp
+.env
+.env.*
+Dockerfile
+nginx.conf
+

@@ -1,10 +1,13 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { get } from 'svelte/store';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import { onMount } from 'svelte';
   import { formatCurrency } from '$lib/utils/currency';
+  import { quickAmounts } from '$lib/stores/quickAmounts';
+  import { currency } from '$lib/stores/currency';
 
   const dispatch = createEventDispatcher();
 
@@ -29,10 +32,15 @@
   let templatesLoading = true;
   let showTemplates = false;
 
-  const quickAmounts = [10000, 25000, 50000, 75000, 100000];
+  let quickAmountsList = [];
+  $: quickAmountsList = $quickAmounts || [];
+  $: if ((!quickAmountsList || quickAmountsList.length === 0) && $currency) {
+    quickAmountsList = quickAmounts.getDefaultsByCurrency($currency);
+  }
 
   onMount(async () => {
-    await Promise.all([loadCategories(), loadTemplates()]);
+    await Promise.all([loadCategories(), loadTemplates(), quickAmounts.init()]);
+    quickAmountsList = get(quickAmounts);
     
     // If in edit mode, populate form with initial data
     if (expenseId && initialData) {
@@ -380,7 +388,7 @@
     <div class="quick-amounts">
       <label class="quick-amounts-label">Quick Amount:</label>
       <div class="quick-amounts-buttons">
-        {#each quickAmounts as quickAmount}
+        {#each quickAmountsList as quickAmount}
           <button
             type="button"
             class="quick-amount-btn"

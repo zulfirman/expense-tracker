@@ -368,12 +368,12 @@
     </button>
   </div>
 
-  <!-- Balance Display (not sticky) -->
+  <!-- Balance Display (compact) -->
   {#if !balanceLoading && !loading}
     {@const remainingBalance = getRemainingBalance()}
-    <div class="balance-section">
-      <div class="balance-card">
-        <div class="balance-label">Current Balance</div>
+    <div class="balance-section compact">
+      <div class="balance-card compact">
+        <div class="balance-label">Balance</div>
         <div class="balance-amount">{formatCurrency(remainingBalance)}</div>
       </div>
     </div>
@@ -563,32 +563,32 @@
     color: var(--text-secondary);
   }
 
-  .balance-section {
-    margin-bottom: 1.5rem;
+  .balance-section.compact {
+    margin-bottom: 0.75rem;
     flex-shrink: 0;
   }
 
-  .balance-card {
-    background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: 0 8px 16px rgba(79, 70, 229, 0.3);
-    text-align: center;
+  .balance-card.compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    box-shadow: none;
   }
 
   .balance-label {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
   }
 
   .balance-amount {
-    font-size: 1.75rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-primary);
     line-height: 1.2;
   }
 
