@@ -1,43 +1,64 @@
 <script>
+  // ============================================================================
+  // IMPORTS
+  // ============================================================================
   import api from '$lib/api';
-  import Swal from 'sweetalert2';
   import { onMount } from 'svelte';
   import CalendarView from './CalendarView.svelte';
   import MonthDetailModal from './MonthDetailModal.svelte';
   import DateExpensesModal from './DateExpensesModal.svelte';
-  import AdvancedAnalyticsModal from './AdvancedAnalyticsModal.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import '$lib/styles/shared.css';
+  import '$lib/styles/modals.css';
 
-  let months = [];
-  let selectedMonth = null;
-  let selectedDate = null;
-  let showMonthDetail = false;
-  let showDateModal = false;
-  let showAnalytics = false;
-  let analyticsMonth = null;
-  let loading = false;
-  let balance = { amount: 0 };
-  let balanceLoading = true;
-  let savedScrollPosition = 0;
-  let calendarWrapper;
-  let isLoadingMore = false;
-  let hasMoreMonths = true;
-  let oldestLoadedMonth = null;
+  // ============================================================================
+  // STATE VARIABLES - Calendar & Months
+  // ============================================================================
+  let months = [];                      // Array of month data from API
+  let selectedMonth = null;              // Currently selected month object
+  let selectedDate = null;               // Currently selected date string
+  let showMonthDetail = false;           // Month detail modal visibility
+  let showDateModal = false;             // Date expenses modal visibility
+  let showAnalytics = false;             // Analytics modal visibility
+  let analyticsMonth = null;             // Month string (YYYY-MM) for analytics
+  let loading = false;                   // Initial loading state
+  let calendarWrapper = null;            // Reference to calendar container element
+  let isLoadingMore = false;             // Loading more months state
+  let hasMoreMonths = true;             // Whether more months can be loaded
+  let oldestLoadedMonth = null;         // Oldest month loaded (for pagination)
+  let savedScrollPosition = 0;           // Saved scroll position for modals
+
+  // ============================================================================
+  // STATE VARIABLES - Balance
+  // ============================================================================
+  let balance = { amount: 0 };           // User's current balance
+  let balanceLoading = true;             // Balance loading state
+
+  // ============================================================================
+  // STATE VARIABLES - Search
+  // ============================================================================
+  let searchQuery = '';                  // Text search query
+  let searchCategory = '';               // Category filter ID
+  let dateFrom = '';                     // Start date for search
+  let dateTo = '';                       // End date for search
+  let showSearch = false;                // Search modal visibility
+  let filteredExpenses = [];             // Filtered search results
+  let categories = [];                   // Available categories for filter
+  let searchLoading = false;             // Search loading state
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
   
-  // Search functionality
-  let searchQuery = '';
-  let searchCategory = '';
-  let dateFrom = '';
-  let dateTo = '';
-  let showSearch = false;
-  let allExpenses = [];
-  let filteredExpenses = [];
-  let categories = [];
-  let searchLoading = false;
-
+  /**
+   * Format currency value to Indonesian Rupiah format
+   * @param {number|string} value - Value to format
+   * @returns {string} Formatted currency string
+   */
   function formatCurrency(value) {
     if (!value && value !== 0) return '';
+    
+    // Convert string to number if needed
     let numericValue;
     if (typeof value === 'string') {
       numericValue = value.replace(/\D/g, '');
@@ -46,21 +67,26 @@
     } else {
       numericValue = value;
     }
+    
     if (isNaN(numericValue)) return '';
+    
     return 'Rp. ' + new Intl.NumberFormat('id-ID', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(numericValue);
   }
 
-  onMount(async () => {
-    await Promise.all([loadMonths(), loadBalance(), loadCategories()]);
-  });
-
+  // ============================================================================
+  // DATA LOADING FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Load categories from API
+   * Only loads active categories for the search filter
+   */
   async function loadCategories() {
     try {
       const response = await api.get('/categories');
-      // Only show active categories in history filter
       categories = response.data
         .filter(cat => cat.isActive !== false)
         .map(cat => ({
@@ -72,7 +98,137 @@
     }
   }
 
+  /**
+   * Load user's current balance from API
+   */
+  async function loadBalance() {
+    try {
+      const response = await api.get('/income/balance');
+      balance = response.data;
+    } catch (error) {
+      // Balance failed to load - silently fail
+    } finally {
+      balanceLoading = false;
+    }
+  }
+
+  /**
+   * Load months data from API
+   * Supports pagination via 'before' parameter
+   * @param {boolean} silent - If true, don't show loading indicator
+   * @param {string|null} beforeMonth - Month string (YYYY-MM) to load months before
+   */
+  async function loadMonths(silent = false, beforeMonth = null) {
+    // Set loading states
+    if (!silent && !beforeMonth) {
+      loading = true;
+    }
+    if (beforeMonth) {
+      isLoadingMore = true;
+    }
+    
+    try {
+      // Build API URL with optional pagination parameter
+      let url = '/expenses/months';
+      if (beforeMonth) {
+        url += `?before=${beforeMonth}`;
+      }
+      
+      const response = await api.get(url);
+      const newMonths = response.data || [];
+      
+      // Append or replace months based on pagination
+      if (beforeMonth) {
+        // Append older months for infinite scroll
+        months = [...months, ...newMonths];
+      } else {
+        // Initial load - replace all months
+        months = newMonths;
+      }
+      
+      // Update oldest loaded month for next pagination
+      if (newMonths.length > 0) {
+        oldestLoadedMonth = newMonths[newMonths.length - 1].month;
+      }
+      
+      // Determine if more months can be loaded
+      // Initial load: 4 months (current + 3 back)
+      // Pagination: 6 months per page
+      const expectedCount = beforeMonth ? 6 : 4;
+      hasMoreMonths = newMonths.length >= expectedCount;
+    } catch (error) {
+      hasMoreMonths = false;
+    } finally {
+      // Reset loading states
+      if (!silent && !beforeMonth) {
+        loading = false;
+      }
+      if (beforeMonth) {
+        isLoadingMore = false;
+      }
+    }
+  }
+
+  /**
+   * Load more months for infinite scroll
+   * Called when user scrolls near bottom
+   */
+  async function loadMoreMonths() {
+    if (isLoadingMore || !hasMoreMonths || !oldestLoadedMonth) return;
+    await loadMonths(true, oldestLoadedMonth);
+  }
+
+  // ============================================================================
+  // CALCULATION FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Calculate total expenses across all loaded months
+   * @returns {number} Total expense amount
+   */
+  function getTotalExpenses() {
+    if (!months || months.length === 0) {
+      return 0;
+    }
+    
+    const total = months.reduce((sum, month) => {
+      // Ensure month.total is parsed as a number
+      const monthTotal = typeof month.total === 'number' 
+        ? month.total 
+        : parseFloat(month.total) || 0;
+      return sum + monthTotal;
+    }, 0);
+    
+    return total;
+  }
+
+  /**
+   * Calculate remaining balance (balance - total expenses)
+   * @returns {number} Remaining balance amount
+   */
+  function getRemainingBalance() {
+    if (balanceLoading || !balance) {
+      return 0;
+    }
+    
+    const totalExpenses = getTotalExpenses();
+    const balanceAmount = typeof balance.amount === 'number' 
+      ? balance.amount 
+      : parseFloat(balance.amount) || 0;
+    
+    return balanceAmount - totalExpenses;
+  }
+
+  // ============================================================================
+  // SEARCH FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Search expenses based on query, category, and date range
+   * Called automatically when search parameters change (reactive)
+   */
   async function searchExpenses() {
+    // Clear results if no search criteria
     if (!searchQuery && !searchCategory && !dateFrom && !dateTo) {
       filteredExpenses = [];
       return;
@@ -80,6 +236,7 @@
 
     searchLoading = true;
     try {
+      // Build query parameters
       const params = new URLSearchParams();
       if (searchQuery) params.append('q', searchQuery);
       if (searchCategory) params.append('categoryId', searchCategory);
@@ -95,6 +252,9 @@
     }
   }
 
+  /**
+   * Clear all search filters and results
+   */
   function clearSearch() {
     searchQuery = '';
     searchCategory = '';
@@ -104,6 +264,9 @@
     showSearch = false;
   }
 
+  /**
+   * Toggle search modal visibility
+   */
   function toggleSearch() {
     showSearch = !showSearch;
     if (!showSearch) {
@@ -111,94 +274,15 @@
     }
   }
 
-  $: if (searchQuery || searchCategory || dateFrom || dateTo) {
-    searchExpenses();
-  }
-
-  async function loadBalance() {
-    try {
-      const response = await api.get('/income/balance');
-      balance = response.data;
-    } catch (error) {
-      // Balance failed to load
-    } finally {
-      balanceLoading = false;
-    }
-  }
-
-  async function loadMonths(silent = false, beforeMonth = null) {
-    if (!silent && !beforeMonth) {
-      loading = true;
-    }
-    if (beforeMonth) {
-      isLoadingMore = true;
-    }
-    try {
-      let url = '/expenses/months';
-      if (beforeMonth) {
-        url += `?before=${beforeMonth}`;
-      }
-      const response = await api.get(url);
-      const newMonths = response.data || [];
-      
-      if (beforeMonth) {
-        // Append older months
-        months = [...months, ...newMonths];
-      } else {
-        // Initial load
-        months = newMonths;
-      }
-      
-      // Update oldest loaded month (last month in the array is the oldest)
-      if (newMonths.length > 0) {
-        oldestLoadedMonth = newMonths[newMonths.length - 1].month;
-      }
-      
-      // Check if there are more months to load
-      // For initial load, check if we got 4 months (current + 3 back)
-      // For pagination, check if we got 6 months
-      const expectedCount = beforeMonth ? 6 : 4;
-      hasMoreMonths = newMonths.length >= expectedCount;
-    } catch (error) {
-      hasMoreMonths = false;
-    } finally {
-      if (!silent && !beforeMonth) {
-        loading = false;
-      }
-      if (beforeMonth) {
-        isLoadingMore = false;
-      }
-    }
-  }
-
-  async function loadMoreMonths() {
-    if (isLoadingMore || !hasMoreMonths || !oldestLoadedMonth) return;
-    await loadMonths(true, oldestLoadedMonth);
-  }
-
-  function getTotalExpenses() {
-    if (!months || months.length === 0) {
-      return 0;
-    }
-    const total = months.reduce((sum, month) => {
-      // Ensure month.total is parsed as a number
-      const monthTotal = typeof month.total === 'number' ? month.total : parseFloat(month.total) || 0;
-      return sum + monthTotal;
-    }, 0);
-    return total;
-  }
-
-  function getRemainingBalance() {
-    if (balanceLoading || !balance) {
-      return 0;
-    }
-    const totalExpenses = getTotalExpenses();
-    // Ensure balance.amount is parsed as a number
-    const balanceAmount = typeof balance.amount === 'number' ? balance.amount : parseFloat(balance.amount) || 0;
-    const remaining = balanceAmount - totalExpenses;
-    return remaining;
-  }
-
+  // ============================================================================
+  // EVENT HANDLERS - Month & Date Clicks
+  // ============================================================================
+  
+  /**
+   * Handle month header click
+   * Opens month detail modal
+   * @param {object} month - Month object from calendar
+   */
   function handleMonthClick(month) {
     // Save scroll position before opening modal
     if (calendarWrapper) {
@@ -208,16 +292,11 @@
     showMonthDetail = true;
   }
 
-  function handleAnalyticsClick(month) {
-    analyticsMonth = month.month; // YYYY-MM format
-    showAnalytics = true;
-  }
-
-  function closeAnalytics() {
-    showAnalytics = false;
-    analyticsMonth = null;
-  }
-
+  /**
+   * Handle date click in calendar
+   * Opens date expenses modal
+   * @param {string} date - Date string (YYYY-MM-DD)
+   */
   function handleDateClick(date) {
     // Save scroll position before opening modal
     if (calendarWrapper) {
@@ -227,10 +306,25 @@
     showDateModal = true;
   }
 
+  /**
+   * Handle load more months request (infinite scroll)
+   */
+  function handleLoadMore() {
+    loadMoreMonths();
+  }
+
+  // ============================================================================
+  // EVENT HANDLERS - Modal Close
+  // ============================================================================
+  
+  /**
+   * Close month detail modal and restore scroll position
+   */
   function closeMonthDetail() {
     showMonthDetail = false;
     selectedMonth = null;
-    // Restore scroll position after closing modal
+    
+    // Restore scroll position after modal closes
     setTimeout(() => {
       if (calendarWrapper) {
         calendarWrapper.scrollTop = savedScrollPosition;
@@ -238,13 +332,16 @@
     }, 10);
   }
 
+  /**
+   * Close date expenses modal
+   * Preserves scroll position
+   */
   async function closeDateModal() {
     showDateModal = false;
     selectedDate = null;
-    // Reload data in background to update balance, but preserve scroll position
+    
+    // Preserve scroll position
     const currentScroll = calendarWrapper ? calendarWrapper.scrollTop : 0;
-    // await Promise.all([loadMonths(), loadBalance()]);
-    // Restore scroll position after data reload
     setTimeout(() => {
       if (calendarWrapper) {
         calendarWrapper.scrollTop = currentScroll;
@@ -252,12 +349,43 @@
     }, 10);
   }
 
-  function handleLoadMore(direction) {
-    loadMoreMonths();
+  /**
+   * Close analytics modal
+   */
+  function closeAnalytics() {
+    showAnalytics = false;
+    analyticsMonth = null;
+  }
+
+  // ============================================================================
+  // LIFECYCLE HOOKS
+  // ============================================================================
+  
+  /**
+   * Component mount: Load initial data
+   */
+  onMount(async () => {
+    await Promise.all([loadMonths(), loadBalance(), loadCategories()]);
+  });
+
+  // ============================================================================
+  // REACTIVE STATEMENTS
+  // ============================================================================
+  
+  /**
+   * Automatically search when search parameters change
+   * This is a Svelte reactive statement (runs when dependencies change)
+   */
+  $: if (searchQuery || searchCategory || dateFrom || dateTo) {
+    searchExpenses();
   }
 </script>
 
+<!-- ============================================================================
+     TEMPLATE
+     ============================================================================ -->
 <div class="expenses-history">
+  <!-- Header Section -->
   <div class="header-section">
     <h1>Expenses History</h1>
     <button class="search-toggle-btn" on:click={toggleSearch} class:active={showSearch}>
@@ -269,8 +397,7 @@
     </button>
   </div>
 
-
-  <!-- Balance Display -->
+  <!-- Balance Display (not sticky) -->
   {#if !balanceLoading && !loading}
     {@const totalExpenses = getTotalExpenses()}
     {@const remainingBalance = getRemainingBalance()}
@@ -282,6 +409,7 @@
     </div>
   {/if}
 
+  <!-- Calendar View -->
   {#if loading}
     <div class="loading">Loading...</div>
   {:else}
@@ -291,7 +419,7 @@
         {hasMoreMonths}
         on:monthClick={(e) => handleMonthClick(e.detail)}
         on:dateClick={(e) => handleDateClick(e.detail)}
-        on:loadMore={(e) => handleLoadMore(e.detail)}
+        on:loadMore={(e) => handleLoadMore()}
       />
       {#if isLoadingMore}
         <div class="loading-more">
@@ -303,6 +431,7 @@
   {/if}
 </div>
 
+<!-- Month Detail Modal -->
 {#if showMonthDetail && selectedMonth}
   <MonthDetailModal
     month={selectedMonth}
@@ -310,12 +439,13 @@
   />
 {/if}
 
+<!-- Date Expenses Modal -->
 {#if showDateModal && selectedDate}
   <DateExpensesModal
     date={selectedDate}
     on:close={closeDateModal}
     on:refresh={async () => {
-      // Refresh data but preserve scroll position and avoid resetting calendar scroll
+      // Refresh data but preserve scroll position
       const currentScroll = calendarWrapper ? calendarWrapper.scrollTop : 0;
       await Promise.all([loadMonths(true), loadBalance()]);
       setTimeout(() => {
@@ -327,6 +457,7 @@
   />
 {/if}
 
+<!-- Analytics Modal -->
 {#if showAnalytics && analyticsMonth}
   <AdvancedAnalyticsModal
     month={analyticsMonth}
@@ -334,6 +465,7 @@
   />
 {/if}
 
+<!-- Search Modal -->
 {#if showSearch}
   <div class="modal-backdrop" on:click={() => showSearch = false}>
     <div class="modal-content search-modal" on:click|stopPropagation>
@@ -343,6 +475,7 @@
       </div>
       <div class="modal-body">
         <div class="search-form">
+          <!-- Search Query Input -->
           <div class="form-group">
             <label for="search-query">Search (notes)</label>
             <input
@@ -354,6 +487,8 @@
               on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
             />
           </div>
+          
+          <!-- Category Filter -->
           <div class="form-group">
             <label for="search-category">Category</label>
             <select id="search-category" bind:value={searchCategory} class="form-input">
@@ -363,6 +498,8 @@
               {/each}
             </select>
           </div>
+          
+          <!-- Date Range -->
           <div class="date-range">
             <div class="form-group">
               <label for="date-from">From Date</label>
@@ -381,12 +518,15 @@
               />
             </div>
           </div>
+          
+          <!-- Action Buttons -->
           <div class="button-group">
             <button type="button" class="btn btn-secondary" on:click={clearSearch}>Clear</button>
             <button type="button" class="btn btn-primary" on:click={searchExpenses}>Search</button>
           </div>
         </div>
         
+        <!-- Search Results -->
         {#if searchLoading}
           <div class="search-loading">Searching...</div>
         {:else if filteredExpenses.length > 0}
@@ -396,7 +536,13 @@
               {#each filteredExpenses as expense}
                 <div class="expense-item">
                   <div class="expense-info">
-                    <div class="expense-date">{new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                    <div class="expense-date">
+                      {new Date(expense.date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </div>
                     <div class="expense-category">{expense.category}</div>
                     {#if expense.notes}
                       <div class="expense-notes">{expense.notes}</div>
@@ -415,6 +561,9 @@
   </div>
 {/if}
 
+<!-- ============================================================================
+     COMPONENT-SPECIFIC STYLES
+     ============================================================================ -->
 <style>
   .expenses-history {
     max-width: 100%;
@@ -447,6 +596,8 @@
   .balance-section {
     margin-bottom: 1.5rem;
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
   }
 
   .balance-card {
@@ -471,28 +622,6 @@
     font-weight: 700;
     color: white;
     line-height: 1.2;
-  }
-
-  .balance-details {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .balance-detail-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .balance-detail-item .expense-text {
-    color: rgba(255, 200, 200, 1);
-    font-weight: 600;
   }
 
   .header-section {
@@ -552,12 +681,6 @@
     to {
       transform: rotate(360deg);
     }
-  }
-
-  .search-modal {
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
   }
 
   .search-form {
@@ -647,4 +770,3 @@
     }
   }
 </style>
-

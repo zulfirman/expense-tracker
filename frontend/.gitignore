@@ -6,3 +6,4 @@ dist/
 *.exe
 go.sum
 git-diff.txt
+.svelte-kit

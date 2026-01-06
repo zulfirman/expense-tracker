@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount, onDestroy, afterUpdate } from 'svelte';
   import api from '$lib/api';
   import { Chart, registerables } from 'chart.js';
+  import '$lib/styles/charts.css';
 
   Chart.register(...registerables);
 
@@ -19,11 +20,14 @@
   let cumulativeChartInstance = null;
   let weeklyChartCanvas;
   let weeklyChartInstance = null;
+  let budgetChartCanvas;
+  let budgetChartInstance = null;
   let loading = true;
   let expensesByCategory = [];
   let dailyExpenses = [];
   let weeklyData = [];
   let cumulativeData = [];
+  let budgets = [];
 
   onMount(async () => {
     await loadMonthDetails();
@@ -50,6 +54,10 @@
       weeklyChartInstance.destroy();
       weeklyChartInstance = null;
     }
+    if (budgetChartInstance) {
+      budgetChartInstance.destroy();
+      budgetChartInstance = null;
+    }
   });
 
   afterUpdate(() => {
@@ -61,9 +69,15 @@
     
     loading = true;
     try {
-      const response = await api.get(`/expenses/month/${month.month}`);
-      expensesByCategory = response.data.categories || [];
-      dailyExpenses = response.data.daily || [];
+      // Load expenses and budgets in parallel
+      const [expensesResponse, budgetsResponse] = await Promise.all([
+        api.get(`/expenses/month/${month.month}`),
+        api.get(`/budgets?month=${month.month}`).catch(() => ({ data: [] }))
+      ]);
+      
+      expensesByCategory = expensesResponse.data.categories || [];
+      dailyExpenses = expensesResponse.data.daily || [];
+      budgets = budgetsResponse.data || [];
       
       // Process data for additional charts
       processChartData();
@@ -89,6 +103,10 @@
         weeklyChartInstance.destroy();
         weeklyChartInstance = null;
       }
+      if (budgetChartInstance) {
+        budgetChartInstance.destroy();
+        budgetChartInstance = null;
+      }
 
       // Create charts after a small delay to ensure canvas is ready
       setTimeout(() => {
@@ -108,6 +126,9 @@
         }
         if (weeklyData.length > 0 && weeklyChartCanvas) {
           createWeeklyChart();
+        }
+        if (budgets.length > 0 && budgetChartCanvas) {
+          createBudgetChart();
         }
       }, 200);
     } catch (error) {
@@ -729,6 +750,129 @@
     });
   }
 
+  function createBudgetChart() {
+    if (!budgetChartCanvas || budgets.length === 0) return;
+
+    // Destroy existing chart if it exists
+    if (budgetChartInstance) {
+      budgetChartInstance.destroy();
+      budgetChartInstance = null;
+    }
+
+    const ctx = budgetChartCanvas.getContext('2d');
+    
+    // Create expense map for quick lookup
+    const expenseMap = new Map();
+    expensesByCategory.forEach(item => {
+      expenseMap.set(item.categoryId, item.total);
+    });
+
+    // Prepare chart data
+    const chartData = budgets.map(budget => {
+      const spent = expenseMap.get(budget.categoryId) || 0;
+      return {
+        category: budget.categoryName,
+        budget: budget.amount,
+        spent: spent
+      };
+    });
+
+    const labels = chartData.map(item => item.category);
+    const budgetData = chartData.map(item => item.budget);
+    const spentData = chartData.map(item => item.spent);
+
+    // Color based on percentage used
+    const backgroundColors = chartData.map(item => {
+      const percentage = item.budget > 0 ? (item.spent / item.budget) * 100 : 0;
+      if (percentage >= 100) return 'rgba(239, 68, 68, 0.8)';
+      if (percentage >= 75) return 'rgba(245, 158, 11, 0.8)';
+      if (percentage >= 50) return 'rgba(251, 191, 36, 0.8)';
+      return 'rgba(16, 185, 129, 0.8)';
+    });
+
+    budgetChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Budget',
+            data: budgetData,
+            backgroundColor: 'rgba(99, 102, 241, 0.3)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 2,
+            borderRadius: 4
+          },
+          {
+            label: 'Spent',
+            data: spentData,
+            backgroundColor: backgroundColors,
+            borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+            borderWidth: 2,
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Category',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Amount (IDR)',
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return (value / 1000000).toFixed(1) + 'M';
+                } else if (value >= 1000) {
+                  return (value / 1000).toFixed(0) + 'K';
+                }
+                return value.toString();
+              }
+            },
+            grid: {
+              display: true,
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          }
+        }
+      }
+    });
+  }
+
   function formatMonthYear(monthYear) {
     const [year, monthNum] = monthYear.split('-');
     const date = new Date(year, monthNum - 1);
@@ -806,6 +950,17 @@
           </div>
         {:else if dailyExpenses.length === 0}
           <div class="no-data">No expenses data available</div>
+        {/if}
+
+        {#if budgets.length > 0}
+          <div class="chart-section">
+            <div class="space-xl"></div>
+            <h3>Budget vs Actual Spending</h3>
+            <p class="chart-description">Compare your budgeted amounts with actual spending</p>
+            <div class="chart-container">
+              <canvas bind:this={budgetChartCanvas}></canvas>
+            </div>
+          </div>
         {/if}
       {:else}
         <div class="no-data">No data available</div>

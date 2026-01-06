@@ -109,3 +109,10 @@ html, body {
   color: var(--primary-color) !important;
 }
 
+/* Spacing scale */
+.space-xs { margin-bottom: 4px; }
+.space-sm { margin-bottom: 8px; }
+.space-md { margin-bottom: 16px; }
+.space-lg { margin-bottom: 24px; }
+.space-xl { margin-bottom: 32px; }
+.space-2xl { margin-bottom: 48px; }

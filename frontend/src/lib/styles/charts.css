@@ -1,0 +1,48 @@
+/* ============================================================================
+   CHART STYLES
+   ============================================================================ */
+
+.chart-section {
+  margin-bottom: 2.5rem;
+}
+
+.chart-section h3 {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.chart-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  margin-top: 1rem;
+}
+
+/* Chart Legend Colors */
+.chart-description .legend-good {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.chart-description .legend-caution {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.chart-description .legend-warning {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.chart-description .legend-exceeded {
+  color: #ef4444;
+  font-weight: 600;
+}
+

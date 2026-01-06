@@ -1,109 +1,104 @@
 <script>
-    import api from '$lib/api';
-    import Swal from 'sweetalert2';
-    import {onMount} from 'svelte';
-    import '$lib/styles/shared.css';
+  // ============================================================================
+  // IMPORTS
+  // ============================================================================
+  import api from '$lib/api';
+  import Swal from 'sweetalert2';
+  import { onMount } from 'svelte';
+  import '$lib/styles/shared.css';
 
-    let categories = [];
-  let budgets = {};
+  // ============================================================================
+  // STATE VARIABLES
+  // ============================================================================
+  let categories = [];              // List of available categories
+  let budgets = {};                 // Map of categoryId -> budget amount
   let currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-  let loading = false;
-  let categoriesLoading = true;
-  let expensesByCategory = {};
-  let budgetCards = [];
-  let showBudgetForm = false;
-  let editingCategory = null;
-  let budgetAmount = '';
+  let loading = false;              // Loading state for async operations
+  let categoriesLoading = true;    // Loading state for categories
+  let expensesByCategory = {};     // Map of categoryId -> total expenses
+  let budgetCards = [];            // Computed array of budget cards with progress
+  let showBudgetForm = false;      // Modal visibility for budget form
+  let editingCategory = null;      // Category ID being edited (null = new)
+  let budgetAmount = '';           // Budget amount input value
 
+  // ============================================================================
+  // LIFECYCLE HOOKS
+  // ============================================================================
   onMount(async () => {
-    // Ensure categories are loaded before budgets and expenses
+    // Load categories first, then budgets and expenses in parallel
     await loadCategories();
     await Promise.all([loadBudgets(), loadExpenses()]);
     
-    // Check if there are no budgets for the current month and offer to import
+    // Check if we should offer to import from latest budget
     await checkAndOfferImport();
   });
 
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Format month string (YYYY-MM) to readable format (e.g., "January 2024")
+   */
   function formatMonthYear(monthStr) {
     const [year, monthNum] = monthStr.split('-').map(Number);
     const date = new Date(year, monthNum - 1);
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  async function checkAndOfferImport() {
-    const hasBudgets = Object.keys(budgets).length > 0;
-    
-    if (!hasBudgets) {
-      // Calculate previous month
-      const [year, month] = currentMonth.split('-').map(Number);
-      let prevYear = year;
-      let prevMonth = month - 1;
-      if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear = year - 1;
-      }
-      const previousMonth = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
-      
-      // Check if previous month has budgets
-      try {
-        const prevResponse = await api.get(`/budgets/latest`);
-        const prevBudgets = prevResponse.data || [];
-        
-        if (prevBudgets.length > 0) {
-          const currentMonthName = formatMonthYear(currentMonth);
-          const previousMonthName = formatMonthYear(previousMonth);
-          
-          const result = await Swal.fire({
-            icon: 'question',
-            title: 'Import Previous Month Budget?',
-            html: `No budgets found for <strong>${currentMonthName}</strong>.<br>Would you like to import budgets from <strong>${previousMonthName}</strong>?`,
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Import',
-            cancelButtonText: 'No, Thanks',
-            reverseButtons: true,
-            zIndex: 9999
-          });
-          
-          if (result.isConfirmed) {
-            loading = true;
-            try {
-              await api.post('/budgets/copy', {
-                fromMonth: previousMonth,
-                toMonth: currentMonth
-              });
-              
-              await loadBudgets();
-              
-              Swal.fire({
-                icon: 'success',
-                title: 'Budgets Imported!',
-                text: `Successfully imported ${prevBudgets.length} budget(s) from ${previousMonthName}`,
-                timer: 2000,
-                showConfirmButton: false,
-                zIndex: 9999
-              });
-            } catch (error) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Import Failed',
-                text: error.response?.data?.message || 'Failed to import budgets',
-                zIndex: 9999
-              });
-            } finally {
-              loading = false;
-            }
-          }
-        }
-      } catch (error) {
-        // Silently fail if we can't check previous month
-      }
+  /**
+   * Format number as Indonesian Rupiah currency
+   */
+  function formatCurrency(amount) {
+    if (!amount && amount !== 0) return '';
+    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  /**
+   * Calculate budget progress percentage (0-100)
+   */
+  function getBudgetProgress(budget, spent) {
+    if (!budget) return 0;
+    return Math.min((spent / budget) * 100, 100);
+  }
+
+  /**
+   * Get budget status based on progress percentage
+   * Returns: 'exceeded', 'warning', 'caution', or 'good'
+   */
+  function getBudgetStatus(progress) {
+    if (progress >= 100) return 'exceeded';
+    if (progress >= 75) return 'warning';
+    if (progress >= 50) return 'caution';
+    return 'good';
+  }
+
+  /**
+   * Get color for budget status
+   */
+  function getStatusColor(status) {
+    switch (status) {
+      case 'exceeded': return 'var(--danger)';
+      case 'warning': return '#f59e0b';
+      case 'caution': return '#fbbf24';
+      default: return 'var(--success)';
     }
   }
 
+  // ============================================================================
+  // DATA LOADING FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Load categories from API
+   * Only shows active categories
+   */
   async function loadCategories() {
     try {
       const response = await api.get('/categories');
-      // Only show active categories in budget page
       categories = response.data
         .filter(cat => cat.isActive !== false)
         .map(cat => ({
@@ -117,6 +112,10 @@
     }
   }
 
+  /**
+   * Load budgets for current month
+   * Stores as map: categoryId -> amount
+   */
   async function loadBudgets() {
     try {
       const response = await api.get(`/budgets?month=${currentMonth}`);
@@ -130,13 +129,15 @@
     }
   }
 
+  /**
+   * Load expenses for current month grouped by category
+   */
   async function loadExpenses() {
     try {
       const response = await api.get(`/expenses/month/${currentMonth}`);
       expensesByCategory = {};
       if (response.data && response.data.categories) {
         response.data.categories.forEach(item => {
-          // Backend now returns categoryId directly, so we can map by ID
           const categoryId = item.categoryId;
           if (categoryId) {
             expensesByCategory[categoryId] = (expensesByCategory[categoryId] || 0) + item.total;
@@ -148,47 +149,103 @@
     }
   }
 
-  function formatCurrency(amount) {
-    if (!amount && amount !== 0) return '';
-    return 'Rp. ' + new Intl.NumberFormat('id-ID', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  }
-
-  function getBudgetProgress(budget, spent) {
-    if (!budget) return 0;
-    return Math.min((spent / budget) * 100, 100);
-  }
-
-  function getBudgetStatus(progress) {
-    if (progress >= 100) return 'exceeded';
-    if (progress >= 75) return 'warning';
-    if (progress >= 50) return 'caution';
-    return 'good';
-  }
-
-  function getStatusColor(status) {
-    switch (status) {
-      case 'exceeded': return 'var(--danger)';
-      case 'warning': return '#f59e0b';
-      case 'caution': return '#fbbf24';
-      default: return 'var(--success)';
+  /**
+   * Check if current month has no budgets and offer to import from latest budget month
+   * Uses /api/budgets/latest endpoint to get the most recent month with budgets
+   */
+  async function checkAndOfferImport() {
+    const hasBudgets = Object.keys(budgets).length > 0;
+    
+    if (!hasBudgets) {
+      try {
+        // Get the latest month that has budgets (most recently inputted)
+        const latestResponse = await api.get('/budgets/latest');
+        const latestMonth = latestResponse.data?.month;
+        
+        if (latestMonth && latestMonth !== currentMonth) {
+          // Load budgets from latest month to get count
+          const latestBudgetsResponse = await api.get(`/budgets?month=${latestMonth}`);
+          const latestBudgets = latestBudgetsResponse.data || [];
+          
+          if (latestBudgets.length > 0) {
+            const currentMonthName = formatMonthYear(currentMonth);
+            const latestMonthName = formatMonthYear(latestMonth);
+            
+            const result = await Swal.fire({
+              icon: 'question',
+              title: 'Import Latest Budget?',
+              html: `No budgets found for <strong>${currentMonthName}</strong>.<br>Would you like to import budgets from <strong>${latestMonthName}</strong> (your latest budget)?`,
+              showCancelButton: true,
+              confirmButtonText: 'Yes, Import',
+              cancelButtonText: 'No, Thanks',
+              reverseButtons: true,
+              zIndex: 9999
+            });
+            
+            if (result.isConfirmed) {
+              loading = true;
+              try {
+                await api.post('/budgets/copy', {
+                  fromMonth: latestMonth,
+                  toMonth: currentMonth
+                });
+                
+                await loadBudgets();
+                
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Budgets Imported!',
+                  text: `Successfully imported ${latestBudgets.length} budget(s) from ${latestMonthName}`,
+                  timer: 2000,
+                  showConfirmButton: false,
+                  zIndex: 9999
+                });
+              } catch (error) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Import Failed',
+                  text: error.response?.data?.message || 'Failed to import budgets',
+                  zIndex: 9999
+                });
+              } finally {
+                loading = false;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Silently fail if we can't check latest budget month
+      }
     }
   }
 
+  // ============================================================================
+  // BUDGET FORM FUNCTIONS
+  // ============================================================================
+  
+  /**
+   * Open budget form modal
+   * @param {number|null} categoryId - Category ID to edit, or null for new budget
+   */
   function openBudgetForm(categoryId = null) {
     editingCategory = categoryId;
     budgetAmount = categoryId && budgets[categoryId] ? budgets[categoryId].toString() : '';
     showBudgetForm = true;
   }
 
+  /**
+   * Close budget form modal and reset state
+   */
   function closeBudgetForm() {
     showBudgetForm = false;
     editingCategory = null;
     budgetAmount = '';
   }
 
+  /**
+   * Save budget to API
+   * Validates amount and creates/updates budget
+   */
   async function saveBudget() {
     if (!editingCategory) return;
     
@@ -234,6 +291,10 @@
     }
   }
 
+  /**
+   * Delete budget for a category
+   * Shows confirmation dialog first
+   */
   async function deleteBudget(categoryId) {
     const result = await Swal.fire({
       icon: 'warning',
@@ -272,6 +333,10 @@
     }
   }
 
+  /**
+   * Handle month selector change
+   * Reloads budgets and expenses for new month
+   */
   async function handleMonthChange() {
     await Promise.all([loadBudgets(), loadExpenses()]);
     // Small delay to ensure budgets are loaded before checking
@@ -280,12 +345,23 @@
     }, 100);
   }
 
+  /**
+   * Handle budget amount input
+   * Only allows numeric characters
+   */
   function handleAmountInput(e) {
     const value = e.target.value;
     budgetAmount = value.replace(/\D/g, '');
   }
 
-  // Derive budget cards reactively so progress updates when data changes
+  // ============================================================================
+  // REACTIVE COMPUTATIONS
+  // ============================================================================
+  
+  /**
+   * Compute budget cards with progress data
+   * This runs automatically when categories, budgets, or expenses change
+   */
   $: budgetCards = categories.map((category) => {
     const budget = budgets[category.id] || 0;
     const spent = expensesByCategory[category.id] || 0;
@@ -302,60 +378,15 @@
       remaining
     };
   });
-
-  // Check for budget alerts
-  function checkBudgetAlerts() {
-    categories.forEach(category => {
-      const progress = getBudgetProgress(category.id);
-      const budget = budgets[category.id] || 0;
-      const spent = expensesByCategory[category.id] || 0;
-
-      if (budget > 0) {
-        if (progress >= 100) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Budget Exceeded!',
-            html: `<strong>${category.label}</strong><br>You've exceeded your budget of ${formatCurrency(budget)}. Current spending: ${formatCurrency(spent)}`,
-            timer: 5000,
-            zIndex: 9999
-          });
-        } else if (progress >= 75 && progress < 100) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Budget Warning',
-            html: `<strong>${category.label}</strong><br>You've used ${Math.round(progress)}% of your budget. Remaining: ${formatCurrency(budget - spent)}`,
-            timer: 4000,
-            zIndex: 9999
-          });
-        } else if (progress >= 50 && progress < 75) {
-          Swal.fire({
-            icon: 'info',
-            title: 'Budget Alert',
-            html: `<strong>${category.label}</strong><br>You've used ${Math.round(progress)}% of your budget.`,
-            timer: 3000,
-            zIndex: 9999
-          });
-        }
-      }
-    });
-  }
-
-  // Auto-check alerts when expenses change
-  $: if (Object.keys(expensesByCategory).length > 0) {
-    // Only show alerts if user has budgets set
-    if (Object.keys(budgets).length > 0) {
-      // Debounce to avoid too many alerts
-      setTimeout(() => {
-        // checkBudgetAlerts(); // Commented out to avoid annoying alerts, can be enabled if needed
-      }, 1000);
-    }
-  }
-
 </script>
 
+<!-- ============================================================================
+     TEMPLATE
+     ============================================================================ -->
 <div class="budget-page">
   <h1>Monthly Budget Planning</h1>
 
+  <!-- Month Selector -->
   <div class="month-selector">
     <label for="month">Select Month:</label>
     <input
@@ -367,14 +398,18 @@
     />
   </div>
 
+  <!-- Loading State -->
   {#if categoriesLoading}
     <div class="loading">Loading categories...</div>
+  <!-- Empty State -->
   {:else if categories.length === 0}
     <div class="no-categories">No categories available</div>
+  <!-- Budget List -->
   {:else}
     <div class="budget-list">
       {#each budgetCards as card}
         <div class="budget-card">
+          <!-- Card Header -->
           <div class="budget-header">
             <div class="category-info">
               <h3>{card.category.label}</h3>
@@ -409,6 +444,7 @@
             </div>
           </div>
 
+          <!-- Progress Bar (only shown if budget is set) -->
           {#if card.budget > 0}
             <div class="budget-progress">
               <div class="progress-info">
@@ -435,9 +471,10 @@
       {/each}
     </div>
   {/if}
-  <br><br>
+  <div class="space-xl"></div>
 </div>
 
+<!-- Budget Form Modal -->
 {#if showBudgetForm}
   <div class="modal-backdrop" on:click={closeBudgetForm}>
     <div class="modal-content" on:click|stopPropagation>
@@ -476,6 +513,9 @@
   </div>
 {/if}
 
+<!-- ============================================================================
+     STYLES
+     ============================================================================ -->
 <style>
   .budget-page {
     max-width: 800px;
@@ -566,12 +606,6 @@
     align-items: center;
   }
 
-  .budget-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
   .btn-add {
     padding: 0.5rem 1rem;
     background: var(--primary-color);
@@ -652,4 +686,3 @@
     color: var(--primary-color);
   }
 </style>
-
