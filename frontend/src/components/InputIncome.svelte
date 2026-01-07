@@ -44,6 +44,7 @@
   });
 
   async function loadCategories() {
+    categoriesLoading = true;
     try {
       const response = await api.get('/categories?type=income');
       // Only show active income categories
@@ -94,7 +95,6 @@
       selectedCategoryIds = [...selectedCategoryIds, id];
     }
   }
-
 
   function handleAmountInput(e) {
     const value = e.target.value;
@@ -218,6 +218,7 @@
     expenseDate = fixedDate || new Date().toISOString().split('T')[0];
     notes = '';
     amount = '';
+    selectedCategoryIds = [];
   }
 
   function handleCancel() {
@@ -235,350 +236,143 @@
   }
 </script>
 
-<form class="input-income" on:submit|preventDefault={handleSubmit}>
-  {#if showTitle}
-    <h1>{incomeId ? 'Edit Income' : 'Input Income'}</h1>
-  {/if}
+<div class="max-w-2xl mx-auto">
+  <div class="card-body">
+    {#if showTitle}
+      <h2 class="card-title text-2xl mb-4">{incomeId ? 'Edit Income' : 'Input Income'}</h2>
+    {/if}
 
-  <div class="form-group">
-    <label>Category {#if selectedCategoryIds.length > 0}<span class="selected-count">({selectedCategoryIds.length} selected)</span>{/if}</label>
-    {#if categoriesLoading}
-      <div class="loading-categories">Loading categories...</div>
-    {:else}
-      <div class="category-pills">
-        {#each categories as category}
-          <button
-            type="button"
-            class="category-pill"
-            class:selected={selectedCategoryIds.some(id => {
-              const selectedId = Number(id);
-              const catId = Number(category.id);
-              return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
-            })}
-            on:click={(e) => toggleCategory(category.id, e)}
-          >
-            {category.label}
-          </button>
-        {/each}
+    <form on:submit|preventDefault={handleSubmit}>
+      <!-- Category Selection -->
+      <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text font-semibold">
+              Category
+              {#if selectedCategoryIds.length > 0}
+                <span class="badge badge-primary badge-sm ml-2">{selectedCategoryIds.length} Selected</span>
+              {/if}
+            </span>
+        </label>
+        {#if categoriesLoading}
+          <div class="flex justify-center py-4">
+            <span class="loading loading-spinner loading-md"></span>
+          </div>
+        {:else}
+          <div class="flex flex-wrap gap-2 mt-2">
+            {#each categories as category}
+              {@const isSelected = selectedCategoryIds.some(id => {
+                  const selectedId = Number(id);
+                  const catId = Number(category.id);
+                  return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
+              })}
+              <button
+                type="button"
+                class="btn btn-sm h-auto py-2 px-4 rounded-full transition-all"
+                class:btn-primary={isSelected}
+                class:btn-outline={!isSelected}
+                on:click={(e) => toggleCategory(category.id, e)}
+              >
+                {category.label}
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
-    {/if}
-  </div>
 
-  {#if !fixedDate}
-    <div class="form-group">
-      <label for="date">Date</label>
-      <DatePicker
-        id="date"
-        bind:value={expenseDate}
-        placeholder="Select date"
-        on:dateChange={handleDateChange}
-      />
-    </div>
-  {/if}
-
-  <div class="form-group">
-    <label for="amount">Amount (Rp.)</label>
-    <input
-      id="amount"
-      type="text"
-      bind:value={amount}
-      on:input={handleAmountInput}
-      placeholder="0"
-      class="form-input"
-      on:keydown={handleKeyDown}
-      inputmode="numeric"
-    />
-    {#if amount}
-      <div class="amount-preview">{formatCurrency(amount)}</div>
-    {/if}
-    
-    <!-- Quick Amount Buttons -->
-    <div class="quick-amounts">
-      <label class="quick-amounts-label">Quick Amount:</label>
-      <div class="quick-amounts-buttons">
-        {#each quickAmounts as quickAmount}
-          <button
-            type="button"
-            class="quick-amount-btn"
-            class:active={amount === quickAmount.toString()}
-            on:click={() => setQuickAmount(quickAmount)}
-          >
-            {formatCurrency(quickAmount.toString())}
-          </button>
-        {/each}
-      </div>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="notes">Notes</label>
-    <textarea
-      id="notes"
-      bind:value={notes}
-      placeholder="Add notes (optional)"
-      class="form-textarea"
-      rows="3"
-      on:keydown={handleKeyDown}
-    ></textarea>
-  </div>
-
-  <div class="button-group">
-    {#if showCancel}
-      <button type="button" class="btn btn-secondary" on:click={handleCancel} disabled={loading}>Cancel</button>
-    {:else if !incomeId}
-      <button type="button" class="btn btn-secondary" on:click={handleClear} disabled={loading}>Clear</button>
-    {/if}
-    <button type="submit" class="btn btn-primary" disabled={loading}>
-      {#if loading}
-        <span class="spinner"></span> {incomeId ? 'Updating...' : 'Submitting...'}
-      {:else}
-        {submitLabel}
+      <!-- Date Selection -->
+      {#if !fixedDate}
+        <div class="form-control mb-4">
+          <label class="label" for="date">
+            <span class="label-text font-semibold">Date</span>
+          </label>
+          <DatePicker
+            id="date"
+            bind:value={expenseDate}
+            placeholder="Select date"
+            on:dateChange={handleDateChange}
+          />
+        </div>
       {/if}
-    </button>
+
+      <!-- Amount Input -->
+      <div class="form-control mb-4">
+        <label class="label" for="amount">
+          <span class="label-text font-semibold">Amount (Rp.)</span>
+        </label>
+        <input
+          id="amount"
+          type="text"
+          bind:value={amount}
+          on:input={handleAmountInput}
+          placeholder="0"
+          class="input input-bordered w-full text-lg border-2"
+          on:keydown={handleKeyDown}
+          inputmode="numeric"
+        />
+        {#if amount}
+          <div class="label">
+              <span class="label-text-alt text-primary font-semibold text-xl mt-2">
+                {formatCurrency(amount)}
+              </span>
+          </div>
+        {/if}
+
+        <!-- Quick Amount Buttons -->
+        <div class="mt-4 pt-4 border-t border-base-300">
+          <label class="label">
+            <span class="label-text text-sm text-base-content/70">Quick Amount:</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2 mt-2">
+            {#each quickAmounts as quickAmount}
+              <button
+                type="button"
+                class="btn btn-sm"
+                class:btn-primary={amount === quickAmount.toString()}
+                class:btn-outline={amount !== quickAmount.toString()}
+                on:click={() => setQuickAmount(quickAmount)}
+              >
+                {formatCurrency(quickAmount.toString())}
+              </button>
+            {/each}
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-control mb-6">
+        <label class="label" for="notes">
+          <span class="label-text font-semibold">Notes</span>
+        </label>
+        <textarea
+          id="notes"
+          bind:value={notes}
+          placeholder="Add notes (optional)"
+          class="textarea textarea-bordered w-full border-2"
+          rows="3"
+          on:keydown={handleKeyDown}
+        ></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2">
+        {#if showCancel}
+          <button type="button" class="btn btn-secondary flex-1" on:click={handleCancel} disabled={loading}>
+            Cancel
+          </button>
+        {:else if !incomeId}
+          <button type="button" class="btn btn-soft flex-1" on:click={handleClear} disabled={loading}>
+            Clear
+          </button>
+        {/if}
+        <button type="submit" class="btn btn-primary flex-1" disabled={loading}>
+          {#if loading}
+            <span class="loading loading-spinner loading-sm"></span>
+            {incomeId ? 'Updating...' : 'Submitting...'}
+          {:else}
+            {submitLabel}
+          {/if}
+        </button>
+      </div>
+    </form>
   </div>
-  <div class="space-xl"></div>
-</form>
-
-<style>
-  .input-income {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .form-input,
-  .form-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    transition: border-color 0.2s;
-  }
-
-  .form-input:focus,
-  .form-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  .amount-preview {
-    margin-top: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 0.875rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: #4338ca;
-  }
-
-  .btn-primary:active {
-    transform: scale(0.98);
-  }
-
-  .btn-secondary {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--background);
-  }
-
-  .btn-secondary:active {
-    transform: scale(0.98);
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .btn-primary:disabled {
-    background-color: var(--text-secondary);
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* Quick Amount Buttons */
-  .quick-amounts {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .quick-amounts-label {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-  }
-
-  .quick-amounts-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .quick-amount-btn {
-    padding: 0.75rem 0.5rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-  }
-
-  .quick-amount-btn:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-  }
-
-  .quick-amount-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  /* Category Pills */
-  .selected-count {
-    color: var(--primary-color);
-    font-weight: 600;
-  }
-
-  .loading-categories {
-    padding: 1rem;
-    text-align: center;
-    color: var(--text-secondary);
-  }
-
-  .category-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .category-pill {
-    padding: 0.5rem 1rem;
-    background: var(--background);
-    border: 2px solid var(--border);
-    border-radius: 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .category-pill:hover {
-    background: var(--surface);
-    border-color: var(--primary-color);
-    transform: translateY(-1px);
-  }
-
-  .category-pill.selected {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  /* Mobile Optimizations */
-  @media (max-width: 768px) {
-    .input-income {
-      padding: 0.5rem;
-    }
-
-    .form-input,
-    .form-textarea {
-      font-size: 16px;
-      padding: 1rem;
-      min-height: 48px;
-    }
-
-    .quick-amounts-buttons {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .quick-amount-btn {
-      padding: 1rem 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    .button-group {
-      flex-direction: column;
-    }
-
-    .btn {
-      min-height: 48px;
-      font-size: 1rem;
-    }
-
-    .category-pill {
-      padding: 0.75rem 1rem;
-      font-size: 0.875rem;
-    }
-  }
-</style>
-
+</div>

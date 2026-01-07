@@ -4,7 +4,6 @@
   import { auth } from '$lib/stores/auth';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
-  import '$lib/styles/shared.css';
 
   let currentPassword = '';
   let newPassword = '';

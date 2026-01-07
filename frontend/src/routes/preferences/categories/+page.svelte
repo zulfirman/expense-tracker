@@ -4,7 +4,6 @@
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
-  import '$lib/styles/shared.css';
 
   let categories = [];
   let incomeCategories = [];

@@ -5,7 +5,6 @@
   import { currency } from '$lib/stores/currency';
   import { quickAmounts } from '$lib/stores/quickAmounts';
   import Swal from 'sweetalert2';
-  import '$lib/styles/shared.css';
 
   let selectedCurrency = 'IDR';
   let amounts = [];

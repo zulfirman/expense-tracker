@@ -1,7 +1,6 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import "tailwindcss";
+@plugin "daisyui" {
+    themes: cupcake --default, light --prefersdark;
 }
 
 :root {
@@ -30,8 +29,6 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: var(--background);
-  color: var(--text-primary);
   overflow-x: hidden;
 }
 

@@ -5,7 +5,6 @@
   import { currency } from '$lib/stores/currency';
   import { auth } from '$lib/stores/auth';
   import Swal from 'sweetalert2';
-  import '$lib/styles/shared.css';
 
   let amounts = [];
   let newAmount = '';

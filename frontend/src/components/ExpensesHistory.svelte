@@ -8,8 +8,6 @@
   import MonthDetailModal from './MonthDetailModal.svelte';
   import DateExpensesModal from './DateExpensesModal.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
-  import '$lib/styles/shared.css';
-  import '$lib/styles/modals.css';
   import { formatCurrency } from '$lib/utils/currency';
 
   // ============================================================================

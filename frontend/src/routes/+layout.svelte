@@ -231,159 +231,162 @@
 
 {#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup' || $page.url.pathname === '/'}
 <div class="app-container">
+  {#if isAuthenticated && $page.url.pathname !== '/login' && $page.url.pathname !== '/signup'}
   <header class="top-header">
     <div class="header-actions">
       {#if isAuthenticated}
         {#if accountList.length > 1}
-          <div class="account-menu-container">
-            <button class="account-toggle" on:click={toggleAccountMenu} title="Switch Account">
+          <!-- Account switcher dropdown -->
+          <div class="dropdown dropdown-end">
+            <div
+              tabindex="0"
+              role="button"
+              class="btn btn-sm btn-soft gap-2"
+              title="Switch Account"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              <span class="account-count">{accountList.length} Accounts</span>
-            </button>
-            {#if showAccountMenu}
-              <div class="account-menu">
-                <div class="account-menu-header">Switch Account</div>
-                {#each accountList as account}
-                  <div 
-                    class="account-item" 
-                    class:active={account.id === currentAccountId}
+              <span class="text-xs font-medium">{accountList.length} Accounts</span>
+            </div>
+            <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1002] w-72 p-2 shadow">
+              <li class="menu-title">
+                <span>Switch Account</span>
+              </li>
+              {#each accountList as account}
+                <li>
+                  <button
+                    class="justify-between"
                     on:click={() => handleSwitchAccount(account.id)}
                   >
-                    <div class="account-info">
-                      <div class="account-name">{account.name}</div>
-                      <div class="account-email">{account.email}</div>
+                    <div class="flex flex-col items-start">
+                      <span class="font-medium text-sm truncate">{account.name}</span>
+                      <span class="text-xs opacity-70 truncate">{account.email}</span>
                     </div>
-                    {#if account.id === currentAccountId}
-                      <span class="current-badge">Current</span>
-                    {/if}
-                    <button 
-                      class="remove-account-btn"
-                      on:click={(e) => handleRemoveAccount(account.id, e)}
-                      title="Remove Account"
-                    >
-                      ×
-                    </button>
-                  </div>
-                {/each}
-              </div>
-            {/if}
+                    <div class="flex items-center gap-2">
+                      {#if account.id === currentAccountId}
+                        <span class="badge badge-primary badge-sm">Current</span>
+                      {/if}
+                      <span
+                        class="btn btn-xs btn-soft text-error"
+                        on:click|stopPropagation={(e) => handleRemoveAccount(account.id, e)}
+                        title="Remove Account"
+                      >
+                        ×
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              {/each}
+              <li>
+                <button on:click={openAddAccountModal}>
+                  + Add account
+                </button>
+              </li>
+            </ul>
           </div>
         {/if}
-        <div class="profile-menu-container">
-          <button class="profile-toggle" on:click={toggleProfileMenu} title="Profile">
+
+        <!-- Profile dropdown -->
+        <div class="dropdown dropdown-end">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-sm btn-soft gap-2"
+            title="Profile"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
             {#if currentUser}
-              <span class="user-name">{currentUser.name}</span>
+              <span class="max-w-[120px] truncate text-sm font-semibold">{currentUser.name}</span>
             {/if}
-          </button>
-          {#if showProfileMenu}
-            <div class="profile-menu">
-              <button class="profile-menu-item" on:click={handleProfileClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
+          </div>
+          <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1002] w-52 p-2 shadow">
+            <li>
+              <button on:click={handleProfileClick}>
                 Profile
               </button>
-              <button class="profile-menu-item" on:click={handlePreferencesClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
-                </svg>
+            </li>
+            <li>
+              <button on:click={handlePreferencesClick}>
                 Preferences
               </button>
-              <button class="profile-menu-item" on:click={openAddAccountModal}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Add Account
+            </li>
+            <li>
+              <button on:click={handleChangePasswordClick}>
+                Change password
               </button>
-              <button class="profile-menu-item" on:click={handleLogout}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
+            </li>
+            <li>
+              <button class="text-error" on:click={handleLogout}>
                 Logout
               </button>
-            </div>
-          {/if}
+            </li>
+          </ul>
         </div>
       {/if}
     </div>
   </header>
+  {/if}
 
   <main>
     <slot />
   </main>
 
-  <nav class="bottom-nav">
-    <a 
-      href="/expenses"
-      data-sveltekit-preload-data="hover"
-      class="nav-item" 
-      class:active={$page.url.pathname === '/expenses' || $page.url.pathname === '/'}
-      on:click|preventDefault={() => goto('/expenses')}
+  {#if isAuthenticated && $page.url.pathname !== '/login' && $page.url.pathname !== '/signup'}
+  <div class="dock dock-sm fixed left-0 right-0 bottom-0 z-[1000] px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+    <button
+      class:dock-active={$page.url.pathname === '/expenses' || $page.url.pathname === '/'}
+      on:click={() => goto('/expenses')}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
-      <span>Expenses</span>
-    </a>
-    <a 
-      href="/income"
-      data-sveltekit-preload-data="hover"
-      class="nav-item" 
-      class:active={$page.url.pathname === '/income'}
-      on:click|preventDefault={() => goto('/income')}
+      <span class="dock-label">Expenses</span>
+    </button>
+
+    <button
+      class:dock-active={$page.url.pathname === '/income'}
+      on:click={() => goto('/income')}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="19" x2="12" y2="5"></line>
         <polyline points="5 12 12 5 19 12"></polyline>
       </svg>
-      <span>Income</span>
-    </a>
-    <a 
-      href="/history"
-      data-sveltekit-preload-data="hover"
-      class="nav-item" 
-      class:active={$page.url.pathname === '/history'}
-      on:click|preventDefault={() => goto('/history')}
+      <span class="dock-label">Income</span>
+    </button>
+
+    <button
+      class:dock-active={$page.url.pathname === '/history'}
+      on:click={() => goto('/history')}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
         <line x1="16" y1="2" x2="16" y2="6"></line>
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
       </svg>
-      <span>History</span>
-    </a>
-    <a 
-      href="/budget"
-      data-sveltekit-preload-data="hover"
-      class="nav-item" 
-      class:active={$page.url.pathname === '/budget'}
-      on:click|preventDefault={() => goto('/budget')}
+      <span class="dock-label">History</span>
+    </button>
+
+    <button
+      class:dock-active={$page.url.pathname === '/budget'}
+      on:click={() => goto('/budget')}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
       </svg>
-      <span>Budget</span>
-    </a>
-  </nav>
+      <span class="dock-label">Budget</span>
+    </button>
+  </div>
+  {/if}
 </div>
 {/if}
 
@@ -458,186 +461,6 @@
     align-items: center;
   }
 
-
-  .profile-menu-container {
-    position: relative;
-  }
-
-  .profile-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-    border: 1.5px solid var(--primary-color);
-    background: var(--surface);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-  }
-
-  .profile-toggle:hover {
-    background: var(--background);
-  }
-
-  .user-name {
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .profile-menu {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 150px;
-    overflow: hidden;
-  }
-
-  .profile-menu-item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border: none;
-    background: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background 0.2s;
-    font-size: 0.875rem;
-    text-align: left;
-  }
-
-  .profile-menu-item:hover {
-    background: var(--background);
-  }
-
-  .profile-menu-item svg {
-    flex-shrink: 0;
-  }
-
-  .account-menu-container {
-    position: relative;
-  }
-
-  .account-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.875rem;
-  }
-
-  .account-toggle:hover {
-    background: var(--background);
-  }
-
-  .account-count {
-    font-size: 0.75rem;
-  }
-
-  .account-menu {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 250px;
-    max-width: 300px;
-    overflow: hidden;
-  }
-
-  .account-menu-header {
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border);
-    font-size: 0.875rem;
-  }
-
-  .account-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-    position: relative;
-  }
-
-  .account-item:hover {
-    background: var(--background);
-  }
-
-  .account-item.active {
-    background: var(--background);
-  }
-
-  .account-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .account-name {
-    font-weight: 500;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .account-email {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .current-badge {
-    font-size: 0.75rem;
-    color: var(--primary-color);
-    font-weight: 500;
-    margin-right: 0.5rem;
-  }
-
-  .remove-account-btn {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    line-height: 1;
-    opacity: 0.7;
-    transition: all 0.2s;
-  }
-
-  .remove-account-btn:hover {
-    opacity: 1;
-    color: var(--danger);
-  }
-
-  .profile-menu-item {
-    text-decoration: none;
-  }
-
   main {
     flex: 1;
     padding: 1rem;
@@ -649,58 +472,6 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: 80px;
     padding-top: 60px;
-  }
-
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-around;
-    padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  }
-
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 1rem;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: color 0.2s;
-    font-size: 0.75rem;
-    flex: 1;
-    min-width: 0;
-    text-decoration: none;
-  }
-
-  .nav-item svg {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-  }
-
-  .nav-item.active {
-    color: var(--primary-color);
-  }
-
-  .nav-item:active {
-    opacity: 0.7;
-  }
-
-  .nav-item span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
   }
 
   .modal-backdrop {

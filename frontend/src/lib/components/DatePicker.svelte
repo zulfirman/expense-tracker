@@ -71,114 +71,91 @@
   {disabled}
   value={value}
   on:input={handleInput}
-  class="date-picker-input"
+  class="input input-bordered w-full border-2"
 />
 
 <style>
-  :global(.date-picker-input) {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    background: var(--background);
-    color: var(--text-primary);
-    cursor: pointer;
-  }
-
-  :global(.date-picker-input:focus) {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  :global(.date-picker-input:disabled) {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  /* Flatpickr theme customization */
+  /* Flatpickr theme customization to match DaisyUI */
   :global(.flatpickr-calendar) {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: hsl(var(--b2));
+    border: 1px solid hsl(var(--b3));
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     font-family: inherit;
   }
 
   :global(.flatpickr-months) {
-    background: var(--primary-color);
-    border-radius: 0.5rem 0.5rem 0 0;
-    padding: 0.5rem;
+    background: hsl(var(--p));
+    border-radius: 1rem 1rem 0 0;
+    padding: 0.75rem;
   }
 
   :global(.flatpickr-month) {
-    color: white;
+    color: hsl(var(--pc));
   }
 
   :global(.flatpickr-current-month) {
-    color: white;
+    color: hsl(var(--pc));
     font-weight: 600;
   }
 
   :global(.flatpickr-prev-month),
   :global(.flatpickr-next-month) {
-    color: white;
-    fill: white;
+    color: hsl(var(--pc));
+    fill: hsl(var(--pc));
   }
 
   :global(.flatpickr-prev-month:hover),
   :global(.flatpickr-next-month:hover) {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0.25rem;
+    background: hsl(var(--p) / 0.2);
+    border-radius: 0.5rem;
   }
 
   :global(.flatpickr-weekdays) {
-    background: var(--background);
-    border-bottom: 1px solid var(--border);
+    background: hsl(var(--b2));
+    border-bottom: 1px solid hsl(var(--b3));
   }
 
   :global(.flatpickr-weekday) {
-    color: var(--text-secondary);
+    color: hsl(var(--bc) / 0.7);
     font-weight: 600;
     font-size: 0.875rem;
   }
 
   :global(.flatpickr-days) {
-    background: var(--surface);
+    background: hsl(var(--b2));
   }
 
   :global(.flatpickr-day) {
-    color: var(--text-primary);
+    color: hsl(var(--bc));
     border: 1px solid transparent;
   }
 
   :global(.flatpickr-day:hover) {
-    background: var(--background);
-    border-color: var(--primary-color);
+    background: hsl(var(--b3));
+    border-color: hsl(var(--p));
   }
 
   :global(.flatpickr-day.selected) {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+    background: hsl(var(--p));
+    color: hsl(var(--pc));
+    border-color: hsl(var(--p));
   }
 
   :global(.flatpickr-day.today) {
-    border-color: var(--primary-color);
+    border-color: hsl(var(--p));
     font-weight: 600;
   }
 
   :global(.flatpickr-day.flatpickr-disabled) {
-    color: var(--text-secondary);
+    color: hsl(var(--bc) / 0.4);
     opacity: 0.4;
     cursor: not-allowed;
   }
 
   :global(.flatpickr-day.prevMonthDay),
   :global(.flatpickr-day.nextMonthDay) {
-    color: var(--text-secondary);
+    color: hsl(var(--bc) / 0.5);
     opacity: 0.5;
   }
 </style>
-

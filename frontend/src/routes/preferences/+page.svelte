@@ -3,7 +3,6 @@
   import { goto } from '$app/navigation';
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
-  import '$lib/styles/shared.css';
 
   let currentTheme = 'light';
 

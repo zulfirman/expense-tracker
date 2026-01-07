@@ -49,7 +49,7 @@
 }
 
 .btn.ghost,
-.btn-ghost {
+.btn-soft {
   background: transparent;
   border-color: var(--border);
   color: var(--text-primary);

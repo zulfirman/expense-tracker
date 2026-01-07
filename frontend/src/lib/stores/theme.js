@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 function createThemeStore() {
-  const { subscribe, set, update } = writable('light');
+  const { subscribe, set, update } = writable('pastel');
 
   return {
     subscribe,
@@ -16,7 +16,7 @@ function createThemeStore() {
       if (typeof window !== 'undefined') {
         // Check localStorage first
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
+        if (savedTheme && (savedTheme === 'pastel' || savedTheme === 'night')) {
           set(savedTheme);
           applyTheme(savedTheme);
           return;
@@ -24,14 +24,14 @@ function createThemeStore() {
         
         // Check system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = prefersDark ? 'dark' : 'light';
+        const theme = prefersDark ? 'night' : 'pastel';
         set(theme);
         applyTheme(theme);
         
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
           if (!localStorage.getItem('theme')) {
-            const newTheme = e.matches ? 'dark' : 'light';
+            const newTheme = e.matches ? 'night' : 'pastel';
             set(newTheme);
             applyTheme(newTheme);
           }
@@ -40,7 +40,7 @@ function createThemeStore() {
     },
     toggle: () => {
       update(theme => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        const newTheme = theme === 'night' ? 'pastel' : 'night';
         if (typeof window !== 'undefined') {
           localStorage.setItem('theme', newTheme);
           applyTheme(newTheme);
@@ -55,11 +55,8 @@ function applyTheme(theme) {
   if (typeof document === 'undefined') return;
   
   const root = document.documentElement;
-  if (theme === 'dark') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
+  // DaisyUI uses data-theme attribute
+  root.setAttribute('data-theme', theme);
 }
 
 export const theme = createThemeStore();
