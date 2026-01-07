@@ -347,7 +347,7 @@
                     <div class="space-y-1">
                       <div class="flex flex-wrap gap-1">
                         {#each expense.categories as cat}
-                          <span class="badge badge-outline">
+                          <span class="badge px-3 py-2 badge-outline">
                             {#if typeof cat === 'string'}
                               {cat}
                             {:else}

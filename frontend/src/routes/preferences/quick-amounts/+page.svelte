@@ -130,7 +130,7 @@
       {:else}
         <div class="flex flex-wrap gap-2">
           {#each amounts as amt}
-            <div class="badge badge-outline gap-1 px-3 py-3 border-1">
+            <div class="badge px-3 py-2 badge-outline gap-1 px-3 py-3 border-1">
               <span class="text-sm">{amt.toLocaleString()}</span>
               <button
                 class="btn btn-xs btn-ghost text-error min-h-0 h-5 w-5 p-0"

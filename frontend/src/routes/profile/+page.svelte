@@ -97,172 +97,68 @@
   }
 </script>
 
-<div class="profile-page">
-  <h1>Profile</h1>
-
-  {#if loading}
-    <div class="loading">Loading profile...</div>
-  {:else}
-    <div class="profile-form">
-      <fieldset class="fieldset mb-4">
-        <legend class="fieldset-legend">Name</legend>
-        <input
-          id="name"
-          type="text"
-          bind:value={name}
-          placeholder="Your name"
-          class="input input-bordered w-full border-2"
-          disabled={saving}
-        />
-      </fieldset>
-
-      <fieldset class="fieldset mb-4">
-        <legend class="fieldset-legend">Email</legend>
-        <input
-          id="email"
-          type="email"
-          bind:value={email}
-          placeholder="your@email.com"
-          class="input input-bordered w-full border-2"
-          disabled={saving}
-        />
-      </fieldset>
-
-      <div class="button-group">
-        <button class="btn btn-primary" on:click={handleSave} disabled={saving}>
-          {#if saving}
-            <span class="spinner"></span> Saving...
-          {:else}
-            Save Changes
-          {/if}
-        </button>
-        <button class="btn btn-danger" on:click={handleLogout} disabled={saving}>
-          Logout
-        </button>
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="card bg-base-100 shadow-xl border border-base-300">
+    <div class="card-body">
+      <div class="flex items-center justify-between gap-2">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-base-content/60">Account</p>
+          <h1 class="text-2xl font-bold">Profile</h1>
+        </div>
+        <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Preferences</button>
       </div>
+
+      {#if loading}
+        <div class="flex justify-center py-8">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+      {:else}
+        <div class="grid gap-4 md:grid-cols-2">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Name</legend>
+            <input
+              id="name"
+              type="text"
+              bind:value={name}
+              placeholder="Your name"
+              class="input input-bordered w-full border-2"
+              disabled={saving}
+            />
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Email</legend>
+            <input
+              id="email"
+              type="email"
+              bind:value={email}
+              placeholder="your@email.com"
+              class="input input-bordered w-full border-2"
+              disabled={saving}
+            />
+          </fieldset>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-3 mt-4">
+          <button class="btn btn-primary w-full" on:click={handleSave} disabled={saving}>
+            {#if saving}
+              <span class="loading loading-spinner loading-sm mr-1"></span>
+              Saving...
+            {:else}
+              Save Changes
+            {/if}
+          </button>
+        </div>
+        <div class="flex flex-col md:flex-row gap-3 mt-4">
+          <button class="btn btn-error w-full" on:click={handleLogout} disabled={saving}>
+            Logout
+          </button>
+          <div class="badge px-3 py-2 badge-accent">Accent</div>
+        </div>
+      {/if}
     </div>
-  {/if}
+  </div>
 </div>
-
-<style>
-  .profile-page {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-  }
-
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-  }
-
-  .profile-form {
-    background: var(--surface);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    background: var(--background);
-    color: var(--text-primary);
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  .form-input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 0.875rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #4338ca;
-  }
-
-  .btn-danger {
-    background-color: var(--danger);
-    color: white;
-  }
-
-  .btn-danger:hover:not(:disabled) {
-    background-color: #dc2626;
-  }
-
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  @media (max-width: 768px) {
-    .button-group {
-      flex-direction: column;
-    }
-  }
-</style>
 
 
 

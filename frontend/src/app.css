@@ -49,32 +49,35 @@ html, body {
 
 /* Ensure SweetAlert appears above modals */
 :global(.swal2-container) {
-  z-index: 9999 !important;
+  z-index: 12000 !important;
 }
 
 /* Themed SweetAlert2 using DaisyUI vars */
 :global(.swal2-popup) {
-  background: var(--b1) !important;
-  color: var(--bc) !important;
-  border: 1px solid var(--b3) !important;
+  background: hsl(var(--b1)) !important;
+  color: hsl(var(--bc)) !important;
+  border: 1px solid hsl(var(--b3)) !important;
   box-shadow: 0 12px 30px rgba(0,0,0,0.18) !important;
+  border-radius: 1rem !important;
 }
 
 :global(.swal2-title),
 :global(.swal2-html-container) {
-  color: var(--bc) !important;
+  color: hsl(var(--bc)) !important;
 }
 
 :global(.swal2-confirm) {
-  background-color: var(--p) !important;
-  color: var(--pc) !important;
-  border-color: var(--p) !important;
+  background-color: hsl(var(--p)) !important;
+  color: hsl(var(--pc)) !important;
+  border-color: hsl(var(--p)) !important;
+  border-radius: 0.5rem !important;
 }
 
 :global(.swal2-cancel) {
-  background-color: var(--b2) !important;
-  color: var(--bc) !important;
-  border: 1px solid var(--b3) !important;
+  background-color: hsl(var(--b2)) !important;
+  color: hsl(var(--bc)) !important;
+  border: 1px solid hsl(var(--b3)) !important;
+  border-radius: 0.5rem !important;
 }
 
 :global(.swal2-actions) {

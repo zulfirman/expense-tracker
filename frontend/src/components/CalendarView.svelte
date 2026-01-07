@@ -82,6 +82,19 @@
       previousMonthsLength = months.length;
     }
   });
+
+  function getToneClasses(dateType) {
+    if (dateType === 'income') {
+      return 'bg-success/20 border-success/60 text-success-content';
+    }
+    if (dateType === 'expense') {
+      return 'bg-error/20 border-error/60 text-error-content';
+    }
+    if (dateType === 'both') {
+      return 'bg-info/20 border-info/60 text-info-content';
+    }
+    return 'bg-base-200/60 border-base-300';
+  }
 </script>
 
 <div class="calendar-container" bind:this={scrollContainer} on:scroll={handleScroll}>
@@ -119,30 +132,51 @@
             {@const isToday = dateKey === new Date().toISOString().split('T')[0]}
             {@const dateType = hasIncome && hasExpense ? 'both' : (hasIncome ? 'income' : (hasExpense ? 'expense' : 'none'))}
 
-            <button
-              class="btn btn-ghost btn-sm w-full flex flex-col items-center border border-base-300 bg-base-200/40"
-              class:btn-success={dateType === 'income'}
-              class:btn-error={dateType === 'expense'}
-              class:btn-info={dateType === 'both'}
-              class:opacity-60={!hasData}
+            <div
+              role="button"
+              class={`card card-compact w-full cursor-pointer border shadow-sm transition text-sm ${getToneClasses(dateType)}`}
               class:outline={isToday}
+              class:opacity-60={!hasData}
               on:click={() => handleDateClick(dateKey, true)}
             >
-              <span class="font-semibold text-base">{day.getDate()}</span>
-              <span class="text-xs">
-                {#if hasData}
-                  {formatCurrency(Math.abs(total))}
-                {:else}
-                  -
+              <div class="card-body items-center text-center p-2">
+                <div class="text-base font-semibold">{day.getDate()}</div>
+                <div class="text-[11px] text-base-content/70">
+                  {#if hasData}
+                    {formatCurrency(Math.abs(total))}
+                  {:else}
+                    -
+                  {/if}
+                </div>
+                {#if isToday}
+                  <span class="badge px-3 py-2 badge-outline badge-xs mt-1">Today</span>
                 {/if}
-              </span>
-              {#if isToday}
-                <span class="badge badge-outline badge-xs mt-1">Today</span>
-              {/if}
-            </button>
+                <div class="flex gap-1 mt-1">
+                  {#if dateType === 'income'}
+                    <span class="badge px-3 py-2 badge-success badge-sm">Income</span>
+                  {:else if dateType === 'expense'}
+                    <span class="badge px-3 py-2 badge-error badge-sm">Expense</span>
+                  {:else if dateType === 'both'}
+                    <span class="badge px-3 py-2 badge-info badge-sm">Both</span>
+                  {/if}
+                </div>
+              </div>
+            </div>
           {/each}
         </div>
       </div>
     </div>
   {/each}
 </div>
+
+<style>
+  .calendar-container {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+  }
+</style>
