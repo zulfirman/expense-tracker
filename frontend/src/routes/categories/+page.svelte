@@ -295,30 +295,30 @@
         <button class="close-btn" on:click={closeForms}>×</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label for="category-type">Type</label>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Type</legend>
           <select
             id="category-type"
             bind:value={categoryType}
-            class="form-input"
+            class="select select-bordered w-full border-2"
             disabled={loading}
           >
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label for="category-name">Category Name</label>
+        </fieldset>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Category Name</legend>
           <input
             id="category-name"
             type="text"
             bind:value={categoryName}
             placeholder="e.g., Groceries"
-            class="form-input"
+            class="input input-bordered w-full border-2"
             on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
             disabled={loading}
           />
-        </div>
+        </fieldset>
         <div class="button-group">
           <button class="btn btn-secondary" on:click={closeForms} disabled={loading}>Cancel</button>
           <button class="btn btn-primary" on:click={handleCreate} disabled={loading}>
@@ -342,36 +342,37 @@
         <button class="close-btn" on:click={closeForms}>×</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label for="edit-category-type">Type</label>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Type</legend>
           <select
             id="edit-category-type"
             bind:value={categoryType}
-            class="form-input"
+            class="select select-bordered w-full border-2"
             disabled={loading}
           >
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label for="edit-category-name">Category Name</label>
+        </fieldset>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Category Name</legend>
           <input
             id="edit-category-name"
             type="text"
             bind:value={categoryName}
             placeholder="e.g., Groceries"
-            class="form-input"
+            class="input input-bordered w-full border-2"
             on:keydown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
             disabled={loading}
           />
-        </div>
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={isActive} disabled={loading} />
+        </fieldset>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Active</legend>
+          <label class="cursor-pointer flex items-center gap-2">
+            <input type="checkbox" bind:checked={isActive} disabled={loading} class="toggle toggle-sm" />
             <span>Active</span>
           </label>
-        </div>
+        </fieldset>
         <div class="button-group">
           <button class="btn btn-secondary" on:click={closeForms} disabled={loading}>Cancel</button>
           <button class="btn btn-primary" on:click={handleUpdate} disabled={loading}>

@@ -19,6 +19,7 @@
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
+      goto('/login');
       return;
     }
     await loadCategories();
@@ -214,37 +215,44 @@
   }
 </script>
 
-<div class="categories-page">
-  <div class="header-section">
-    <h1>My Categories</h1>
-    <div class="header-actions">
-      <button class="btn ghost" on:click={() => goto('/preferences')}>Back</button>
-      <button class="btn primary" style="max-width: 50%" on:click={openAddForm} disabled={loading}>
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex items-center justify-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold">My Categories</h1>
+      <p class="text-sm text-base-content/70 mt-1">
+        Manage your income and expense categories.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn btn-primary btn-sm" on:click={openAddForm} disabled={loading}>
         + Add Category
       </button>
     </div>
   </div>
 
   {#if loading && categories.length === 0}
-    <div class="loading">Loading categories...</div>
+    <div class="flex justify-center py-10">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
   {:else if categories.length === 0}
-    <div class="empty-state">
-      <p>No categories yet. Create your first category to get started!</p>
+    <div class="alert alert-info">
+      <span>No categories yet. Create your first category to get started!</span>
     </div>
   {:else}
     <!-- Tabs -->
-    <div class="tabs">
+    <div class="tabs tabs-boxed w-fit">
       <button
-        class="tab-button"
-        class:active={activeTab === 'income'}
+        class="tab text-sm"
+        class:tab-active={activeTab === 'income'}
         on:click={() => activeTab = 'income'}
         disabled={loading}
       >
         💰 Income ({incomeCategories.length})
       </button>
       <button
-        class="tab-button"
-        class:active={activeTab === 'expense'}
+        class="tab text-sm"
+        class:tab-active={activeTab === 'expense'}
         on:click={() => activeTab = 'expense'}
         disabled={loading}
       >
@@ -253,57 +261,57 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="categories-list">
+    <div class="space-y-3 mt-3">
       {#if activeTab === 'income'}
         {#if incomeCategories.length === 0}
-          <div class="empty-state">
-            <p>No income categories yet. Create your first income category!</p>
+          <div class="alert alert-soft">
+            <span>No income categories yet. Create your first income category!</span>
           </div>
         {:else}
           {#each incomeCategories as category}
-            <div class="category-card">
-              <div class="category-info">
-                <h3>{category.name}</h3>
-              </div>
-              <div class="category-actions">
-                <label class="toggle-switch">
+    <div class="card bg-base-100 shadow-sm border-1">
+              <div class="card-body flex flex-row items-center justify-between gap-3 py-3">
+                <div>
+                  <h3 class="font-semibold text-sm">{category.name}</h3>
+                </div>
+                <div class="flex items-center gap-2">
                   <input
                     type="checkbox"
+                    class="toggle toggle-sm toggle-primary"
                     checked={category.isActive}
                     on:change={() => toggleActive(category)}
                     disabled={loading}
                   />
-                  <span class="toggle-slider"></span>
-                </label>
-                <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
-                <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
+                  <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
+                  <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
+                </div>
               </div>
             </div>
           {/each}
         {/if}
       {:else}
         {#if expenseCategories.length === 0}
-          <div class="empty-state">
-            <p>No expense categories yet. Create your first expense category!</p>
+          <div class="alert alert-soft">
+            <span>No expense categories yet. Create your first expense category!</span>
           </div>
         {:else}
           {#each expenseCategories as category}
-            <div class="category-card">
-              <div class="category-info">
-                <h3>{category.name}</h3>
-              </div>
-              <div class="category-actions">
-                <label class="toggle-switch">
+            <div class="card bg-base-100 shadow-sm border-1">
+              <div class="card-body flex flex-row items-center justify-between gap-3 py-3">
+                <div>
+                  <h3 class="font-semibold text-sm">{category.name}</h3>
+                </div>
+                <div class="flex items-center gap-2">
                   <input
                     type="checkbox"
+                    class="toggle toggle-sm toggle-primary"
                     checked={category.isActive}
                     on:change={() => toggleActive(category)}
                     disabled={loading}
                   />
-                  <span class="toggle-slider"></span>
-                </label>
-                <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
-                <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
+                  <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
+                  <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
+                </div>
               </div>
             </div>
           {/each}
@@ -314,261 +322,95 @@
 </div>
 
 {#if showAddForm}
-  <div class="modal-backdrop" on:click={closeForms}>
-    <div class="modal-content" on:click|stopPropagation>
-      <div class="modal-header">
-        <h2>Add Category</h2>
-        <button class="close-btn" on:click={closeForms}>×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="category-type">Type</label>
-          <select
-            id="category-type"
-            bind:value={categoryType}
-            class="form-input"
-            disabled={loading}
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="category-name">Category Name</label>
-          <input
-            id="category-name"
-            type="text"
-            bind:value={categoryName}
-            placeholder="e.g., Groceries"
-            class="form-input"
-            on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
-            disabled={loading}
-          />
-        </div>
-        <div class="button-group">
-          <button class="btn btn-secondary" on:click={closeForms} disabled={loading}>Cancel</button>
-          <button class="btn btn-primary" on:click={handleCreate} disabled={loading}>
-            {#if loading}
-              <span class="spinner"></span> Creating...
-            {:else}
-              Create
-            {/if}
-          </button>
-        </div>
+  <div class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-semibold text-lg mb-2">Add Category</h3>
+      <fieldset class="fieldset mb-3">
+        <legend class="fieldset-legend">Type</legend>
+        <select
+          id="category-type"
+          bind:value={categoryType}
+          class="select select-bordered w-full border-2"
+          disabled={loading}
+        >
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </fieldset>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Category Name</legend>
+        <input
+          id="category-name"
+          type="text"
+          bind:value={categoryName}
+          placeholder="e.g., Groceries"
+          class="input input-bordered w-full border-2"
+          on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
+          disabled={loading}
+        />
+      </fieldset>
+      <div class="modal-action">
+        <button class="btn btn-soft" on:click={closeForms} disabled={loading}>Cancel</button>
+        <button class="btn btn-primary" on:click={handleCreate} disabled={loading}>
+          {#if loading}
+            <span class="loading loading-spinner loading-sm mr-1"></span>
+            Creating...
+          {:else}
+            Create
+          {/if}
+        </button>
       </div>
     </div>
   </div>
 {/if}
 
 {#if showEditForm}
-  <div class="modal-backdrop" on:click={closeForms}>
-    <div class="modal-content" on:click|stopPropagation>
-      <div class="modal-header">
-        <h2>Edit Category</h2>
-        <button class="close-btn" on:click={closeForms}>×</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="edit-category-type">Type</label>
-          <select
-            id="edit-category-type"
-            bind:value={categoryType}
-            class="form-input"
-            disabled={loading}
-          >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="edit-category-name">Category Name</label>
-          <input
-            id="edit-category-name"
-            type="text"
-            bind:value={categoryName}
-            placeholder="e.g., Groceries"
-            class="form-input"
-            on:keydown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
-            disabled={loading}
-          />
-        </div>
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={isActive} disabled={loading} />
-            <span>Active</span>
-          </label>
-        </div>
-        <div class="button-group">
-          <button class="btn btn-secondary" on:click={closeForms} disabled={loading}>Cancel</button>
-          <button class="btn btn-primary" on:click={handleUpdate} disabled={loading}>
-            {#if loading}
-              <span class="spinner"></span> Updating...
-            {:else}
-              Update
-            {/if}
-          </button>
-        </div>
+  <div class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-semibold text-lg mb-2">Edit Category</h3>
+      <fieldset class="fieldset mb-3">
+        <legend class="fieldset-legend">Type</legend>
+        <select
+          id="edit-category-type"
+          bind:value={categoryType}
+          class="select select-bordered w-full border-2"
+          disabled={loading}
+        >
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </fieldset>
+      <fieldset class="fieldset mb-3">
+        <legend class="fieldset-legend">Category Name</legend>
+        <input
+          id="edit-category-name"
+          type="text"
+          bind:value={categoryName}
+          placeholder="e.g., Groceries"
+          class="input input-bordered w-full border-2"
+          on:keydown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
+          disabled={loading}
+        />
+      </fieldset>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Active</legend>
+        <label class="cursor-pointer label justify-start gap-3">
+          <input type="checkbox" class="toggle toggle-sm" bind:checked={isActive} disabled={loading} />
+          <span class="label-text">Active</span>
+        </label>
+      </fieldset>
+      <div class="modal-action">
+        <button class="btn btn-soft" on:click={closeForms} disabled={loading}>Cancel</button>
+        <button class="btn btn-primary" on:click={handleUpdate} disabled={loading}>
+          {#if loading}
+            <span class="loading loading-spinner loading-sm mr-1"></span>
+            Updating...
+          {:else}
+            Update
+          {/if}
+        </button>
       </div>
     </div>
   </div>
 {/if}
-
-<style>
-  .categories-page {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-  }
-
-  .loading, .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-  }
-
-  .categories-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 2px solid var(--border);
-    margin-bottom: 1rem;
-  }
-
-  .tab-button {
-    padding: 0.75rem 1.5rem;
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: -2px;
-  }
-
-  .tab-button:hover:not(:disabled) {
-    color: var(--text-primary);
-    background: var(--surface);
-  }
-
-  .tab-button.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-  }
-
-  .tab-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .category-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: box-shadow 0.2s;
-  }
-
-  .category-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .category-info h3 {
-    font-size: 1.125rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-primary);
-  }
-
-  .category-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-  }
-
-  .toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--border);
-    transition: 0.3s;
-    border-radius: 24px;
-  }
-
-  .toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-  }
-
-  .toggle-switch input:checked + .toggle-slider {
-    background-color: var(--primary-color);
-  }
-
-  .toggle-switch input:checked + .toggle-slider:before {
-    transform: translateX(26px);
-  }
-
-  .category-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
-</style>
-
 

@@ -78,44 +78,47 @@
       <div class="preference-section">
         <h3>Currency</h3>
         <p class="preference-description">Choose your preferred currency for displaying amounts</p>
-        <div class="currency-options">
-          <label class="currency-option">
-            <input
-              type="radio"
-              bind:group={selectedCurrency}
-              value="IDR"
-              disabled={loading}
-            />
-            <span>Indonesian Rupiah (Rp.)</span>
-          </label>
-          <label class="currency-option">
-            <input
-              type="radio"
-              bind:group={selectedCurrency}
-              value="USD"
-              disabled={loading}
-            />
-            <span>US Dollar ($)</span>
-          </label>
-          <label class="currency-option">
-            <input
-              type="radio"
-              bind:group={selectedCurrency}
-              value="EUR"
-              disabled={loading}
-            />
-            <span>Euro (€)</span>
-          </label>
-          <label class="currency-option">
-            <input
-              type="radio"
-              bind:group={selectedCurrency}
-              value="JPY"
-              disabled={loading}
-            />
-            <span>Japanese Yen (¥)</span>
-          </label>
-        </div>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Currency</legend>
+          <div class="currency-options">
+            <label class="currency-option">
+              <input
+                type="radio"
+                bind:group={selectedCurrency}
+                value="IDR"
+                disabled={loading}
+              />
+              <span>Indonesian Rupiah (Rp.)</span>
+            </label>
+            <label class="currency-option">
+              <input
+                type="radio"
+                bind:group={selectedCurrency}
+                value="USD"
+                disabled={loading}
+              />
+              <span>US Dollar ($)</span>
+            </label>
+            <label class="currency-option">
+              <input
+                type="radio"
+                bind:group={selectedCurrency}
+                value="EUR"
+                disabled={loading}
+              />
+              <span>Euro (€)</span>
+            </label>
+            <label class="currency-option">
+              <input
+                type="radio"
+                bind:group={selectedCurrency}
+                value="JPY"
+                disabled={loading}
+              />
+              <span>Japanese Yen (¥)</span>
+            </label>
+          </div>
+        </fieldset>
         <button
           class="btn btn-primary"
           on:click={handleSaveCurrency}
@@ -129,29 +132,32 @@
       <div class="preference-section">
         <h3>Appearance</h3>
         <p class="preference-description">Choose between light and dark mode</p>
-        <div class="theme-toggle-section">
-          <span class="theme-label">Theme: {currentTheme === 'dark' ? 'Dark' : 'Light'}</span>
-          <button
-            class="theme-toggle-btn"
-            on:click={handleThemeToggle}
-            title="Toggle Theme"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-          </button>
-        </div>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Theme</legend>
+          <div class="theme-toggle-section">
+            <span class="theme-label">Theme: {currentTheme === 'dark' ? 'Dark' : 'Light'}</span>
+            <button
+              class="theme-toggle-btn"
+              on:click={handleThemeToggle}
+              title="Toggle Theme"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
+          </div>
+        </fieldset>
       </div>
     </div>
   </div>

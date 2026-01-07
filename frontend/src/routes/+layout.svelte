@@ -100,11 +100,6 @@
     goto('/preferences');
   }
 
-  function handleChangePasswordClick() {
-    showProfileMenu = false;
-    goto('/change-password');
-  }
-
   function handleLogout() {
     auth.logout();
     showProfileMenu = false;
@@ -250,11 +245,11 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              <span class="text-xs font-medium">{accountList.length} Accounts</span>
+              <span class="text-xs font-medium">{accountList.length} Account{accountList.length === 1 ? '' : 's'}</span>
             </div>
             <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1002] w-72 p-2 shadow">
               <li class="menu-title">
-                <span>Switch Account</span>
+                <span>Accounts</span>
               </li>
               {#each accountList as account}
                 <li>
@@ -281,9 +276,13 @@
                   </button>
                 </li>
               {/each}
-              <li>
-                <button on:click={openAddAccountModal}>
-                  + Add account
+              <li class="pt-1">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm w-full"
+                  on:click={openAddAccountModal}
+                >
+                  + Add Account
                 </button>
               </li>
             </ul>
@@ -317,11 +316,13 @@
                 Preferences
               </button>
             </li>
-            <li>
-              <button on:click={handleChangePasswordClick}>
-                Change password
-              </button>
-            </li>
+            {#if accountList.length <= 1}
+              <li>
+                <button on:click={openAddAccountModal}>
+                  + Add Account
+                </button>
+              </li>
+            {/if}
             <li>
               <button class="text-error" on:click={handleLogout}>
                 Logout
@@ -391,47 +392,51 @@
 {/if}
 
 {#if showAddAccountModal}
-  <div class="modal-backdrop" on:click={closeAddAccountModal}>
-    <div class="modal-content" on:click|stopPropagation>
-      <div class="modal-header">
-        <h2>Add Account</h2>
-        <button class="close-btn" on:click={closeAddAccountModal}>×</button>
+  <div class="modal modal-open z-[3000]" on:click={closeAddAccountModal}>
+    <div class="modal-box max-w-md" on:click|stopPropagation>
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-base-content/60">Accounts</p>
+          <h3 class="text-xl font-bold">Add Account</h3>
+        </div>
+        <button class="btn btn-ghost btn-sm" on:click={closeAddAccountModal}>✕</button>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="add-account-email">Email</label>
-          <input
-            id="add-account-email"
-            type="email"
-            bind:value={addAccountEmail}
-            placeholder="your@email.com"
-            class="form-input"
-            on:keydown={handleAddAccountKeyDown}
-            disabled={addAccountLoading}
-          />
-        </div>
-        <div class="form-group">
-          <label for="add-account-password">Password</label>
-          <input
-            id="add-account-password"
-            type="password"
-            bind:value={addAccountPassword}
-            placeholder="Enter password"
-            class="form-input"
-            on:keydown={handleAddAccountKeyDown}
-            disabled={addAccountLoading}
-          />
-        </div>
-        <div class="button-group">
-          <button class="btn btn-secondary" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
-          <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
-            {#if addAccountLoading}
-              <span class="spinner"></span> Logging in...
-            {:else}
-              Add Account
-            {/if}
-          </button>
-        </div>
+
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Email</legend>
+        <input
+          id="add-account-email"
+          type="email"
+          bind:value={addAccountEmail}
+          placeholder="your@email.com"
+          class="input input-bordered w-full border-2"
+          on:keydown={handleAddAccountKeyDown}
+          disabled={addAccountLoading}
+        />
+      </fieldset>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Password</legend>
+        <input
+          id="add-account-password"
+          type="password"
+          bind:value={addAccountPassword}
+          placeholder="Enter password"
+          class="input input-bordered w-full border-2"
+          on:keydown={handleAddAccountKeyDown}
+          disabled={addAccountLoading}
+        />
+      </fieldset>
+
+      <div class="flex justify-end gap-2">
+        <button class="btn btn-soft" on:click={closeAddAccountModal} disabled={addAccountLoading}>Cancel</button>
+        <button class="btn btn-primary" on:click={handleAddAccount} disabled={addAccountLoading}>
+          {#if addAccountLoading}
+            <span class="loading loading-spinner loading-sm"></span>
+            Logging in...
+          {:else}
+            Add Account
+          {/if}
+        </button>
       </div>
     </div>
   </div>
@@ -472,6 +477,18 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: 80px;
     padding-top: 60px;
+  }
+
+  /* Dock styling */
+  :global(.dock button) {
+    border-radius: 0.75rem;
+  }
+
+  :global(.dock button.dock-active) {
+    background-color: var(--b2);
+    color: var(--bc);
+    border: 1px solid var(--b3);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
   }
 
   .modal-backdrop {

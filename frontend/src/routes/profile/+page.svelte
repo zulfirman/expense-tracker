@@ -104,29 +104,29 @@
     <div class="loading">Loading profile...</div>
   {:else}
     <div class="profile-form">
-      <div class="form-group">
-        <label for="name">Name</label>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Name</legend>
         <input
           id="name"
           type="text"
           bind:value={name}
           placeholder="Your name"
-          class="form-input"
+          class="input input-bordered w-full border-2"
           disabled={saving}
         />
-      </div>
+      </fieldset>
 
-      <div class="form-group">
-        <label for="email">Email</label>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Email</legend>
         <input
           id="email"
           type="email"
           bind:value={email}
           placeholder="your@email.com"
-          class="form-input"
+          class="input input-bordered w-full border-2"
           disabled={saving}
         />
-      </div>
+      </fieldset>
 
       <div class="button-group">
         <button class="btn btn-primary" on:click={handleSave} disabled={saving}>

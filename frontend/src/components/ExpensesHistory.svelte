@@ -167,21 +167,6 @@
       return sum + monthTotal;
     }, 0);
   }
-
-  /**
-   * Calculate remaining balance (balance - total expenses)
-   * @returns {number} Remaining balance amount
-   */
-  function getRemainingBalance() {
-    if (balanceLoading || !balance) {
-      return 0;
-    }
-    const balanceAmount = typeof balance.amount === 'number'
-      ? balance.amount
-      : parseFloat(balance.amount) || 0;
-    return balanceAmount;
-  }
-
   // ============================================================================
   // SEARCH FUNCTIONS
   // ============================================================================
@@ -347,11 +332,17 @@
 <!-- ============================================================================
      TEMPLATE
      ============================================================================ -->
-<div class="expenses-history">
-  <!-- Header Section -->
-  <div class="header-section">
-    <h1>Expenses History</h1>
-    <button class="search-toggle-btn" on:click={toggleSearch} class:active={showSearch}>
+<div class="expenses-history space-y-4">
+  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="text-xs uppercase tracking-wide text-base-content/60">Overview</p>
+      <h1 class="text-3xl font-bold">Expenses History</h1>
+    </div>
+    <button
+      class="btn btn-primary gap-2"
+      class:btn-active={showSearch}
+      on:click={toggleSearch}
+    >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"></circle>
         <path d="m21 21-4.35-4.35"></path>
@@ -360,36 +351,40 @@
     </button>
   </div>
 
-  <!-- Balance Display (compact) -->
   {#if !balanceLoading && !loading}
-    <div class="balance-section compact">
-      <div class="balance-card compact">
-        <div class="balance-label">Balance</div>
-        <div class="balance-amount">{formatCurrency(balance.amount)}</div>
+    <div class="stats shadow-sm bg-base-100 border border-base-300">
+      <div class="stat">
+        <div class="stat-title">Balance</div>
+        <div class="stat-value text-primary text-2xl">{formatCurrency(balance.amount)}</div>
       </div>
     </div>
   {/if}
 
-  <!-- Calendar View -->
-  {#if loading}
-    <div class="loading">Loading...</div>
-  {:else}
-    <div class="calendar-wrapper" bind:this={calendarWrapper}>
-      <CalendarView
-        {months}
-        {hasMoreMonths}
-        on:monthClick={(e) => handleMonthClick(e.detail)}
-        on:dateClick={(e) => handleDateClick(e.detail)}
-        on:loadMore={(e) => handleLoadMore()}
-      />
-      {#if isLoadingMore}
-        <div class="loading-more">
-          <div class="spinner"></div>
-          <span>Loading more months...</span>
+  <div class="card bg-base-100 shadow-xl border border-base-300">
+    <div class="card-body p-0">
+      {#if loading}
+        <div class="flex justify-center py-10">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+      {:else}
+        <div class="calendar-wrapper px-4 pb-4" bind:this={calendarWrapper}>
+          <CalendarView
+            {months}
+            {hasMoreMonths}
+            on:monthClick={(e) => handleMonthClick(e.detail)}
+            on:dateClick={(e) => handleDateClick(e.detail)}
+            on:loadMore={(e) => handleLoadMore()}
+          />
+          {#if isLoadingMore}
+            <div class="flex items-center gap-2 justify-center py-4 text-base-content/70">
+              <span class="loading loading-spinner loading-sm"></span>
+              <span>Loading more months...</span>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
-  {/if}
+  </div>
 </div>
 
 <!-- Month Detail Modal -->
@@ -418,98 +413,93 @@
   />
 {/if}
 
-<!-- Search Modal -->
 {#if showSearch}
-  <div class="modal-backdrop" on:click={() => showSearch = false}>
-    <div class="modal-content search-modal" on:click|stopPropagation>
-      <div class="modal-header">
-        <h2>Search Expenses</h2>
-        <button class="close-btn" on:click={() => showSearch = false}>×</button>
-      </div>
-      <div class="modal-body">
-        <div class="search-form">
-          <!-- Search Query Input -->
-          <div class="form-group">
-            <label for="search-query">Search (notes)</label>
-            <input
-              id="search-query"
-              type="text"
-              bind:value={searchQuery}
-              placeholder="Search expenses..."
-              class="form-input"
-              on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
-            />
-          </div>
-          
-          <!-- Category Filter -->
-          <div class="form-group">
-            <label for="search-category">Category</label>
-            <select id="search-category" bind:value={searchCategory} class="form-input">
-              <option value="">All Categories</option>
-              {#each categories as category}
-                <option value={category.id}>{category.label}</option>
-              {/each}
-            </select>
-          </div>
-          
-          <!-- Date Range -->
-          <div class="date-range">
-            <div class="form-group">
-              <label for="date-from">From Date</label>
-              <DatePicker
-                id="date-from"
-                bind:value={dateFrom}
-                placeholder="From date"
-              />
-            </div>
-            <div class="form-group">
-              <label for="date-to">To Date</label>
-              <DatePicker
-                id="date-to"
-                bind:value={dateTo}
-                placeholder="To date"
-              />
-            </div>
-          </div>
-          
-          <!-- Action Buttons -->
-          <div class="button-group">
-            <button type="button" class="btn btn-secondary" on:click={clearSearch}>Clear</button>
-            <button type="button" class="btn btn-primary" on:click={searchExpenses}>Search</button>
-          </div>
+  <div class="modal modal-open z-[2100]" on:click={() => showSearch = false}>
+    <div class="modal-box w-11/12 max-w-4xl" on:click|stopPropagation>
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h3 class="font-bold text-xl">Search Expenses</h3>
+          <p class="text-sm text-base-content/70">Filter by notes, category, or date range.</p>
         </div>
-        
-        <!-- Search Results -->
-        {#if searchLoading}
-          <div class="search-loading">Searching...</div>
-        {:else if filteredExpenses.length > 0}
-          <div class="search-results">
-            <h3>Search Results ({filteredExpenses.length})</h3>
-            <div class="expenses-list">
-              {#each filteredExpenses as expense}
-                <div class="expense-item">
-                  <div class="expense-info">
-                    <div class="expense-date">
-                      {new Date(expense.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </div>
-                    <div class="expense-category">{expense.category}</div>
-                    {#if expense.notes}
-                      <div class="expense-notes">{expense.notes}</div>
-                    {/if}
-                  </div>
-                  <div class="expense-amount">{formatCurrency(expense.amount)}</div>
-                </div>
-              {/each}
-            </div>
-          </div>
-        {:else if searchQuery || searchCategory || dateFrom || dateTo}
-          <div class="no-results">No expenses found matching your search criteria.</div>
-        {/if}
+        <button class="btn btn-ghost btn-sm" on:click={() => showSearch = false}>✕</button>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <fieldset class="fieldset w-full">
+          <legend class="fieldset-legend">Search (notes)</legend>
+          <input
+            id="search-query"
+            type="text"
+            bind:value={searchQuery}
+            placeholder="Search expenses..."
+            class="input input-bordered w-full border-2"
+            on:keydown={(e) => { if (e.key === 'Enter') searchExpenses(); }}
+          />
+        </fieldset>
+
+        <fieldset class="fieldset w-full">
+          <legend class="fieldset-legend">Category</legend>
+          <select
+            id="search-category"
+            bind:value={searchCategory}
+            class="select select-bordered w-full border-2"
+          >
+            <option value="">All Categories</option>
+            {#each categories as category}
+              <option value={category.id}>{category.label}</option>
+            {/each}
+          </select>
+        </fieldset>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+          <DatePicker
+            id="date-from"
+            bind:value={dateFrom}
+            placeholder="From date"
+            label="From date"
+          />
+          <DatePicker
+            id="date-to"
+            bind:value={dateTo}
+            placeholder="To date"
+            label="To date"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button type="button" class="btn btn-soft" on:click={clearSearch}>Clear</button>
+        <button type="button" class="btn btn-primary" on:click={searchExpenses}>Search</button>
+      </div>
+
+      {#if searchLoading}
+        <div class="flex justify-center py-6 text-base-content/70">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      {:else if filteredExpenses.length > 0}
+        <div class="divider mt-6">Results ({filteredExpenses.length})</div>
+        <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
+          {#each filteredExpenses as expense}
+            <div class="card bg-base-100 border border-base-300 shadow-sm">
+              <div class="card-body py-3 px-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                <div class="space-y-1">
+                  <p class="text-sm text-base-content/70">
+                    {new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {expense.category}
+                  </p>
+                  {#if expense.notes}
+                    <p class="text-sm text-base-content/90">{expense.notes}</p>
+                  {/if}
+                </div>
+                <div class="text-right font-semibold text-primary text-lg">{formatCurrency(expense.amount)}</div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else if searchQuery || searchCategory || dateFrom || dateTo}
+        <div class="alert alert-info mt-4">
+          <span>No expenses found matching your search criteria.</span>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -520,204 +510,16 @@
 <style>
   .expenses-history {
     max-width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-    flex-shrink: 0;
   }
 
   .calendar-wrapper {
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-    position: relative;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-  }
-
-  .balance-section.compact {
-    margin-bottom: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .balance-card.compact {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 0.6rem 0.9rem;
-    box-shadow: none;
-  }
-
-  .balance-label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
-
-  .balance-amount {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.2;
-  }
-
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-shrink: 0;
-  }
-
-  .search-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-  }
-
-  .search-toggle-btn:hover {
-    background: var(--background);
-    border-color: var(--primary-color);
-  }
-
-  .search-toggle-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  .loading-more {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    gap: 0.75rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-  }
-
-  .loading-more .spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .search-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .date-range {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .search-loading, .no-results {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-  }
-
-  .search-results {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .search-results h3 {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-  }
-
-  .expenses-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 400px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
-  .expense-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border);
-  }
-
-  .expense-info {
-    flex: 1;
-  }
-
-  .expense-date {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-  }
-
-  .expense-category {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-  }
-
-  .expense-notes {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-style: italic;
-  }
-
-  .expense-amount {
-    font-weight: 600;
-    color: var(--danger);
-    font-size: 1.125rem;
+    height: 65vh;
+    min-height: 420px;
   }
 
   @media (max-width: 768px) {
-    .date-range {
-      grid-template-columns: 1fr;
-    }
-
-    .expenses-list {
-      max-height: 300px;
+    .calendar-wrapper {
+      height: 70vh;
     }
   }
 </style>

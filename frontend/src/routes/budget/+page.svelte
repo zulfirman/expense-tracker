@@ -384,16 +384,16 @@
   <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body flex flex-col md:flex-row md:items-end gap-4">
       <div class="form-control w-full md:w-auto">
-        <label class="label" for="month">
-          <span class="label-text font-semibold">Select month</span>
-        </label>
-        <input
-          id="month"
-          type="month"
-          bind:value={currentMonth}
-          on:change={handleMonthChange}
-          class="input w-full md:w-56 border-1"
-        />
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Select month</legend>
+          <input
+            id="month"
+            type="month"
+            bind:value={currentMonth}
+            on:change={handleMonthChange}
+            class="input input-bordered w-full md:w-56 border-2"
+          />
+        </fieldset>
       </div>
       <div class="text-sm text-base-content/70 md:ml-auto">
         <span>Viewing budgets for </span>
@@ -501,18 +501,18 @@
         Enter monthly budget amount for {formatMonthYear(currentMonth)}.
       </p>
       <div class="form-control mb-4">
-        <label class="label" for="budget-amount">
-          <span class="label-text font-semibold">Monthly Budget Amount (Rp.)</span>
-        </label>
-        <input
-          id="budget-amount"
-          type="text"
-          bind:value={budgetAmount}
-          on:input={handleAmountInput}
-          on:keydown={(e) => { if (e.key === 'Enter') saveBudget(); }}
-          placeholder="0"
-          class="input w-full border-2"
-        />
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Monthly Budget Amount (Rp.)</legend>
+          <input
+            id="budget-amount"
+            type="text"
+            bind:value={budgetAmount}
+            on:input={handleAmountInput}
+            on:keydown={(e) => { if (e.key === 'Enter') saveBudget(); }}
+            placeholder="0"
+            class="input input-bordered w-full border-2"
+          />
+        </fieldset>
         {#if budgetAmount}
           <span class="mt-2 text-sm font-semibold text-primary">
             {formatCurrency(budgetAmount)}

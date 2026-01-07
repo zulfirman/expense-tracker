@@ -236,69 +236,65 @@
   }
 </script>
 
-<div class="max-w-2xl mx-auto">
-  <div class="card-body">
-    {#if showTitle}
-      <h2 class="card-title text-2xl mb-4">{incomeId ? 'Edit Income' : 'Input Income'}</h2>
-    {/if}
+<div class="card-body">
+  {#if showTitle}
+    <h2 class="card-title text-2xl mb-4">{incomeId ? 'Edit Income' : 'Input Income'}</h2>
+  {/if}
 
-    <form on:submit|preventDefault={handleSubmit}>
-      <!-- Category Selection -->
-      <div class="form-control mb-4">
-        <label class="label">
+  <form on:submit|preventDefault={handleSubmit}>
+    <!-- Category Selection -->
+    <div class="form-control mb-4">
+      <label class="label">
             <span class="label-text font-semibold">
               Category
               {#if selectedCategoryIds.length > 0}
-                <span class="badge badge-primary badge-sm ml-2">{selectedCategoryIds.length} Selected</span>
+                ({selectedCategoryIds.length} Selected)
               {/if}
             </span>
-        </label>
-        {#if categoriesLoading}
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-md"></span>
-          </div>
-        {:else}
-          <div class="flex flex-wrap gap-2 mt-2">
-            {#each categories as category}
-              {@const isSelected = selectedCategoryIds.some(id => {
-                  const selectedId = Number(id);
-                  const catId = Number(category.id);
-                  return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
-              })}
-              <button
-                type="button"
-                class="btn btn-sm h-auto py-2 px-4 rounded-full transition-all"
-                class:btn-primary={isSelected}
-                class:btn-outline={!isSelected}
-                on:click={(e) => toggleCategory(category.id, e)}
-              >
-                {category.label}
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Date Selection -->
-      {#if !fixedDate}
-        <div class="form-control mb-4">
-          <label class="label" for="date">
-            <span class="label-text font-semibold">Date</span>
-          </label>
-          <DatePicker
-            id="date"
-            bind:value={expenseDate}
-            placeholder="Select date"
-            on:dateChange={handleDateChange}
-          />
+      </label>
+      {#if categoriesLoading}
+        <div class="flex justify-center py-4">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      {:else}
+        <div class="flex flex-wrap gap-2 mt-2">
+          {#each categories as category}
+            {@const isSelected = selectedCategoryIds.some(id => {
+                const selectedId = Number(id);
+                const catId = Number(category.id);
+                return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
+            })}
+            <button
+              type="button"
+              class="btn btn-sm h-auto py-2 px-4 rounded-full transition-all"
+              class:btn-primary={isSelected}
+              class:btn-soft={!isSelected}
+              on:click={(e) => toggleCategory(category.id, e)}
+            >
+              {category.label}
+            </button>
+          {/each}
         </div>
       {/if}
+    </div>
 
-      <!-- Amount Input -->
+    <!-- Date Selection -->
+    {#if !fixedDate}
       <div class="form-control mb-4">
-        <label class="label" for="amount">
-          <span class="label-text font-semibold">Amount (Rp.)</span>
-        </label>
+        <DatePicker
+          id="date"
+          bind:value={expenseDate}
+          placeholder="Select date"
+          label="Date"
+          on:dateChange={handleDateChange}
+        />
+      </div>
+    {/if}
+
+    <!-- Amount Input -->
+    <div class="form-control mb-4">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Amount (Rp.)</legend>
         <input
           id="amount"
           type="text"
@@ -309,70 +305,70 @@
           on:keydown={handleKeyDown}
           inputmode="numeric"
         />
-        {#if amount}
-          <div class="label">
+      </fieldset>
+      {#if amount}
+        <div class="label">
               <span class="label-text-alt text-primary font-semibold text-xl mt-2">
                 {formatCurrency(amount)}
               </span>
-          </div>
-        {/if}
+        </div>
+      {/if}
 
-        <!-- Quick Amount Buttons -->
-        <div class="mt-4 pt-4 border-t border-base-300">
-          <label class="label">
-            <span class="label-text text-sm text-base-content/70">Quick Amount:</span>
-          </label>
-          <div class="grid grid-cols-3 gap-2 mt-2">
-            {#each quickAmounts as quickAmount}
-              <button
-                type="button"
-                class="btn btn-sm"
-                class:btn-primary={amount === quickAmount.toString()}
-                class:btn-outline={amount !== quickAmount.toString()}
-                on:click={() => setQuickAmount(quickAmount)}
-              >
-                {formatCurrency(quickAmount.toString())}
-              </button>
-            {/each}
-          </div>
+      <!-- Quick Amount Buttons -->
+      <div class="mt-4 pt-4 border-t border-base-300">
+        <label class="label">
+          <span class="label-text text-sm text-base-content/70">Quick Amount:</span>
+        </label>
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          {#each quickAmounts as quickAmount}
+            <button
+              type="button"
+              class="btn btn-sm"
+              class:btn-primary={amount === quickAmount.toString()}
+              class:btn-soft={amount !== quickAmount.toString()}
+              on:click={() => setQuickAmount(quickAmount)}
+            >
+              {formatCurrency(quickAmount.toString())}
+            </button>
+          {/each}
         </div>
       </div>
+    </div>
 
-      <!-- Notes -->
-      <div class="form-control mb-6">
-        <label class="label" for="notes">
-          <span class="label-text font-semibold">Notes</span>
-        </label>
-        <textarea
-          id="notes"
-          bind:value={notes}
-          placeholder="Add notes (optional)"
-          class="textarea textarea-bordered w-full border-2"
-          rows="3"
-          on:keydown={handleKeyDown}
-        ></textarea>
-      </div>
+    <!-- Notes -->
+    <div class="form-control mb-6">
+      <label class="label" for="notes">
+        <span class="label-text font-semibold">Notes</span>
+      </label>
+      <textarea
+        id="notes"
+        bind:value={notes}
+        placeholder="Add notes (optional)"
+        class="textarea textarea-bordered w-full border-2"
+        rows="3"
+        on:keydown={handleKeyDown}
+      ></textarea>
+    </div>
 
-      <!-- Action Buttons -->
-      <div class="flex gap-2">
-        {#if showCancel}
-          <button type="button" class="btn btn-secondary flex-1" on:click={handleCancel} disabled={loading}>
-            Cancel
-          </button>
-        {:else if !incomeId}
-          <button type="button" class="btn btn-soft flex-1" on:click={handleClear} disabled={loading}>
-            Clear
-          </button>
-        {/if}
-        <button type="submit" class="btn btn-primary flex-1" disabled={loading}>
-          {#if loading}
-            <span class="loading loading-spinner loading-sm"></span>
-            {incomeId ? 'Updating...' : 'Submitting...'}
-          {:else}
-            {submitLabel}
-          {/if}
+    <!-- Action Buttons -->
+    <div class="flex gap-2">
+      {#if showCancel}
+        <button type="button" class="btn btn-secondary flex-1" on:click={handleCancel} disabled={loading}>
+          Cancel
         </button>
-      </div>
-    </form>
-  </div>
+      {:else if !incomeId}
+        <button type="button" class="btn btn-soft flex-1" on:click={handleClear} disabled={loading}>
+          Clear
+        </button>
+      {/if}
+      <button type="submit" class="btn btn-primary flex-1" disabled={loading}>
+        {#if loading}
+          <span class="loading loading-spinner loading-sm"></span>
+          {incomeId ? 'Updating...' : 'Submitting...'}
+        {:else}
+          {submitLabel}
+        {/if}
+      </button>
+    </div>
+  </form>
 </div>

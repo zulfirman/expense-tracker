@@ -95,42 +95,42 @@
   </div>
 
   <div class="password-form">
-    <div class="form-group">
-      <label for="current-password">Current Password</label>
+    <fieldset class="fieldset mb-4">
+      <legend class="fieldset-legend">Current Password</legend>
       <input
         id="current-password"
         type="password"
         bind:value={currentPassword}
         placeholder="Enter current password"
-        class="form-input"
+        class="input input-bordered w-full border-2"
         on:keydown={handleKeyDown}
         disabled={loading}
       />
-    </div>
-    <div class="form-group">
-      <label for="new-password">New Password</label>
+    </fieldset>
+    <fieldset class="fieldset mb-4">
+      <legend class="fieldset-legend">New Password</legend>
       <input
         id="new-password"
         type="password"
         bind:value={newPassword}
         placeholder="Enter new password (min. 6 characters)"
-        class="form-input"
+        class="input input-bordered w-full border-2"
         on:keydown={handleKeyDown}
         disabled={loading}
       />
-    </div>
-    <div class="form-group">
-      <label for="confirm-password">Confirm New Password</label>
+    </fieldset>
+    <fieldset class="fieldset mb-4">
+      <legend class="fieldset-legend">Confirm New Password</legend>
       <input
         id="confirm-password"
         type="password"
         bind:value={confirmPassword}
         placeholder="Confirm new password"
-        class="form-input"
+        class="input input-bordered w-full border-2"
         on:keydown={handleKeyDown}
         disabled={loading}
       />
-    </div>
+    </fieldset>
     <div class="button-group">
       <button class="btn btn-primary" on:click={handleSubmit} disabled={loading}>
         {loading ? 'Changing...' : 'Change Password'}

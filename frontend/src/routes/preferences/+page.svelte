@@ -4,217 +4,91 @@
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
 
-  let currentTheme = 'light';
+  const availableThemes = ['cupcake', 'night', 'forest'];
+  let selectedTheme = 'cupcake';
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
       goto('/login');
       return;
     }
-    currentTheme = $theme;
+    selectedTheme = $theme || 'cupcake';
   });
 
   $: if ($theme) {
-    currentTheme = $theme;
+    selectedTheme = $theme;
   }
 
-  function handleThemeToggle() {
-    theme.toggle();
+  function handleThemeChange() {
+    theme.setTheme(selectedTheme);
   }
 </script>
 
-<div class="preferences-page">
-  <div class="header">
-    <h1>Preferences</h1>
-  </div>
+<div class="max-w-4xl mx-auto space-y-4">
+  <div class="card bg-base-100 shadow-xl border-1">
+    <div class="card-body">
+      <h2 class="card-title text-2xl mb-2">Preferences</h2>
+      <p class="text-sm text-base-content/70">
+        Manage how the app looks and behaves for your account.
+      </p>
+    </div>
 
-  <div class="nav-grid">
-    <a class="nav-card" href="/preferences/categories">
-      <div>
-        <h3>Categories</h3>
-        <p>Manage and reorder your expense categories.</p>
-      </div>
-      <span class="nav-arrow">›</span>
-    </a>
-    <a class="nav-card" href="/preferences/currency">
-      <div>
-        <h3>Currency & Quick Amount</h3>
-        <p>Configure currency and quick amount shortcuts.</p>
-      </div>
-      <span class="nav-arrow">›</span>
-    </a>
-    <a class="nav-card" href="/preferences/change-password">
-      <div>
-        <h3>Change Password</h3>
-        <p>Update your account password securely.</p>
-      </div>
-      <span class="nav-arrow">›</span>
-    </a>
-  </div>
+    <div class="card-body space-y-4">
+      <!-- Navigation links in two columns -->
+      <div class="grid gap-3 md:grid-cols-2">
+        <a href="/preferences/categories" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+          <span class="text-left">
+            <span class="block font-semibold">Categories</span>
+            <span class="block text-xs text-base-content/70">
+              Manage and reorder your income & expense categories.
+            </span>
+          </span>
+          <span class="text-lg">›</span>
+        </a>
 
-  <!-- Theme Toggle -->
-  <div class="preference-section">
-    <h2>Appearance</h2>
-    <p class="preference-description">Choose between light and dark mode</p>
-    <div class="theme-toggle-section">
-      <span class="theme-label">Theme: {currentTheme === 'dark' ? 'Dark' : 'Light'}</span>
-      <button
-        class="theme-toggle-btn"
-        on:click={handleThemeToggle}
-        title="Toggle Theme"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
+        <a href="/preferences/currency" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+          <span class="text-left">
+            <span class="block font-semibold">Currency & Quick Amount</span>
+            <span class="block text-xs text-base-content/70">
+              Configure display currency and quick amount shortcuts.
+            </span>
+          </span>
+          <span class="text-lg">›</span>
+        </a>
+
+        <a href="/preferences/change-password" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+          <span class="text-left">
+            <span class="block font-semibold">Change Password</span>
+            <span class="block text-xs text-base-content/70">
+              Update your account password securely.
+            </span>
+          </span>
+          <span class="text-lg">›</span>
+        </a>
+      </div>
+
+      <!-- Appearance -->
+      <div class="divider my-2"></div>
+
+      <div class="space-y-2 max-w-md">
+        <h3 class="font-semibold text-base">Appearance</h3>
+        <p class="text-xs text-base-content/70">
+          Choose a DaisyUI theme for the app.
+        </p>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Theme</legend>
+          <select
+            class="select select-bordered w-full border-2"
+            bind:value={selectedTheme}
+            on:change={handleThemeChange}
+          >
+            {#each availableThemes as t}
+              <option value={t}>{t}</option>
+            {/each}
+          </select>
+        </fieldset>
+      </div>
     </div>
   </div>
 </div>
-
-<style>
-  .preferences-page {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-  }
-
-  .preference-section {
-    background: var(--surface);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-    margin-bottom: 1.5rem;
-  }
-
-  .nav-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .nav-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    background: var(--surface);
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-
-  .nav-card:hover {
-    border-color: var(--primary-color);
-    background: var(--background);
-  }
-
-  .nav-card h3 {
-    margin: 0;
-    font-size: 1rem;
-  }
-
-  .nav-card p {
-    margin: 0.25rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-
-  .nav-arrow {
-    font-size: 1.25rem;
-    color: var(--text-secondary);
-  }
-
-  .preference-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .preference-section h2 {
-    font-size: 1.125rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-  }
-
-  .preference-description {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-  }
-
-  .theme-toggle-section {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-  }
-
-  .theme-label {
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  .theme-toggle-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-primary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .theme-toggle-btn:hover {
-    background: var(--background);
-    transform: scale(1.05);
-  }
-
-  .theme-toggle-btn svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .moon-icon {
-    display: none;
-  }
-
-  :global(.dark) .sun-icon {
-    display: none;
-  }
-
-  :global(.dark) .moon-icon {
-    display: block;
-  }
-</style>
 

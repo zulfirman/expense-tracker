@@ -1,22 +1,22 @@
 import { writable } from 'svelte/store';
 
 function createThemeStore() {
-  const { subscribe, set, update } = writable('pastel');
+  const { subscribe, set, update } = writable('cupcake');
 
   return {
     subscribe,
-    setTheme: (theme) => {
-      set(theme);
+    setTheme: (newTheme) => {
+      set(newTheme);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('theme', theme);
-        applyTheme(theme);
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
       }
     },
     init: () => {
       if (typeof window !== 'undefined') {
         // Check localStorage first
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme && (savedTheme === 'pastel' || savedTheme === 'night')) {
+        if (savedTheme) {
           set(savedTheme);
           applyTheme(savedTheme);
           return;
@@ -24,14 +24,14 @@ function createThemeStore() {
         
         // Check system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = prefersDark ? 'night' : 'pastel';
-        set(theme);
-        applyTheme(theme);
+        const initialTheme = prefersDark ? 'night' : 'cupcake';
+        set(initialTheme);
+        applyTheme(initialTheme);
         
-        // Listen for system theme changes
+        // Listen for system theme changes when user hasn't chosen explicitly
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
           if (!localStorage.getItem('theme')) {
-            const newTheme = e.matches ? 'night' : 'pastel';
+            const newTheme = e.matches ? 'night' : 'cupcake';
             set(newTheme);
             applyTheme(newTheme);
           }
@@ -39,8 +39,9 @@ function createThemeStore() {
       }
     },
     toggle: () => {
-      update(theme => {
-        const newTheme = theme === 'night' ? 'pastel' : 'night';
+      update(current => {
+        // Simple toggle between cupcake (light) and night (dark)
+        const newTheme = current === 'night' ? 'cupcake' : 'night';
         if (typeof window !== 'undefined') {
           localStorage.setItem('theme', newTheme);
           applyTheme(newTheme);

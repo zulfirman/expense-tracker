@@ -214,16 +214,21 @@
   }
 </script>
 
-<div class="modal-backdrop" on:click={handleBackdropClick}>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>{date ? formatDate(date.date) : ''}</h2>
-      <button class="close-btn" on:click={close}>×</button>
+<div class="modal modal-open z-[2100]" on:click={handleBackdropClick}>
+  <div class="modal-box w-11/12 max-w-4xl" on:click|stopPropagation>
+    <div class="flex items-start justify-between gap-3 mb-4">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-base-content/60">Date</p>
+        <h2 class="text-2xl font-bold">{date ? formatDate(date.date) : ''}</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" on:click={close}>✕</button>
     </div>
 
-    <div class="modal-body">
+    <div class="max-h-[70vh] overflow-y-auto pr-1">
       {#if loading}
-        <div class="loading">Loading...</div>
+        <div class="flex justify-center py-8">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
       {:else if showAddExpenseForm}
         <InputExpenses
           fixedDate={date?.date}
@@ -280,89 +285,91 @@
         {@const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0)}
         {@const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)}
         {@const netTotal = totalIncome - totalExpenses}
-        
-        <div class="date-summary">
-          <div class="summary-item income">
-            <span class="summary-label">Total Income</span>
-            <span class="summary-amount">{formatCurrency(totalIncome)}</span>
+
+        <div class="stats shadow-sm bg-base-200 border border-base-300 mb-6">
+          <div class="stat">
+            <div class="stat-title">Total Income</div>
+            <div class="stat-value text-success text-xl">{formatCurrency(totalIncome)}</div>
           </div>
-          <div class="summary-item expense">
-            <span class="summary-label">Total Expenses</span>
-            <span class="summary-amount">{formatCurrency(totalExpenses)}</span>
+          <div class="stat">
+            <div class="stat-title">Total Expenses</div>
+            <div class="stat-value text-error text-xl">{formatCurrency(totalExpenses)}</div>
           </div>
-          <div class="summary-item net" class:positive={netTotal > 0} class:negative={netTotal < 0}>
-            <span class="summary-label">Net Total</span>
-            <span class="summary-amount">{formatCurrency(Math.abs(netTotal))}</span>
+          <div class="stat">
+            <div class="stat-title">Net Total</div>
+            <div class="stat-value text-xl" class:text-success={netTotal >= 0} class:text-error={netTotal < 0}>
+              {formatCurrency(Math.abs(netTotal))}
+            </div>
           </div>
         </div>
 
-        <div class="transactions-section">
-          <div class="section-header">
-            <h3>Income</h3>
-            <button class="btn btn-primary add-btn" on:click={startAddIncome}>+ Add</button>
-          </div>
-          {#if incomes.length === 0}
-            <div class="no-items">No income for this date</div>
-          {:else}
-            {#each incomes as income}
-              <div class="transaction-item income-item">
-                <div class="transaction-info">
-                  <div class="transaction-amount income-amount">{formatCurrency(income.amount)}</div>
-                  {#if income.notes}
-                    <div class="transaction-notes">{income.notes}</div>
-                  {/if}
-                </div>
-                <div class="transaction-actions">
-                  <button class="action-btn edit-btn" on:click={() => startEditIncome(income)}>
-                    Edit
-                  </button>
-                  <button class="action-btn delete-btn" on:click={() => handleDeleteIncome(income.id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            {/each}
-          {/if}
-        </div>
-
-        <div class="transactions-section">
-          <div class="section-header">
-            <h3>Expenses</h3>
-            <button class="btn btn-primary add-btn" on:click={startAddExpense}>+ Add</button>
-          </div>
-          {#if expenses.length === 0}
-            <div class="no-items">No expenses for this date</div>
-          {:else}
-            {#each expenses as expense}
-              <div class="transaction-item expense-item">
-                <div class="transaction-info">
-                  <div class="transaction-categories">
-                    {#each expense.categories as cat}
-                      <span class="category-badge">
-                        {#if typeof cat === 'string'}
-                          {cat}
-                        {:else}
-                          {cat?.name}
-                        {/if}
-                      </span>
-                    {/each}
+        <div class="card bg-base-100 border border-base-300 shadow-sm mb-6">
+          <div class="card-body p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-lg">Income</h3>
+              <button class="btn btn-primary btn-sm" on:click={startAddIncome}>+ Add</button>
+            </div>
+            {#if incomes.length === 0}
+              <div class="alert alert-info"><span>No income for this date</span></div>
+            {:else}
+              <div class="space-y-2">
+                {#each incomes as income}
+                  <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-base-200 bg-base-200/50">
+                    <div class="space-y-1">
+                      <div class="text-lg font-semibold text-success">{formatCurrency(income.amount)}</div>
+                      {#if income.notes}
+                        <div class="text-sm text-base-content/70">{income.notes}</div>
+                      {/if}
+                    </div>
+                    <div class="flex gap-2">
+                      <button class="btn btn-soft btn-xs" on:click={() => startEditIncome(income)}>Edit</button>
+                      <button class="btn btn-error btn-xs" on:click={() => handleDeleteIncome(income.id)}>Delete</button>
+                    </div>
                   </div>
-                  <div class="transaction-amount expense-amount">{formatCurrency(expense.amount)}</div>
-                  {#if expense.notes}
-                    <div class="transaction-notes">{expense.notes}</div>
-                  {/if}
-                </div>
-                <div class="transaction-actions">
-                  <button class="action-btn edit-btn" on:click={() => startEditExpense(expense)}>
-                    Edit
-                  </button>
-                  <button class="action-btn delete-btn" on:click={() => handleDeleteExpense(expense.id)}>
-                    Delete
-                  </button>
-                </div>
+                {/each}
               </div>
-            {/each}
-          {/if}
+            {/if}
+          </div>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+          <div class="card-body p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-lg">Expenses</h3>
+              <button class="btn btn-primary btn-sm" on:click={startAddExpense}>+ Add</button>
+            </div>
+            {#if expenses.length === 0}
+              <div class="alert alert-info"><span>No expenses for this date</span></div>
+            {:else}
+              <div class="space-y-2">
+                {#each expenses as expense}
+                  <div class="flex items-start justify-between gap-3 p-3 rounded-lg border border-base-200 bg-base-200/50">
+                    <div class="space-y-1">
+                      <div class="flex flex-wrap gap-1">
+                        {#each expense.categories as cat}
+                          <span class="badge badge-outline">
+                            {#if typeof cat === 'string'}
+                              {cat}
+                            {:else}
+                              {cat?.name}
+                            {/if}
+                          </span>
+                        {/each}
+                      </div>
+                      <div class="text-lg font-semibold text-error">{formatCurrency(expense.amount)}</div>
+                      {#if expense.notes}
+                        <div class="text-sm text-base-content/70">{expense.notes}</div>
+                      {/if}
+                    </div>
+                    <div class="flex gap-2">
+                      <button class="btn btn-soft btn-xs" on:click={() => startEditExpense(expense)}>Edit</button>
+                      <button class="btn btn-error btn-xs" on:click={() => handleDeleteExpense(expense.id)}>Delete</button>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </div>
         </div>
       {/if}
     </div>
@@ -370,323 +377,7 @@
 </div>
 
 <style>
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 1rem;
-  }
-
-  .modal-content {
-    background: var(--surface);
-    border-radius: 1.25rem;
-    width: 100%;
-    max-width: 650px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-header h2 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-    margin: 0;
-    text-transform: capitalize;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .close-btn:hover {
-    color: var(--text-primary);
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-    scroll-behavior: smooth;
-  }
-
-  .date-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
-    padding: 1.25rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 1rem;
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-
-  .summary-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.875rem 1rem;
-    border-radius: 0.625rem;
-    transition: all 0.2s;
-  }
-
-  .summary-item.income {
-    background: rgba(16, 185, 129, 0.08);
-    border-left: 3px solid #10b981;
-  }
-
-  .summary-item.expense {
-    background: rgba(239, 68, 68, 0.08);
-    border-left: 3px solid #ef4444;
-  }
-
-  .summary-item.net {
-    background: var(--surface);
-    border: 2px solid var(--border);
-    font-weight: 600;
-    margin-top: 0.5rem;
-    padding: 1rem;
-  }
-
-  .summary-item.net.positive {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .summary-item.net.negative {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-  }
-
-  .summary-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-  }
-
-  .summary-amount {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .summary-item.net .summary-amount {
-    font-size: 1.25rem;
-  }
-
-  .transactions-section {
-    margin-bottom: 2rem;
-  }
-
-  .transactions-section:last-child {
-    margin-bottom: 0;
-  }
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border);
-  }
-
-  .section-header h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-  }
-
-  .add-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.75rem;
-    min-width: auto;
-    font-weight: 500;
-      max-width: 50%;
-  }
-
-  .no-items {
-    padding: 2rem 1.5rem;
-    text-align: center;
-    color: var(--text-secondary);
-    background: var(--background);
-    border-radius: 0.75rem;
-    border: 2px dashed var(--border);
-    font-size: 0.875rem;
-  }
-
-  .transaction-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1.25rem;
-    background: var(--surface);
-    border-radius: 0.75rem;
-    border: 1px solid var(--border);
-    margin-bottom: 1rem;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  .transaction-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-color);
-  }
-
-  .transaction-item.income-item {
-    border-left: 4px solid #10b981;
-    background: linear-gradient(to right, rgba(16, 185, 129, 0.05), var(--surface));
-  }
-
-  .transaction-item.expense-item {
-    border-left: 4px solid #ef4444;
-    background: linear-gradient(to right, rgba(239, 68, 68, 0.05), var(--surface));
-  }
-
-  .transaction-info {
-    flex: 1;
-  }
-
-  .transaction-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .transaction-amount {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-
-  .transaction-amount.income-amount {
-    color: #10b981;
-  }
-
-  .transaction-amount.expense-amount {
-    color: #ef4444;
-  }
-
-  .transaction-notes {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-  }
-
-  .transaction-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-
-  .action-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .action-btn:hover {
-    transform: scale(1.05);
-  }
-
-  .expense-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border);
-  }
-
   .category-badge {
-    padding: 0.25rem 0.75rem;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 1rem;
-    font-size: 0.75rem;
     text-transform: capitalize;
   }
-
-  .expense-amount {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 0.25rem;
-  }
-
-  .edit-btn {
-    background: var(--primary-color);
-    color: white;
-  }
-
-  .edit-btn:hover {
-    background: #4338ca;
-  }
-
-  .delete-btn {
-    background: var(--danger);
-    color: white;
-  }
-
-  .delete-btn:hover {
-    background: #dc2626;
-  }
-
-  .btn {
-    flex: 1;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-
 </style>

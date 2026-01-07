@@ -1,10 +1,10 @@
 <script>
-  import { createEventDispatcher, onMount, onDestroy, afterUpdate } from 'svelte';
+import { createEventDispatcher, onMount, onDestroy, afterUpdate } from 'svelte';
   import api from '$lib/api';
   import { Chart, registerables } from 'chart.js';
-  import '$lib/styles/charts.css';
   import { formatCurrency } from '$lib/utils/currency';
   import { currency } from '$lib/stores/currency';
+import { theme } from '$lib/stores/theme';
 
   Chart.register(...registerables);
 
@@ -30,6 +30,32 @@
   let weeklyData = [];
   let cumulativeData = [];
   let budgets = [];
+$: currentTheme = $theme || document.documentElement?.dataset?.theme || 'light';
+$: isDarkTheme = ['dark', 'night', 'forest', 'business', 'dracula', 'sunset', 'dim', 'black'].some(t => currentTheme?.toLowerCase().includes(t));
+
+function hexToRgba(hex, alpha = 1) {
+  if (!hex) return `rgba(99,102,241,${alpha})`;
+  const normalized = hex.replace('#', '');
+  const bigint = parseInt(normalized.length === 3 ? normalized.split('').map(c => c + c).join('') : normalized, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getPalette() {
+  return {
+    text: isDarkTheme ? '#e5e7eb' : '#1f2937',
+    grid: isDarkTheme ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    surface: isDarkTheme ? '#0f172a' : '#ffffff',
+    primary: '#6366f1',
+    success: '#10b981',
+    danger: '#ef4444',
+    info: '#3b82f6',
+    warning: '#f59e0b',
+    accent: '#a855f7'
+  };
+}
 
   onMount(async () => {
     await loadMonthDetails();
@@ -201,6 +227,7 @@
 
     const ctx = chartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     // Sort daily expenses by date
     const sortedDaily = [...dailyExpenses].sort((a, b) => {
@@ -224,43 +251,43 @@
           {
             label: 'Income',
             data: incomeData,
-            borderColor: 'rgb(16, 185, 129)',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: palette.success,
+            backgroundColor: hexToRgba(palette.success, 0.16),
             borderWidth: 2,
             fill: false,
             tension: 0.4,
             pointRadius: 4,
             pointHoverRadius: 6,
-            pointBackgroundColor: 'rgb(16, 185, 129)',
-            pointBorderColor: '#fff',
+            pointBackgroundColor: palette.success,
+            pointBorderColor: palette.surface,
             pointBorderWidth: 2
           },
           {
             label: 'Expenses',
             data: expenseData,
-            borderColor: 'rgb(239, 68, 68)',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderColor: palette.danger,
+            backgroundColor: hexToRgba(palette.danger, 0.16),
             borderWidth: 2,
             fill: false,
             tension: 0.4,
             pointRadius: 4,
             pointHoverRadius: 6,
-            pointBackgroundColor: 'rgb(239, 68, 68)',
-            pointBorderColor: '#fff',
+            pointBackgroundColor: palette.danger,
+            pointBorderColor: palette.surface,
             pointBorderWidth: 2
           },
           {
             label: 'Net (Income - Expense)',
             data: netData,
-            borderColor: 'rgb(59, 130, 246)',
-            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            borderColor: palette.info,
+            backgroundColor: hexToRgba(palette.info, 0.2),
             borderWidth: 3,
             fill: true,
             tension: 0.4,
             pointRadius: 5,
             pointHoverRadius: 7,
-            pointBackgroundColor: 'rgb(59, 130, 246)',
-            pointBorderColor: '#fff',
+            pointBackgroundColor: palette.info,
+            pointBorderColor: palette.surface,
             pointBorderWidth: 2,
             borderDash: [5, 5]
           }
@@ -280,6 +307,7 @@
             labels: {
               usePointStyle: true,
               padding: 15,
+              color: palette.text,
               font: {
                 size: 12
               }
@@ -308,14 +336,18 @@
             title: {
               display: true,
               text: 'Day of Month',
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
+            ticks: {
+              color: palette.text
+            },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           },
           y: {
@@ -323,19 +355,21 @@
             title: {
               display: true,
               text: `Amount (${currentCurrency})`,
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
             ticks: {
+              color: palette.text,
               callback: function(value) {
                 return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           }
         }
@@ -354,17 +388,18 @@
 
     const ctx = categoryChartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     // Sort categories by total (descending)
     const sortedCategories = [...expensesByCategory].sort((a, b) => b.total - a.total);
 
     const colors = [
-      'rgba(79, 70, 229, 0.8)',
-      'rgba(124, 58, 237, 0.8)',
-      'rgba(168, 85, 247, 0.8)',
-      'rgba(192, 132, 252, 0.8)',
-      'rgba(217, 119, 6, 0.8)',
-      'rgba(234, 179, 8, 0.8)'
+      palette.primary,
+      palette.info,
+      palette.accent,
+      palette.warning,
+      palette.success,
+      palette.danger
     ];
 
     categoryChartInstance = new Chart(ctx, {
@@ -374,8 +409,8 @@
         datasets: [{
           label: 'Expenses by Category',
           data: sortedCategories.map(item => item.total),
-          backgroundColor: sortedCategories.map((_, index) => colors[index % colors.length]),
-          borderColor: sortedCategories.map((_, index) => colors[index % colors.length].replace('0.8', '1')),
+          backgroundColor: sortedCategories.map((_, index) => hexToRgba(colors[index % colors.length], 0.75)),
+          borderColor: sortedCategories.map((_, index) => colors[index % colors.length]),
           borderWidth: 2,
           borderRadius: 4
         }]
@@ -400,10 +435,14 @@
             title: {
               display: true,
               text: 'Category',
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
+            },
+            ticks: {
+              color: palette.text
             },
             grid: {
               display: false
@@ -414,19 +453,21 @@
             title: {
               display: true,
               text: `Amount (${currentCurrency})`,
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
             ticks: {
+              color: palette.text,
               callback: function(value) {
                 return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           }
         }
@@ -445,21 +486,22 @@
 
     const ctx = pieChartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     // Sort categories by total (descending)
     const sortedCategories = [...expensesByCategory].sort((a, b) => b.total - a.total);
 
     const colors = [
-      'rgba(79, 70, 229, 0.8)',
-      'rgba(124, 58, 237, 0.8)',
-      'rgba(168, 85, 247, 0.8)',
-      'rgba(192, 132, 252, 0.8)',
-      'rgba(217, 119, 6, 0.8)',
-      'rgba(234, 179, 8, 0.8)',
-      'rgba(16, 185, 129, 0.8)',
-      'rgba(59, 130, 246, 0.8)',
-      'rgba(239, 68, 68, 0.8)',
-      'rgba(245, 158, 11, 0.8)'
+      palette.primary,
+      palette.accent,
+      palette.info,
+      palette.warning,
+      palette.success,
+      palette.danger,
+      '#0ea5e9',
+      '#f97316',
+      '#14b8a6',
+      '#a3e635'
     ];
 
     const total = sortedCategories.reduce((sum, item) => sum + item.total, 0);
@@ -470,8 +512,8 @@
         labels: sortedCategories.map(item => item.category),
         datasets: [{
           data: sortedCategories.map(item => item.total),
-          backgroundColor: sortedCategories.map((_, index) => colors[index % colors.length]),
-          borderColor: sortedCategories.map((_, index) => colors[index % colors.length].replace('0.8', '1')),
+          backgroundColor: sortedCategories.map((_, index) => hexToRgba(colors[index % colors.length], 0.78)),
+          borderColor: sortedCategories.map((_, index) => colors[index % colors.length]),
           borderWidth: 2
         }]
       },
@@ -485,6 +527,7 @@
             labels: {
               usePointStyle: true,
               padding: 15,
+              color: palette.text,
               font: {
                 size: 12
               },
@@ -534,6 +577,7 @@
 
     const ctx = cumulativeChartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     const labels = cumulativeData.map(item => {
       const date = new Date(item.date);
@@ -549,15 +593,15 @@
         datasets: [{
           label: 'Cumulative Spending',
           data: cumulativeValues,
-          borderColor: 'rgb(239, 68, 68)',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          borderColor: palette.danger,
+          backgroundColor: hexToRgba(palette.danger, 0.14),
           borderWidth: 3,
           fill: true,
           tension: 0.4,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: 'rgb(239, 68, 68)',
-          pointBorderColor: '#fff',
+          pointBackgroundColor: palette.danger,
+          pointBorderColor: palette.surface,
           pointBorderWidth: 2
         }]
       },
@@ -571,6 +615,7 @@
             labels: {
               usePointStyle: true,
               padding: 15,
+              color: palette.text,
               font: {
                 size: 12
               }
@@ -594,14 +639,18 @@
             title: {
               display: true,
               text: 'Day of Month',
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
+            ticks: {
+              color: palette.text
+            },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           },
           y: {
@@ -609,19 +658,21 @@
             title: {
               display: true,
               text: `Cumulative Amount (${currentCurrency})`,
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
             ticks: {
+              color: palette.text,
               callback: function(value) {
                 return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           }
         }
@@ -640,6 +691,7 @@
 
     const ctx = weeklyChartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     const labels = weeklyData.map(item => item.week);
     const expenseData = weeklyData.map(item => item.expense);
@@ -653,16 +705,16 @@
           {
             label: 'Income',
             data: incomeData,
-            backgroundColor: 'rgba(16, 185, 129, 0.8)',
-            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: hexToRgba(palette.success, 0.8),
+            borderColor: palette.success,
             borderWidth: 2,
             borderRadius: 4
           },
           {
             label: 'Expenses',
             data: expenseData,
-            backgroundColor: 'rgba(239, 68, 68, 0.8)',
-            borderColor: 'rgba(239, 68, 68, 1)',
+            backgroundColor: hexToRgba(palette.danger, 0.82),
+            borderColor: palette.danger,
             borderWidth: 2,
             borderRadius: 4
           }
@@ -678,6 +730,7 @@
             labels: {
               usePointStyle: true,
               padding: 15,
+              color: palette.text,
               font: {
                 size: 12
               }
@@ -696,10 +749,14 @@
             title: {
               display: true,
               text: 'Week',
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
+            },
+            ticks: {
+              color: palette.text
             },
             grid: {
               display: false
@@ -710,19 +767,21 @@
             title: {
               display: true,
               text: `Amount (${currentCurrency})`,
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
             ticks: {
+              color: palette.text,
               callback: function(value) {
                 return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           }
         }
@@ -741,6 +800,7 @@
 
     const ctx = budgetChartCanvas.getContext('2d');
     const currentCurrency = $currency || 'IDR';
+    const palette = getPalette();
     
     // Create expense map for quick lookup
     const expenseMap = new Map();
@@ -779,8 +839,8 @@
           {
             label: 'Budget',
             data: budgetData,
-            backgroundColor: 'rgba(99, 102, 241, 0.3)',
-            borderColor: 'rgba(99, 102, 241, 1)',
+            backgroundColor: hexToRgba(palette.primary, 0.3),
+            borderColor: palette.primary,
             borderWidth: 2,
             borderRadius: 4
           },
@@ -800,7 +860,10 @@
         plugins: {
           legend: {
             display: true,
-            position: 'top'
+            position: 'top',
+            labels: {
+              color: palette.text
+            }
           },
           tooltip: {
             callbacks: {
@@ -815,10 +878,14 @@
             title: {
               display: true,
               text: 'Category',
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
+            },
+            ticks: {
+              color: palette.text
             },
             grid: {
               display: false
@@ -829,19 +896,21 @@
             title: {
               display: true,
               text: `Amount (${currentCurrency})`,
+              color: palette.text,
               font: {
                 size: 12,
                 weight: 'bold'
               }
             },
             ticks: {
+              color: palette.text,
               callback: function(value) {
                 return formatCurrency(value, currentCurrency);
               }
             },
             grid: {
               display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              color: palette.grid
             }
           }
         }
@@ -866,238 +935,120 @@
   }
 </script>
 
-<div class="modal-backdrop" on:click={handleBackdropClick}>
-  <div class="modal-content">
-    <div class="modal-header">
+<div class="modal modal-open z-[2100]" on:click={handleBackdropClick}>
+  <div class="modal-box w-11/12 max-w-5xl" on:click|stopPropagation>
+    <div class="flex items-start justify-between gap-3 mb-4">
       <div>
-        <h2>Advanced Analytics & Insights</h2>
-        <p class="modal-subtitle">{formatMonthYear(month.month)}</p>
+        <p class="text-xs uppercase tracking-wide text-base-content/60">Insights</p>
+        <h2 class="text-2xl font-bold">Advanced Analytics</h2>
+        <p class="text-sm text-base-content/70">{formatMonthYear(month.month)}</p>
       </div>
-      <button class="close-btn" on:click={close}>×</button>
+      <button class="btn btn-ghost btn-sm" on:click={close}>✕</button>
     </div>
 
-    <div class="modal-body">
+    <div class="max-h-[75vh] overflow-y-auto pr-1 space-y-4">
       {#if loading}
-        <div class="loading">Loading...</div>
+        <div class="flex justify-center py-10">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
       {:else if dailyExpenses.length > 0 || expensesByCategory.length > 0}
         {#if dailyExpenses.length > 0}
-          <div class="chart-section">
-            <h3>Daily Income vs Expenses Trend</h3>
-            <div class="chart-container">
-              <canvas bind:this={chartCanvas}></canvas>
+          <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body space-y-3">
+              <h3 class="font-semibold text-lg">Daily Income vs Expenses</h3>
+              <div class="rounded-lg border border-base-300 bg-base-200/40 p-3">
+                <div class="relative h-[320px]">
+                  <canvas bind:this={chartCanvas}></canvas>
+                </div>
+              </div>
             </div>
           </div>
         {/if}
 
         {#if cumulativeData.length > 0}
-          <div class="chart-section">
-            <h3>Cumulative Spending Trend</h3>
-            <p class="chart-description">Track your spending accumulation throughout the month</p>
-            <div class="chart-container">
-              <canvas bind:this={cumulativeChartCanvas}></canvas>
+          <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body space-y-2">
+              <div>
+                <h3 class="font-semibold text-lg">Cumulative Spending Trend</h3>
+                <p class="text-sm text-base-content/70">Track your spending accumulation throughout the month</p>
+              </div>
+              <div class="rounded-lg border border-base-300 bg-base-200/40 p-3">
+                <div class="relative h-[320px]">
+                  <canvas bind:this={cumulativeChartCanvas}></canvas>
+                </div>
+              </div>
             </div>
           </div>
         {/if}
 
         {#if weeklyData.length > 0}
-          <div class="chart-section">
-            <h3>Weekly Income vs Expenses</h3>
-            <p class="chart-description">Compare your weekly income and expenses</p>
-            <div class="chart-container">
-              <canvas bind:this={weeklyChartCanvas}></canvas>
+          <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body space-y-2">
+              <div>
+                <h3 class="font-semibold text-lg">Weekly Income vs Expenses</h3>
+                <p class="text-sm text-base-content/70">Compare your weekly income and expenses</p>
+              </div>
+              <div class="rounded-lg border border-base-300 bg-base-200/40 p-3">
+                <div class="relative h-[320px]">
+                  <canvas bind:this={weeklyChartCanvas}></canvas>
+                </div>
+              </div>
             </div>
           </div>
         {/if}
 
         {#if expensesByCategory.length > 0}
-          <div class="category-list">
-            <h4>Category Breakdown Details</h4>
-            {#each expensesByCategory.sort((a, b) => b.total - a.total) as item}
-              {@const total = expensesByCategory.reduce((sum, cat) => sum + cat.total, 0)}
-              {@const percentage = ((item.total / total) * 100).toFixed(1)}
-              <div class="category-item">
-                <div class="category-info">
-                  <span class="category-name">{item.category}</span>
-                  <span class="category-percentage">{percentage}%</span>
-                </div>
-                <span class="category-amount">{formatCurrency(item.total)}</span>
+          <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body space-y-3">
+              <h3 class="font-semibold text-lg">Category Breakdown</h3>
+              <div class="space-y-2">
+                {#each expensesByCategory.sort((a, b) => b.total - a.total) as item}
+                  {@const total = expensesByCategory.reduce((sum, cat) => sum + cat.total, 0)}
+                  {@const percentage = ((item.total / total) * 100).toFixed(1)}
+                  <div class="flex items-center justify-between p-3 rounded-lg border border-base-200 bg-base-200/40">
+                    <div>
+                      <p class="font-semibold text-base">{item.category}</p>
+                      <p class="text-xs text-base-content/70">{percentage}% of spend</p>
+                    </div>
+                    <div class="font-semibold">{formatCurrency(item.total)}</div>
+                  </div>
+                {/each}
               </div>
-            {/each}
+            </div>
           </div>
         {:else if dailyExpenses.length === 0}
-          <div class="no-data">No expenses data available</div>
+          <div class="alert alert-info">
+            <span>No expenses data available</span>
+          </div>
         {/if}
 
         {#if budgets.length > 0}
-          <div class="chart-section">
-            <div class="space-xl"></div>
-            <h3>Budget vs Actual Spending</h3>
-            <p class="chart-description">Compare your budgeted amounts with actual spending</p>
-            <div class="chart-container">
-              <canvas bind:this={budgetChartCanvas}></canvas>
+          <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body space-y-2">
+              <div>
+                <h3 class="font-semibold text-lg">Budget vs Actual Spending</h3>
+                <p class="text-sm text-base-content/70">Compare your budgeted amounts with actual spending</p>
+              </div>
+              <div class="rounded-lg border border-base-300 bg-base-200/40 p-3">
+                <div class="relative h-[320px]">
+                  <canvas bind:this={budgetChartCanvas}></canvas>
+                </div>
+              </div>
             </div>
           </div>
         {/if}
       {:else}
-        <div class="no-data">No data available</div>
+        <div class="alert alert-info">
+          <span>No data available</span>
+        </div>
       {/if}
     </div>
   </div>
 </div>
 
 <style>
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: 1rem;
-  }
-
-  .modal-content {
-    background: var(--surface);
-    border-radius: 1rem;
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-header h2 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    margin: 0;
-    font-weight: 700;
-  }
-
-  .modal-subtitle {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0.25rem 0 0 0;
-    text-transform: capitalize;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .close-btn:hover {
-    color: var(--text-primary);
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .loading,
-  .no-data {
-    text-align: center;
-    padding: 2rem;
-    color: var(--text-secondary);
-  }
-
-  .chart-section {
-    margin-bottom: 2.5rem;
-  }
-
-  .chart-section h3 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-  }
-
-  .chart-description {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    font-style: italic;
-  }
-
-  .chart-container {
-    position: relative;
-    height: 350px;
-    width: 100%;
-    background: var(--background);
-    border-radius: 0.75rem;
-    padding: 1rem;
-    border: 1px solid var(--border);
-  }
-
-  .category-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-  }
-
-  .category-list h4 {
-    font-size: 1rem;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-  }
-
-  .category-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border);
-  }
-
-  .category-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .category-name {
-    font-weight: 500;
-    color: var(--text-primary);
-    text-transform: capitalize;
-  }
-
-  .category-percentage {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-  }
-
-  .category-amount {
-    font-weight: 600;
-    color: var(--primary-color);
-    font-size: 1.125rem;
+  .chart-container canvas {
+    max-width: 100%;
   }
 </style>
 

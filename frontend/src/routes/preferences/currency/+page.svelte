@@ -100,255 +100,133 @@
   }
 </script>
 
-<div class="page">
-  <div class="header">
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex items-center justify-between gap-2">
     <div>
-      <p class="eyebrow">Preferences</p>
-      <h1>Currency & Quick Amount</h1>
-      <p class="muted">
+      <p class="text-xs uppercase tracking-wide text-base-content/60">Preferences</p>
+      <h1 class="text-2xl font-bold mt-1">Currency & Quick Amount</h1>
+      <p class="text-sm text-base-content/70 mt-1">
         Configure your preferred currency and quick amount shortcuts.
       </p>
     </div>
-    <button class="btn ghost" on:click={() => goto('/preferences')}>Back</button>
+    <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
   </div>
 
   <!-- Currency Selection -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <h3>Currency</h3>
-        <p class="muted">Choose your preferred currency for displaying amounts</p>
-      </div>
-    </div>
-
-    <div class="currency-options">
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="IDR"
-          disabled={loading}
-        />
-        <span>Indonesian Rupiah (Rp.)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="USD"
-          disabled={loading}
-        />
-        <span>US Dollar ($)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="EUR"
-          disabled={loading}
-        />
-        <span>Euro (€)</span>
-      </label>
-      <label class="currency-option">
-        <input
-          type="radio"
-          bind:group={selectedCurrency}
-          value="JPY"
-          disabled={loading}
-        />
-        <span>Japanese Yen (¥)</span>
-      </label>
+  <div class="card bg-base-100 shadow-xl border-1">
+    <div class="card-body gap-4">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Currency</legend>
+        <div class="grid gap-2">
+          <label class="flex items-center gap-3 p-2 rounded-lg border border-base-300 cursor-pointer hover:bg-base-200 transition">
+            <input
+              type="radio"
+              bind:group={selectedCurrency}
+              value="IDR"
+              disabled={loading}
+              class="radio radio-primary radio-xs"
+            />
+            <span class="text-sm">Indonesian Rupiah (Rp.)</span>
+          </label>
+          <label class="flex items-center gap-3 p-2 rounded-lg border border-base-300 cursor-pointer hover:bg-base-200 transition">
+            <input
+              type="radio"
+              bind:group={selectedCurrency}
+              value="USD"
+              disabled={loading}
+              class="radio radio-primary radio-xs"
+            />
+            <span class="text-sm">US Dollar ($)</span>
+          </label>
+          <label class="flex items-center gap-3 p-2 rounded-lg border border-base-300 cursor-pointer hover:bg-base-200 transition">
+            <input
+              type="radio"
+              bind:group={selectedCurrency}
+              value="EUR"
+              disabled={loading}
+              class="radio radio-primary radio-xs"
+            />
+            <span class="text-sm">Euro (€)</span>
+          </label>
+          <label class="flex items-center gap-3 p-2 rounded-lg border border-base-300 cursor-pointer hover:bg-base-200 transition">
+            <input
+              type="radio"
+              bind:group={selectedCurrency}
+              value="JPY"
+              disabled={loading}
+              class="radio radio-primary radio-xs"
+            />
+            <span class="text-sm">Japanese Yen (¥)</span>
+          </label>
+        </div>
+      </fieldset>
     </div>
   </div>
 
   <!-- Quick Amounts -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <h3>Quick Amounts</h3>
-        <p class="muted">
-          Customize the quick amount buttons used when adding expenses
-          (currency: {selectedCurrency}).
-        </p>
-      </div>
-      <div class="header-actions">
-        <button class="btn ghost" on:click={resetToDefaults} disabled={loading}>
+  <div class="card bg-base-100 shadow-xl border-1">
+    <div class="card-body gap-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="font-semibold text-base">Quick Amounts</h3>
+          <p class="text-xs text-base-content/70">
+            Customize the quick amount buttons used when adding expenses
+            (currency: {selectedCurrency}).
+          </p>
+        </div>
+        <button class="btn btn-soft btn-xs" on:click={resetToDefaults} disabled={loading}>
           Use currency defaults
         </button>
       </div>
-    </div>
 
-    <div class="form-row">
-      <input
-        type="number"
-        min="0"
-        step="1"
-        placeholder="Add amount"
-        bind:value={newAmount}
-        class="form-input"
-        on:keydown={(e) => { if (e.key === 'Enter') addAmount(); }}
-      />
-      <button class="btn secondary" on:click={addAmount} disabled={loading}>Add</button>
-    </div>
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Add quick amount</legend>
+        <div class="flex gap-2">
+          <input
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Add amount"
+            bind:value={newAmount}
+            class="input input-bordered w-full border-2"
+            on:keydown={(e) => { if (e.key === 'Enter') addAmount(); }}
+          />
+          <button class="btn btn-primary" on:click={addAmount} disabled={loading}>Add</button>
+        </div>
+      </fieldset>
 
-    {#if amounts.length === 0}
-      <div class="empty">No quick amounts yet. Add one above or use defaults.</div>
-    {:else}
-      <div class="amount-pills">
-        {#each amounts as amt}
-          <div class="pill">
-            <span>{amt.toLocaleString()}</span>
-            <button class="remove" on:click={() => removeAmount(amt)} disabled={loading}>×</button>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
-
-  <div class="footer-actions">
-    <button class="btn primary" on:click={handleSave} disabled={loading}>
-      {#if loading}
-        <span class="spinner"></span> Saving...
+      {#if amounts.length === 0}
+        <div class="text-sm text-base-content/60 py-2">
+          No quick amounts yet. Add one above or use defaults.
+        </div>
       {:else}
-        Save
+        <div class="flex flex-wrap gap-2">
+          {#each amounts as amt}
+            <div class="badge badge-outline gap-1 px-3 py-3 border-1">
+              <span class="text-sm">{amt.toLocaleString()}</span>
+              <button
+                class="btn btn-xs btn-ghost text-error min-h-0 h-5 w-5 p-0"
+                on:click={() => removeAmount(amt)}
+                disabled={loading}
+              >
+                ×
+              </button>
+            </div>
+          {/each}
+        </div>
       {/if}
-    </button>
+
+      <div class="flex justify-end pt-2">
+        <button class="btn btn-primary" on:click={handleSave} disabled={loading}>
+          {#if loading}
+            <span class="loading loading-spinner loading-sm mr-1"></span>
+            Saving...
+          {:else}
+            Save
+          {/if}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
-
-<style>
-  .page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1.5rem;
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-  }
-
-  .eyebrow {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-
-  h1 {
-    margin: 0.2rem 0;
-    color: var(--text-primary);
-    font-size: 1.5rem;
-  }
-
-  .muted {
-    color: var(--text-secondary);
-    margin: 0.2rem 0 0;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .currency-options {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .currency-option {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .currency-option:hover {
-    background: var(--background);
-    border-color: var(--primary-color);
-  }
-
-  .currency-option input[type="radio"] {
-    cursor: pointer;
-  }
-
-  .currency-option input[type="radio"]:checked + span {
-    font-weight: 600;
-    color: var(--primary-color);
-  }
-
-  .form-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-input {
-    flex: 1;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    background: var(--background);
-    color: var(--text-primary);
-  }
-
-  .amount-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    background: var(--background);
-  }
-
-  .pill .remove {
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  .empty {
-    color: var(--text-secondary);
-    padding: 0.75rem 0;
-  }
-
-  .footer-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 0.5rem;
-  }
-</style>
-
 

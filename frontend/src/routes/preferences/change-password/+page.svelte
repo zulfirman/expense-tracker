@@ -88,81 +88,69 @@
   }
 </script>
 
-<div class="change-password-page">
-  <div class="header-row">
-    <h1>Change Password</h1>
-    <button class="btn ghost" on:click={() => goto('/preferences')}>Back</button>
+<div class="max-w-md mx-auto space-y-4">
+  <div class="flex items-center justify-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold">Change Password</h1>
+      <p class="text-sm text-base-content/70 mt-1">
+        Update the password for your account.
+      </p>
+    </div>
+    <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
   </div>
 
-  <div class="password-form">
-    <div class="form-group">
-      <label for="current-password">Current Password</label>
-      <input
-        id="current-password"
-        type="password"
-        bind:value={currentPassword}
-        placeholder="Enter current password"
-        class="form-input"
-        on:keydown={handleKeyDown}
-        disabled={loading}
-      />
-    </div>
-    <div class="form-group">
-      <label for="new-password">New Password</label>
-      <input
-        id="new-password"
-        type="password"
-        bind:value={newPassword}
-        placeholder="Enter new password (min. 6 characters)"
-        class="form-input"
-        on:keydown={handleKeyDown}
-        disabled={loading}
-      />
-    </div>
-    <div class="form-group">
-      <label for="confirm-password">Confirm New Password</label>
-      <input
-        id="confirm-password"
-        type="password"
-        bind:value={confirmPassword}
-        placeholder="Confirm new password"
-        class="form-input"
-        on:keydown={handleKeyDown}
-        disabled={loading}
-      />
-    </div>
-    <div class="button-group">
-      <button class="btn btn-primary" on:click={handleSubmit} disabled={loading}>
-        {loading ? 'Changing...' : 'Change Password'}
-      </button>
+  <div class="card bg-base-100 shadow-xl border-1">
+    <div class="card-body space-y-4">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Current password</legend>
+        <input
+          id="current-password"
+          type="password"
+          bind:value={currentPassword}
+          placeholder="Enter current password"
+          class="input input-bordered w-full border-2"
+          on:keydown={handleKeyDown}
+          disabled={loading}
+        />
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">New password</legend>
+        <input
+          id="new-password"
+          type="password"
+          bind:value={newPassword}
+          placeholder="At least 6 characters"
+          class="input input-bordered w-full border-2"
+          on:keydown={handleKeyDown}
+          disabled={loading}
+        />
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Confirm new password</legend>
+        <input
+          id="confirm-password"
+          type="password"
+          bind:value={confirmPassword}
+          placeholder="Re-enter new password"
+          class="input input-bordered w-full border-2"
+          on:keydown={handleKeyDown}
+          disabled={loading}
+        />
+      </fieldset>
+
+      <div class="pt-2">
+        <button class="btn btn-primary w-full" on:click={handleSubmit} disabled={loading}>
+          {#if loading}
+            <span class="loading loading-spinner loading-sm mr-1"></span>
+            Changing...
+          {:else}
+            Change password
+          {/if}
+        </button>
+      </div>
     </div>
   </div>
 </div>
-
-<style>
-  .change-password-page {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-  }
-
-  .password-form {
-    background: var(--surface);
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-  }
-
-  .button-group {
-    margin-top: 2rem;
-  }
-</style>
-
 

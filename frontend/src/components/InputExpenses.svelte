@@ -286,95 +286,92 @@
   }
 </script>
 
-<div class="max-w-2xl mx-auto">
-  <div class="card-body">
-    {#if showTitle}
-      <h2 class="card-title text-2xl mb-4">{expenseId ? 'Edit Expense' : 'Input Expenses'}</h2>
-    {/if}
+<div class="card-body">
+  {#if showTitle}
+    <h2 class="card-title text-2xl mb-4">{expenseId ? 'Edit Expense' : 'Input Expenses'}</h2>
+  {/if}
 
-    <form on:submit|preventDefault={handleSubmit}>
-      <!-- Templates Section -->
-      {#if templates.length > 0}
-        <div class="form-control mb-4">
-          <div class="collapse collapse-arrow bg-base-200">
-            <input type="checkbox" bind:checked={showTemplates} />
-            <div class="collapse-title font-semibold">
-              Templates ({templates.length})
-            </div>
-            <div class="collapse-content">
-              <div class="flex flex-col gap-2">
-                {#each templates as template}
-                  <button
-                    type="button"
-                    class="btn btn-outline justify-between"
-                    on:click={() => applyTemplate(template)}
-                  >
-                    <span>{template.name}</span>
-                    <span class="font-semibold text-primary">{formatCurrency(template.amount)}</span>
-                  </button>
-                {/each}
-              </div>
+  <form on:submit|preventDefault={handleSubmit}>
+    <!-- Templates Section -->
+    {#if templates.length > 0}
+      <div class="form-control mb-4">
+        <div class="collapse collapse-arrow bg-base-200">
+          <input type="checkbox" bind:checked={showTemplates} />
+          <div class="collapse-title font-semibold">
+            Templates ({templates.length})
+          </div>
+          <div class="collapse-content">
+            <div class="flex flex-col gap-2">
+              {#each templates as template}
+                <button
+                  type="button"
+                  class="btn btn-soft justify-between"
+                  on:click={() => applyTemplate(template)}
+                >
+                  <span>{template.name}</span>
+                  <span class="font-semibold text-primary">{formatCurrency(template.amount)}</span>
+                </button>
+              {/each}
             </div>
           </div>
         </div>
-      {/if}
+      </div>
+    {/if}
 
-      <!-- Category Selection -->
-      <div class="form-control mb-4">
-        <label class="label">
+    <!-- Category Selection -->
+    <div class="form-control mb-4">
+      <label class="label">
             <span class="label-text font-semibold">
               Category
               {#if selectedCategoryIds.length > 0}
                 ({selectedCategoryIds.length} Selected)
               {/if}
             </span>
-        </label>
-        {#if categoriesLoading}
-          <div class="flex justify-center py-4">
-            <span class="loading loading-spinner loading-md"></span>
-          </div>
-        {:else}
-          <div class="flex flex-wrap gap-2 mt-2">
-            {#each categories as category}
-              {@const isSelected = selectedCategoryIds.some(id => {
-                  const selectedId = Number(id);
-                  const catId = Number(category.id);
-                  return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
-              })}
-              <button
-                type="button"
-                class="btn btn-sm h-auto py-2 px-4 rounded-full transition-all"
-                class:btn-primary={isSelected}
-                class:btn-outline={!isSelected}
-                on:click={(e) => toggleCategory(category.id, e)}
-              >
-                {category.label}
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      <!-- Date Selection -->
-      {#if !fixedDate}
-        <div class="form-control mb-4">
-          <label class="label" for="date">
-            <span class="label-text font-semibold">Date</span>
-          </label>
-          <DatePicker
-            id="date"
-            bind:value={expenseDate}
-            placeholder="Select date"
-            on:dateChange={handleDateChange}
-          />
+      </label>
+      {#if categoriesLoading}
+        <div class="flex justify-center py-4">
+          <span class="loading loading-spinner loading-md"></span>
+        </div>
+      {:else}
+        <div class="flex flex-wrap gap-2 mt-2">
+          {#each categories as category}
+            {@const isSelected = selectedCategoryIds.some(id => {
+                const selectedId = Number(id);
+                const catId = Number(category.id);
+                return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
+            })}
+            <button
+              type="button"
+              class="btn btn-sm h-auto py-2 px-4 rounded-full transition-all"
+              class:btn-primary={isSelected}
+              class:btn-soft={!isSelected}
+              on:click={(e) => toggleCategory(category.id, e)}
+            >
+              {category.label}
+            </button>
+          {/each}
         </div>
       {/if}
+    </div>
 
-      <!-- Amount Input -->
+
+    <!-- Date Selection -->
+    {#if !fixedDate}
       <div class="form-control mb-4">
-        <label class="label" for="amount">
-          <span class="label-text font-semibold">Amount (Rp.)</span>
-        </label>
+        <DatePicker
+          id="date"
+          bind:value={expenseDate}
+          placeholder="Select date"
+          label="Date"
+          on:dateChange={handleDateChange}
+        />
+      </div>
+    {/if}
+
+    <!-- Amount Input -->
+    <div class="form-control mb-4">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Amount (Rp.)</legend>
         <input
           id="amount"
           type="text"
@@ -385,72 +382,73 @@
           on:keydown={handleKeyDown}
           inputmode="numeric"
         />
-        {#if amount}
-          <div class="label">
+      </fieldset>
+      {#if amount}
+        <div class="label">
               <span class="label-text-alt text-primary font-semibold text-xl mt-2">
                 {formatCurrency(amount)}
               </span>
+        </div>
+      {/if}
+
+      <!-- Quick Amount Buttons -->
+      {#if quickAmountsList.length > 0}
+        <div class="mt-4 pt-4 border-t border-base-300">
+          <label class="label">
+            <span class="label-text text-sm text-base-content/70">Quick Amount:</span>
+          </label>
+          <div class="grid grid-cols-3 gap-2 mt-2">
+            {#each quickAmountsList as quickAmount}
+              <button
+                type="button"
+                class="btn btn-sm"
+                class:btn-primary={amount === quickAmount.toString()}
+                class:btn-soft={amount !== quickAmount.toString()}
+                on:click={() => setQuickAmount(quickAmount)}
+              >
+                {formatCurrency(quickAmount.toString())}
+              </button>
+            {/each}
           </div>
-        {/if}
+        </div>
+      {/if}
+    </div>
 
-        <!-- Quick Amount Buttons -->
-        {#if quickAmountsList.length > 0}
-          <div class="mt-4 pt-4 border-t border-base-300">
-            <label class="label">
-              <span class="label-text text-sm text-base-content/70">Quick Amount:</span>
-            </label>
-            <div class="grid grid-cols-3 gap-2 mt-2">
-              {#each quickAmountsList as quickAmount}
-                <button
-                  type="button"
-                  class="btn btn-sm"
-                  class:btn-primary={amount === quickAmount.toString()}
-                  class:btn-outline={amount !== quickAmount.toString()}
-                  on:click={() => setQuickAmount(quickAmount)}
-                >
-                  {formatCurrency(quickAmount.toString())}
-                </button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-      </div>
+    <!-- Notes -->
+    <div class="form-control mb-6">
+      <label class="label" for="notes">
+        <span class="label-text font-semibold">Notes</span>
+      </label>
+      <textarea
+        id="notes"
+        bind:value={notes}
+        placeholder="Add notes (optional)"
+        class="textarea textarea-bordered w-full border-2"
+        rows="3"
+        on:keydown={handleKeyDown}
+      ></textarea>
+    </div>
 
-      <!-- Notes -->
-      <div class="form-control mb-6">
-        <label class="label" for="notes">
-          <span class="label-text font-semibold">Notes</span>
-        </label>
-        <textarea
-          id="notes"
-          bind:value={notes}
-          placeholder="Add notes (optional)"
-          class="textarea textarea-bordered w-full border-2"
-          rows="3"
-          on:keydown={handleKeyDown}
-        ></textarea>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex gap-2">
-        {#if showCancel}
-          <button type="button" class="btn btn-secondary flex-1" on:click={handleCancel} disabled={loading}>
-            Cancel
-          </button>
-        {:else if !expenseId}
-          <button type="button" class="btn btn-soft flex-1" on:click={handleClear} disabled={loading}>
-            Clear
-          </button>
-        {/if}
-        <button type="submit" class="btn btn-primary flex-1" disabled={loading}>
-          {#if loading}
-            <span class="loading loading-spinner loading-sm"></span>
-            {expenseId ? 'Updating...' : 'Submitting...'}
-          {:else}
-            {submitLabel}
-          {/if}
+    <!-- Action Buttons -->
+    <div class="flex gap-2">
+      {#if showCancel}
+        <button type="button" class="btn btn-secondary flex-1" on:click={handleCancel} disabled={loading}>
+          Cancel
         </button>
-      </div>
-    </form>
-  </div>
+      {:else if !expenseId}
+        <button type="button" class="btn btn-soft flex-1" on:click={handleClear} disabled={loading}>
+          Clear
+        </button>
+      {/if}
+      <button type="submit" class="btn btn-primary flex-1" disabled={loading}>
+        {#if loading}
+          <span class="loading loading-spinner loading-sm"></span>
+          {expenseId ? 'Updating...' : 'Submitting...'}
+        {:else}
+          {submitLabel}
+        {/if}
+      </button>
+    </div>
+  </form>
 </div>
+

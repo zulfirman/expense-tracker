@@ -5,6 +5,7 @@
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
+  import InputExpenses from "../../components/InputExpenses.svelte";
 
   let email = '';
   let password = '';
@@ -72,17 +73,15 @@
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-base-200 px-4">
-  <div class="card w-full max-w-md bg-base-100 shadow-xl">
+<div class="max-w-2xl mx-auto">
+  <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body">
       <h1 class="card-title text-3xl justify-center mb-2">Login</h1>
       <p class="text-center text-base-content/70 mb-6">Sign in to your account</p>
 
       <form on:submit|preventDefault={handleLogin}>
-        <div class="form-control mb-4">
-          <label class="label" for="email">
-            <span class="label-text">Email</span>
-          </label>
+        <fieldset class="fieldset mb-4">
+          <legend class="fieldset-legend">Email</legend>
           <input
             id="email"
             type="email"
@@ -93,12 +92,10 @@
             disabled={loading}
             required
           />
-        </div>
+        </fieldset>
 
-        <div class="form-control mb-6">
-          <label class="label" for="password">
-            <span class="label-text">Password</span>
-          </label>
+        <fieldset class="fieldset mb-6">
+          <legend class="fieldset-legend">Password</legend>
           <input
             id="password"
             type="password"
@@ -109,7 +106,7 @@
             disabled={loading}
             required
           />
-        </div>
+        </fieldset>
 
         <button type="submit" class="btn btn-primary w-full" disabled={loading}>
           {#if loading}
