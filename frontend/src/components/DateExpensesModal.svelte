@@ -263,6 +263,7 @@
         <InputIncome
           incomeId={editingIncome.id}
           initialData={{
+            categoryIds: editingIncome.categoryIds || editingIncome.categories?.map(c => typeof c === 'object' ? c.id : c) || [],
             date: date?.date || editingIncome.date,
             notes: editingIncome.notes || '',
             amount: editingIncome.amount

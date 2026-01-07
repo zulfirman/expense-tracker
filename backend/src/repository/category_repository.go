@@ -14,9 +14,16 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) GetAll(userID uint) ([]model.M_category, error) {
+func (r *CategoryRepository) GetAll(userID uint, typeFilter string) ([]model.M_category, error) {
 	var categories []model.M_category
-	err := r.db.Where("user_id = ?", userID).Order("name ASC").Find(&categories).Error
+	query := r.db.Where("user_id = ?", userID)
+	
+	// Filter by type if provided
+	if typeFilter == "income" || typeFilter == "expense" {
+		query = query.Where("type = ?", typeFilter)
+	}
+	
+	err := query.Order("type ASC, name ASC").Find(&categories).Error
 	return categories, err
 }
 

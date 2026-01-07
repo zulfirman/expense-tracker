@@ -89,7 +89,7 @@
    */
   async function loadCategories() {
     try {
-      const response = await api.get('/categories');
+      const response = await api.get('/categories?type=expense');
       categories = response.data
         .filter(cat => cat.isActive !== false)
         .map(cat => ({

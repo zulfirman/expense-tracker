@@ -13,17 +13,20 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
 	userRepo         *repository.UserRepository
 	refreshTokenRepo *repository.RefreshTokenRepository
+	db               *gorm.DB
 }
 
-func NewAuthHandler(userRepo *repository.UserRepository, refreshTokenRepo *repository.RefreshTokenRepository) *AuthHandler {
+func NewAuthHandler(userRepo *repository.UserRepository, refreshTokenRepo *repository.RefreshTokenRepository, db *gorm.DB) *AuthHandler {
 	return &AuthHandler{
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
+		db:               db,
 	}
 }
 
@@ -80,6 +83,12 @@ func (h *AuthHandler) Signup(c echo.Context) error {
 
 	if err := h.userRepo.Create(&user); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to create user"})
+	}
+
+	// Seed default categories for the new user
+	if err := repository.SeedDefaultCategories(h.db, user.ID); err != nil {
+		// Log error but don't fail signup - categories can be added later
+		// In production, you might want to log this to a monitoring service
 	}
 
 	// Generate access token (3 minutes) and refresh token (7 days)

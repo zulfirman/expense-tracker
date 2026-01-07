@@ -22,20 +22,77 @@
   let notes = '';
   let amount = '';
   let loading = false;
+  let categories = [];
+  let selectedCategoryIds = [];
+  let categoriesLoading = false;
 
   const quickAmounts = [100000, 250000, 500000, 750000, 1000000];
 
   onMount(async () => {
+    await loadCategories();
     // If in edit mode, populate form with initial data
     if (incomeId && initialData) {
       expenseDate = initialData.date || expenseDate;
       notes = initialData.notes || '';
       amount = initialData.amount ? initialData.amount.toString() : '';
+      // Ensure categoryIds are numbers for consistent comparison and filter out invalid ones
+      const categoryIds = (initialData.categoryIds || [])
+        .map(id => Number(id))
+        .filter(id => !isNaN(id) && id > 0);
+      selectedCategoryIds = [...categoryIds];
     }
   });
 
+  async function loadCategories() {
+    try {
+      const response = await api.get('/categories?type=income');
+      // Only show active income categories
+      categories = response.data
+        .filter(cat => cat.isActive !== false)
+        .map(cat => ({
+          id: cat.id,
+          label: cat.name
+        }));
+    } catch (error) {
+      categories = [];
+    } finally {
+      categoriesLoading = false;
+    }
+  }
+
   function setQuickAmount(quickAmount) {
     amount = quickAmount.toString();
+  }
+
+  function toggleCategory(categoryId, event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    // Ensure categoryId is valid
+    if (!categoryId && categoryId !== 0) {
+      console.error('Invalid categoryId:', categoryId);
+      return;
+    }
+    
+    // Normalize to number for consistent comparison
+    const id = Number(categoryId);
+    
+    // Check if ID is valid number
+    if (isNaN(id)) {
+      console.error('Category ID is not a valid number:', categoryId);
+      return;
+    }
+    
+    // Check if already selected
+    const isSelected = selectedCategoryIds.some(cid => Number(cid) === id);
+    
+    if (isSelected) {
+      // Remove if already selected
+      selectedCategoryIds = selectedCategoryIds.filter(cid => Number(cid) !== id);
+    } else {
+      // Add if not selected
+      selectedCategoryIds = [...selectedCategoryIds, id];
+    }
   }
 
 
@@ -55,6 +112,16 @@
   }
 
   async function handleSubmit() {
+    if (selectedCategoryIds.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'Please select at least one category',
+        zIndex: 9999
+      });
+      return;
+    }
+
     if (!amount || parseFloat(amount) <= 0) {
       Swal.fire({
         icon: 'warning',
@@ -69,6 +136,7 @@
     
     try {
       const payload = {
+        categoryIds: selectedCategoryIds,
         date: expenseDate,
         notes: notes,
         amount: parseFloat(amount)
@@ -90,12 +158,18 @@
         // Add mode
         const response = await api.post('/income', payload);
         
+        const categoryNames = categories
+          .filter(cat => selectedCategoryIds.includes(cat.id))
+          .map(cat => cat.label)
+          .join(', ');
+        
         Swal.fire({
           icon: 'success',
           title: 'Success!',
           html: `
             <div style="text-align: left;">
               <p><strong>Type:</strong> Income</p>
+              <p><strong>Categories:</strong> ${categoryNames}</p>
               <p><strong>Date:</strong> ${new Date(expenseDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
               <p><strong>Notes:</strong> ${notes || '-'}</p>
@@ -126,6 +200,7 @@
       if (!incomeId) {
         notes = '';
         amount = '';
+        selectedCategoryIds = [];
       }
     } catch (error) {
       Swal.fire({
@@ -164,6 +239,30 @@
   {#if showTitle}
     <h1>{incomeId ? 'Edit Income' : 'Input Income'}</h1>
   {/if}
+
+  <div class="form-group">
+    <label>Category {#if selectedCategoryIds.length > 0}<span class="selected-count">({selectedCategoryIds.length} selected)</span>{/if}</label>
+    {#if categoriesLoading}
+      <div class="loading-categories">Loading categories...</div>
+    {:else}
+      <div class="category-pills">
+        {#each categories as category}
+          <button
+            type="button"
+            class="category-pill"
+            class:selected={selectedCategoryIds.some(id => {
+              const selectedId = Number(id);
+              const catId = Number(category.id);
+              return !isNaN(selectedId) && !isNaN(catId) && selectedId === catId;
+            })}
+            on:click={(e) => toggleCategory(category.id, e)}
+          >
+            {category.label}
+          </button>
+        {/each}
+      </div>
+    {/if}
+  </div>
 
   {#if !fixedDate}
     <div class="form-group">
@@ -401,6 +500,50 @@
     border-color: var(--primary-color);
   }
 
+  /* Category Pills */
+  .selected-count {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  .loading-categories {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .category-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .category-pill {
+    padding: 0.5rem 1rem;
+    background: var(--background);
+    border: 2px solid var(--border);
+    border-radius: 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .category-pill:hover {
+    background: var(--surface);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+  }
+
+  .category-pill.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
   /* Mobile Optimizations */
   @media (max-width: 768px) {
     .input-income {
@@ -430,6 +573,11 @@
     .btn {
       min-height: 48px;
       font-size: 1rem;
+    }
+
+    .category-pill {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
     }
   }
 </style>

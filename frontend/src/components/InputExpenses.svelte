@@ -57,8 +57,8 @@
 
   async function loadCategories() {
     try {
-      const response = await api.get('/categories');
-      // Only show active categories in expense input
+      const response = await api.get('/categories?type=expense');
+      // Only show active expense categories in expense input
       categories = response.data
         .filter(cat => cat.isActive !== false)
         .map(cat => ({

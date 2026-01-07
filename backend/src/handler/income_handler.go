@@ -13,20 +13,25 @@ import (
 )
 
 type IncomeHandler struct {
-	incomeRepo *repository.IncomeRepository
+	incomeRepo  *repository.IncomeRepository
+	categoryRepo *repository.CategoryRepository
 }
 
-func NewIncomeHandler(incomeRepo *repository.IncomeRepository) *IncomeHandler {
-	return &IncomeHandler{incomeRepo: incomeRepo}
+func NewIncomeHandler(incomeRepo *repository.IncomeRepository, categoryRepo *repository.CategoryRepository) *IncomeHandler {
+	return &IncomeHandler{
+		incomeRepo:  incomeRepo,
+		categoryRepo: categoryRepo,
+	}
 }
 
 func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 
 	var req struct {
-		Date   string  `json:"date"`
-		Notes  string  `json:"notes"`
-		Amount float64 `json:"amount"`
+		CategoryIDs []uint  `json:"categoryIds"`
+		Date        string  `json:"date"`
+		Notes       string  `json:"notes"`
+		Amount      float64 `json:"amount"`
 	}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
@@ -37,11 +42,21 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date"})
 	}
 
+	if len(req.CategoryIDs) == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "At least one category is required"})
+	}
+
+	cats := make([]model.M_category, len(req.CategoryIDs))
+	for i, id := range req.CategoryIDs {
+		cats[i] = model.M_category{ID: id}
+	}
+
 	in := &model.T_income{
-		UserID: cc.UserID,
-		Date:   d,
-		Notes:  req.Notes,
-		Amount: req.Amount,
+		UserID:     cc.UserID,
+		Categories: cats,
+		Date:       d,
+		Notes:      req.Notes,
+		Amount:     req.Amount,
 	}
 
 	if err := h.incomeRepo.Create(in); err != nil {
@@ -109,9 +124,10 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 	}
 
 	var req struct {
-		Date   *string  `json:"date"`
-		Notes  *string  `json:"notes"`
-		Amount *float64 `json:"amount"`
+		CategoryIDs []uint  `json:"categoryIds"`
+		Date        *string `json:"date"`
+		Notes       *string `json:"notes"`
+		Amount      *float64 `json:"amount"`
 	}
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
@@ -120,6 +136,16 @@ func (h *IncomeHandler) UpdateIncome(c echo.Context) error {
 	in, err := h.incomeRepo.GetByID(uint(id), cc.UserID)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"message": "Income not found"})
+	}
+
+	if req.CategoryIDs != nil && len(req.CategoryIDs) > 0 {
+		cats := make([]model.M_category, len(req.CategoryIDs))
+		for i, catID := range req.CategoryIDs {
+			cats[i] = model.M_category{ID: catID}
+		}
+		if err := h.incomeRepo.ReplaceCategories(in, cats); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update categories"})
+		}
 	}
 
 	if req.Date != nil {

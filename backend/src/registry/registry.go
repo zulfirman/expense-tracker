@@ -70,9 +70,9 @@ func NewRegistry() (*Registry, error) {
 	quickAmountRepo := repository.NewQuickAmountRepository(db)
 
 	// Initialize handlers
-	authHandler := handler.NewAuthHandler(userRepo, refreshTokenRepo)
+	authHandler := handler.NewAuthHandler(userRepo, refreshTokenRepo, db)
 	expenseHandler := handler.NewExpenseHandler(db, expenseRepo, categoryRepo)
-	incomeHandler := handler.NewIncomeHandler(incomeRepo)
+	incomeHandler := handler.NewIncomeHandler(incomeRepo, categoryRepo)
 	categoryHandler := handler.NewCategoryHandler(categoryRepo)
 	budgetHandler := handler.NewBudgetHandler(budgetRepo, categoryRepo)
 	templateHandler := handler.NewTemplateHandler(templateRepo, categoryRepo)

@@ -21,10 +21,12 @@ func NewCategoryHandler(categoryRepo *repository.CategoryRepository) *CategoryHa
 
 type CreateCategoryRequest struct {
 	Name string `json:"name" validate:"required"`
+	Type string `json:"type" validate:"required,oneof=income expense"`
 }
 
 type UpdateCategoryRequest struct {
 	Name     string `json:"name"`
+	Type     string `json:"type" validate:"omitempty,oneof=income expense"`
 	IsActive bool   `json:"isActive"`
 }
 
@@ -32,7 +34,10 @@ func (h *CategoryHandler) GetCategories(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 	userID := cc.UserID
 
-	categories, err := h.categoryRepo.GetAll(userID)
+	// Optional type filter query parameter
+	typeFilter := c.QueryParam("type")
+
+	categories, err := h.categoryRepo.GetAll(userID, typeFilter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch categories"})
 	}
@@ -76,6 +81,7 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 		UserID:   userID,
 		Name:     req.Name,
 		Slug:     slug,
+		Type:     req.Type,
 		IsActive: true,
 	}
 
@@ -135,6 +141,9 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 
 		category.Name = req.Name
 		category.Slug = slug
+	}
+	if req.Type != "" && (req.Type == "income" || req.Type == "expense") {
+		category.Type = req.Type
 	}
 	category.IsActive = req.IsActive
 

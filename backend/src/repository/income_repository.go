@@ -20,7 +20,7 @@ func NewIncomeRepository(db *gorm.DB) *IncomeRepository {
 
 func (r *IncomeRepository) GetByID(id, userID uint) (*model.T_income, error) {
 	var in model.T_income
-	if err := r.db.Where("id = ? AND user_id = ?", id, userID).First(&in).Error; err != nil {
+	if err := r.db.Preload("Categories").Where("id = ? AND user_id = ?", id, userID).First(&in).Error; err != nil {
 		return nil, err
 	}
 	return &in, nil
@@ -40,13 +40,17 @@ func (r *IncomeRepository) Delete(id uint, userID uint) error {
 
 func (r *IncomeRepository) GetByDate(userID uint, date time.Time) ([]model.T_income, error) {
 	var items []model.T_income
-	if err := r.db.
+	if err := r.db.Preload("Categories").
 		Where("user_id = ? AND date = ?", userID, date).
 		Order("id DESC").
 		Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil
+}
+
+func (r *IncomeRepository) ReplaceCategories(income *model.T_income, categories []model.M_category) error {
+	return r.db.Model(income).Association("Categories").Replace(categories)
 }
 
 func (r *IncomeRepository) GetBalance(userID uint) (*model.R_balance, error) {

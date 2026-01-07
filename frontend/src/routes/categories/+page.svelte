@@ -7,11 +7,14 @@
   import '$lib/styles/shared.css';
 
   let categories = [];
+  let incomeCategories = [];
+  let expenseCategories = [];
   let loading = false;
   let showAddForm = false;
   let showEditForm = false;
   let editingCategory = null;
   let categoryName = '';
+  let categoryType = 'expense';
   let isActive = true;
 
   onMount(async () => {
@@ -26,6 +29,8 @@
     try {
       const response = await api.get('/categories');
       categories = response.data || [];
+      incomeCategories = categories.filter(cat => cat.type === 'income');
+      expenseCategories = categories.filter(cat => cat.type === 'expense');
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -40,6 +45,7 @@
 
   function openAddForm() {
     categoryName = '';
+    categoryType = 'expense';
     isActive = true;
     showAddForm = true;
     showEditForm = false;
@@ -48,6 +54,7 @@
   function openEditForm(category) {
     editingCategory = category;
     categoryName = category.name;
+    categoryType = category.type || 'expense';
     isActive = category.isActive;
     showEditForm = true;
     showAddForm = false;
@@ -58,6 +65,7 @@
     showEditForm = false;
     editingCategory = null;
     categoryName = '';
+    categoryType = 'expense';
   }
 
   async function handleCreate() {
@@ -74,7 +82,8 @@
     loading = true;
     try {
       await api.post('/categories', {
-        name: categoryName.trim()
+        name: categoryName.trim(),
+        type: categoryType
       });
       
       await loadCategories();
@@ -114,6 +123,7 @@
     try {
       await api.put(`/categories/${editingCategory.id}`, {
         name: categoryName.trim(),
+        type: categoryType,
         isActive: isActive
       });
       
@@ -184,8 +194,10 @@
   async function handleUpdateCategory(id, name, active) {
     loading = true;
     try {
+      const category = categories.find(cat => cat.id === id);
       await api.put(`/categories/${id}`, {
         name: name,
+        type: category?.type || 'expense',
         isActive: active
       });
       await loadCategories();
@@ -221,26 +233,57 @@
     </div>
   {:else}
     <div class="categories-list">
-      {#each categories as category}
-        <div class="category-card">
-          <div class="category-info">
-            <h3>{category.name}</h3>
-          </div>
-          <div class="category-actions">
-            <label class="toggle-switch">
-              <input
-                type="checkbox"
-                checked={category.isActive}
-                on:change={() => toggleActive(category)}
-                disabled={loading}
-              />
-              <span class="toggle-slider"></span>
-            </label>
-            <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
-            <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
-          </div>
+      {#if incomeCategories.length > 0}
+        <div class="category-section">
+          <h2 class="section-title">💰 Income Categories</h2>
+          {#each incomeCategories as category}
+            <div class="category-card">
+              <div class="category-info">
+                <h3>{category.name}</h3>
+              </div>
+              <div class="category-actions">
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={category.isActive}
+                    on:change={() => toggleActive(category)}
+                    disabled={loading}
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+                <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
+                <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
+              </div>
+            </div>
+          {/each}
         </div>
-      {/each}
+      {/if}
+
+      {#if expenseCategories.length > 0}
+        <div class="category-section">
+          <h2 class="section-title">💸 Expense Categories</h2>
+          {#each expenseCategories as category}
+            <div class="category-card">
+              <div class="category-info">
+                <h3>{category.name}</h3>
+              </div>
+              <div class="category-actions">
+                <label class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={category.isActive}
+                    on:change={() => toggleActive(category)}
+                    disabled={loading}
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+                <button class="btn-text btn-edit" on:click={() => openEditForm(category)}>Edit</button>
+                <button class="btn-text btn-delete" on:click={() => handleDelete(category)}>Delete</button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -253,6 +296,18 @@
         <button class="close-btn" on:click={closeForms}>×</button>
       </div>
       <div class="modal-body">
+        <div class="form-group">
+          <label for="category-type">Type</label>
+          <select
+            id="category-type"
+            bind:value={categoryType}
+            class="form-input"
+            disabled={loading}
+          >
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="category-name">Category Name</label>
           <input
@@ -288,6 +343,18 @@
         <button class="close-btn" on:click={closeForms}>×</button>
       </div>
       <div class="modal-body">
+        <div class="form-group">
+          <label for="edit-category-type">Type</label>
+          <select
+            id="edit-category-type"
+            bind:value={categoryType}
+            class="form-input"
+            disabled={loading}
+          >
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="edit-category-name">Category Name</label>
           <input
@@ -353,7 +420,22 @@
   .categories-list {
     display: flex;
     flex-direction: column;
+    gap: 2rem;
+  }
+
+  .category-section {
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
   }
 
   .category-card {
