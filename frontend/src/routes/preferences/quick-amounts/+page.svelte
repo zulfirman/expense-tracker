@@ -1,14 +1,19 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { quickAmounts } from '$lib/stores/quickAmounts';
   import { currency } from '$lib/stores/currency';
   import { auth } from '$lib/stores/auth';
   import Swal from 'sweetalert2';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import { getPageCode } from '$lib/utils/pageCodes';
 
   let amounts = [];
   let newAmount = '';
   let loading = false;
+  
+  $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
@@ -72,16 +77,16 @@
 </script>
 
 <div class="max-w-3xl mx-auto space-y-4">
-  <div class="flex items-center justify-between gap-2">
-    <div>
-      <p class="text-xs uppercase tracking-wide text-base-content/60">Preferences</p>
-      <h1 class="text-2xl font-bold mt-1">Quick Amount</h1>
-      <p class="text-sm text-base-content/70 mt-1">
-        Customize your quick amount shortcuts (currency: {$currency || 'IDR'}).
-      </p>
-    </div>
-    <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
-  </div>
+  <PageHeader
+    title="Quick Amount"
+    subtitle="Customize your quick amount shortcuts (currency: {$currency || 'IDR'})."
+    pageCode={pageCode}
+    actions={true}
+  >
+    <svelte:fragment slot="actions">
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+    </svelte:fragment>
+  </PageHeader>
 
   <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body gap-4">

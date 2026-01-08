@@ -1,9 +1,13 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import PageCode from '$lib/components/PageCode.svelte';
+  import { getPageCode } from '$lib/utils/pageCodes';
 
   let categories = [];
   let incomeCategories = [];
@@ -16,6 +20,8 @@
   let categoryType = 'expense';
   let isActive = true;
   let activeTab = 'expense'; // 'income' or 'expense'
+  
+  $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
@@ -216,20 +222,19 @@
 </script>
 
 <div class="max-w-3xl mx-auto space-y-4">
-  <div class="flex items-center justify-between gap-2">
-    <div>
-      <h1 class="text-2xl font-bold">My Categories</h1>
-      <p class="text-sm text-base-content/70 mt-1">
-        Manage your income and expense categories.
-      </p>
-    </div>
-    <div class="flex gap-2">
+  <PageHeader
+    title="My Categories"
+    subtitle="Manage your income and expense categories."
+    pageCode={pageCode}
+    actions={true}
+  >
+    <svelte:fragment slot="actions">
       <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
       <button class="btn btn-primary btn-sm" on:click={openAddForm} disabled={loading}>
         + Add Category
       </button>
-    </div>
-  </div>
+    </svelte:fragment>
+  </PageHeader>
 
   {#if loading && categories.length === 0}
     <div class="flex justify-center py-10">
@@ -241,9 +246,9 @@
     </div>
   {:else}
     <!-- Tabs -->
-    <div class="tabs tabs-boxed w-fit">
+    <div class="tabs tabs-boxed w-full sm:w-fit">
       <button
-        class="tab text-sm"
+        class="tab text-xs sm:text-sm flex-1 sm:flex-none"
         class:tab-active={activeTab === 'income'}
         on:click={() => activeTab = 'income'}
         disabled={loading}
@@ -251,7 +256,7 @@
         💰 Income ({incomeCategories.length})
       </button>
       <button
-        class="tab text-sm"
+        class="tab text-xs sm:text-sm flex-1 sm:flex-none"
         class:tab-active={activeTab === 'expense'}
         on:click={() => activeTab = 'expense'}
         disabled={loading}
@@ -269,19 +274,22 @@
           </div>
         {:else}
           {#each incomeCategories as category}
-    <div class="card bg-base-100 shadow-sm border-1">
-              <div class="card-body flex flex-row items-center justify-between gap-3 py-3">
-                <div>
+            <div class="card bg-base-100 shadow-sm border-1">
+              <div class="card-body flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
+                <div class="flex-1">
                   <h3 class="font-semibold text-sm">{category.name}</h3>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    class="toggle toggle-sm toggle-primary"
-                    checked={category.isActive}
-                    on:change={() => toggleActive(category)}
-                    disabled={loading}
-                  />
+                <div class="flex items-center gap-2 flex-wrap">
+                  <label class="label cursor-pointer gap-2">
+                    <span class="label-text text-xs sm:text-sm">Active</span>
+                    <input
+                      type="checkbox"
+                      class="toggle toggle-sm toggle-primary"
+                      checked={category.isActive}
+                      on:change={() => toggleActive(category)}
+                      disabled={loading}
+                    />
+                  </label>
                   <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
                   <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
                 </div>
@@ -297,18 +305,21 @@
         {:else}
           {#each expenseCategories as category}
             <div class="card bg-base-100 shadow-sm border-1">
-              <div class="card-body flex flex-row items-center justify-between gap-3 py-3">
-                <div>
+              <div class="card-body flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
+                <div class="flex-1">
                   <h3 class="font-semibold text-sm">{category.name}</h3>
                 </div>
-                <div class="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    class="toggle toggle-sm toggle-primary"
-                    checked={category.isActive}
-                    on:change={() => toggleActive(category)}
-                    disabled={loading}
-                  />
+                <div class="flex items-center gap-2 flex-wrap">
+                  <label class="label cursor-pointer gap-2">
+                    <span class="label-text text-xs sm:text-sm">Active</span>
+                    <input
+                      type="checkbox"
+                      class="toggle toggle-sm toggle-primary"
+                      checked={category.isActive}
+                      on:change={() => toggleActive(category)}
+                      disabled={loading}
+                    />
+                  </label>
                   <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
                   <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
                 </div>
@@ -322,8 +333,8 @@
 </div>
 
 {#if showAddForm}
-  <div class="modal modal-open">
-    <div class="modal-box">
+  <div class="modal modal-open z-[2100]">
+    <div class="modal-box w-11/12 max-w-md">
       <h3 class="font-semibold text-lg mb-2">Add Category</h3>
       <fieldset class="fieldset mb-3">
         <legend class="fieldset-legend">Type</legend>
@@ -337,7 +348,7 @@
           <option value="income">Income</option>
         </select>
       </fieldset>
-      <fieldset class="fieldset mb-4">
+      <fieldset class="fieldset mb-3">
         <legend class="fieldset-legend">Category Name</legend>
         <input
           id="category-name"
@@ -348,6 +359,13 @@
           on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
           disabled={loading}
         />
+      </fieldset>
+      <fieldset class="fieldset mb-4">
+        <legend class="fieldset-legend">Active</legend>
+        <label class="cursor-pointer label justify-start gap-3">
+          <input type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={isActive} disabled={loading} />
+          <span class="label-text">Active</span>
+        </label>
       </fieldset>
       <div class="modal-action">
         <button class="btn btn-soft" on:click={closeForms} disabled={loading}>Cancel</button>
@@ -365,8 +383,8 @@
 {/if}
 
 {#if showEditForm}
-  <div class="modal modal-open">
-    <div class="modal-box">
+  <div class="modal modal-open z-[2100]">
+    <div class="modal-box w-11/12 max-w-md">
       <h3 class="font-semibold text-lg mb-2">Edit Category</h3>
       <fieldset class="fieldset mb-3">
         <legend class="fieldset-legend">Type</legend>

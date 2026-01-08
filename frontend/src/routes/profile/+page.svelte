@@ -1,14 +1,19 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import { getPageCode } from '$lib/utils/pageCodes';
 
   let name = '';
   let email = '';
   let loading = false;
   let saving = false;
+  
+  $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
@@ -98,9 +103,9 @@
 </script>
 
 <div class="max-w-3xl mx-auto space-y-4">
-  <div class="card bg-base-100 shadow-xl border border-base-300">
+  <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body">
-      <div class="flex items-center justify-between gap-2">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <p class="text-xs uppercase tracking-wide text-base-content/60">Account</p>
           <h1 class="text-2xl font-bold">Profile</h1>
@@ -153,7 +158,6 @@
           <button class="btn btn-error w-full" on:click={handleLogout} disabled={saving}>
             Logout
           </button>
-          <div class="badge px-3 py-2 badge-accent">Accent</div>
         </div>
       {/if}
     </div>

@@ -1,14 +1,19 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { auth } from '$lib/stores/auth';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import { getPageCode } from '$lib/utils/pageCodes';
 
   let currentPassword = '';
   let newPassword = '';
   let confirmPassword = '';
   let loading = false;
+  
+  $: pageCode = getPageCode($page.url.pathname);
 
   onMount(() => {
     if (!$auth.isAuthenticated) {
@@ -89,15 +94,16 @@
 </script>
 
 <div class="max-w-md mx-auto space-y-4">
-  <div class="flex items-center justify-between gap-2">
-    <div>
-      <h1 class="text-2xl font-bold">Change Password</h1>
-      <p class="text-sm text-base-content/70 mt-1">
-        Update the password for your account.
-      </p>
-    </div>
-    <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
-  </div>
+  <PageHeader
+    title="Change Password"
+    subtitle="Update the password for your account."
+    pageCode={pageCode}
+    actions={true}
+  >
+    <svelte:fragment slot="actions">
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+    </svelte:fragment>
+  </PageHeader>
 
   <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body space-y-4">

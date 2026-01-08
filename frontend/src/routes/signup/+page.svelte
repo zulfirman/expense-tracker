@@ -91,7 +91,7 @@
   }
 </script>
 
-<div class="max-w-2xl mx-auto">
+<div class="max-w-md mx-auto">
   <div class="card bg-base-100 shadow-xl border-1">
     <div class="card-body">
       <h1 class="card-title text-3xl justify-center mb-2">Sign Up</h1>

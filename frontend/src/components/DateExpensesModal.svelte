@@ -214,8 +214,8 @@
   }
 </script>
 
-<div class="modal modal-open z-[2100]" on:click={handleBackdropClick}>
-  <div class="modal-box w-11/12 max-w-4xl" on:click|stopPropagation>
+<div class="modal modal-open z-[3000]" on:click={handleBackdropClick}>
+  <div class="modal-box w-11/12 max-w-3xl" on:click|stopPropagation>
     <div class="flex items-start justify-between gap-3 mb-4">
       <div>
         <p class="text-xs uppercase tracking-wide text-base-content/60">Date</p>
@@ -224,7 +224,7 @@
       <button class="btn btn-ghost btn-sm" on:click={close}>✕</button>
     </div>
 
-    <div class="max-h-[70vh] overflow-y-auto pr-1">
+    <div class="max-h-[70vh] overflow-y-auto pr-1 space-y-4">
       {#if loading}
         <div class="flex justify-center py-8">
           <span class="loading loading-spinner loading-lg"></span>
@@ -297,17 +297,17 @@
           </div>
           <div class="stat">
             <div class="stat-title">Net Total</div>
-            <div class="stat-value text-xl" class:text-success={netTotal >= 0} class:text-error={netTotal < 0}>
+            <div class="stat-value text-primary text-xl" class:text-success={netTotal >= 0} class:text-error={netTotal < 0}>
               {formatCurrency(Math.abs(netTotal))}
             </div>
           </div>
         </div>
 
-        <div class="card bg-base-100 border border-base-300 shadow-sm mb-6">
-          <div class="card-body p-4 space-y-3">
-            <div class="flex items-center justify-between">
+        <div class="card bg-base-100 border border-base-300 shadow-sm mb-4">
+          <div class="card-body p-3 md:p-4 space-y-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <h3 class="font-semibold text-lg">Income</h3>
-              <button class="btn btn-primary btn-sm" on:click={startAddIncome}>+ Add</button>
+              <button class="btn btn-primary btn-sm w-full md:w-auto" on:click={startAddIncome}>+ Add</button>
             </div>
             {#if incomes.length === 0}
               <div class="alert alert-info"><span>No income for this date</span></div>
@@ -333,10 +333,10 @@
         </div>
 
         <div class="card bg-base-100 border border-base-300 shadow-sm">
-          <div class="card-body p-4 space-y-3">
-            <div class="flex items-center justify-between">
+          <div class="card-body p-3 md:p-4 space-y-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <h3 class="font-semibold text-lg">Expenses</h3>
-              <button class="btn btn-primary btn-sm" on:click={startAddExpense}>+ Add</button>
+              <button class="btn btn-primary btn-sm w-full md:w-auto" on:click={startAddExpense}>+ Add</button>
             </div>
             {#if expenses.length === 0}
               <div class="alert alert-info"><span>No expenses for this date</span></div>

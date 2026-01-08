@@ -5,7 +5,10 @@
     import api from '$lib/api';
     import Swal from 'sweetalert2';
     import { onMount } from 'svelte';
+    import { page } from '$app/stores';
     import { formatCurrency } from '$lib/utils/currency';
+    import PageHeader from '$lib/components/PageHeader.svelte';
+    import { getPageCode } from '$lib/utils/pageCodes';
 
     // ============================================================================
     // STATE VARIABLES
@@ -20,6 +23,8 @@
     let showBudgetForm = false;      // Modal visibility for budget form
     let editingCategory = null;      // Category ID being edited (null = new)
     let budgetAmount = '';           // Budget amount input value
+    
+    $: pageCode = getPageCode($page.url.pathname);
 
     // ============================================================================
     // LIFECYCLE HOOKS
@@ -370,15 +375,12 @@
     });
 </script>
 
-<div class="max-w-3xl mx-auto space-y-6">
-  <div class="flex items-center justify-between gap-2">
-    <div>
-      <h1 class="text-2xl font-bold">Monthly Budget Planning</h1>
-      <p class="text-sm text-base-content/70 mt-1">
-        Track how much you plan to spend in each category this month.
-      </p>
-    </div>
-  </div>
+<div class="max-w-3xl mx-auto space-y-6 px-4">
+  <PageHeader
+    title="Monthly Budget Planning"
+    subtitle="Track how much you plan to spend in each category this month."
+    pageCode={pageCode}
+  />
 
   <!-- Month Selector -->
   <div class="card bg-base-100 shadow-xl border-1">
@@ -416,8 +418,8 @@
       {#each budgetCards as card}
         <div class="card bg-base-100 shadow-xl border-1">
           <div class="card-body gap-3">
-            <div class="flex items-start justify-between gap-3">
-              <div>
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-base">{card.category.label}</h3>
                 {#if card.budget > 0}
                   <p class="text-xs text-base-content/70">
@@ -429,7 +431,7 @@
                   </p>
                 {/if}
               </div>
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-shrink-0">
                 {#if card.budget > 0}
                   <button
                     type="button"
@@ -459,7 +461,7 @@
 
             {#if card.budget > 0}
               <div class="space-y-2 mt-1">
-                <div class="flex items-center justify-between text-xs">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs">
                   <span class="text-base-content/70">
                     Spent: {formatCurrency(card.spent)}
                   </span>
@@ -478,7 +480,7 @@
                   value={Math.min(card.progress, 100)}
                   max="100"
                 />
-                <div class="text-right text-[11px] text-base-content/60">
+                <div class="text-left sm:text-right text-[11px] text-base-content/60">
                   {Math.round(card.progress)}% of budget used
                 </div>
               </div>

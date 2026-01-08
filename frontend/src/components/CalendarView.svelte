@@ -102,70 +102,69 @@
     {@const [year, monthNum] = month.month.split('-').map(Number)}
     {@const allDays = getAllDaysInMonth(year, monthNum - 1)}
 
-    <div class="card bg-base-100 shadow-md border border-base-300 mb-4">
-      <div class="card-body p-4 space-y-3">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <p class="text-xs uppercase tracking-wide text-base-content/60">Month</p>
-            <h2 class="text-xl font-bold">{formatMonthYear(month.month)}</h2>
-            <p class="text-sm text-base-content/60">Tap to open details</p>
-          </div>
-          <button
-            class="btn btn-primary gap-2 shadow"
-            on:click={() => handleMonthClick(month)}
-          >
-            {formatCurrency(month.netTotal ?? month.total)}
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
+    <div class="card-body p-4 space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-base-content/60">Month</p>
+          <h2 class="text-xl font-bold">{formatMonthYear(month.month)}</h2>
+          <p class="text-sm text-base-content/60">Tap to open details</p>
         </div>
+        <button
+          class="btn btn-primary gap-2 shadow"
+          on:click={() => handleMonthClick(month)}
+        >
+          {formatCurrency(month.netTotal ?? month.total)}
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
 
-        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-          {#each allDays.slice().reverse() as day}
-            {@const dateKey = formatDateKey(day)}
-            {@const dateData = month.dates?.find(d => d.date === dateKey)}
-            {@const total = dateData?.total || 0}
-            {@const hasIncome = dateData?.hasIncome || false}
-            {@const hasExpense = dateData?.hasExpense || false}
-            {@const hasData = hasIncome || hasExpense}
-            {@const isToday = dateKey === new Date().toISOString().split('T')[0]}
-            {@const dateType = hasIncome && hasExpense ? 'both' : (hasIncome ? 'income' : (hasExpense ? 'expense' : 'none'))}
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+        {#each allDays.slice().reverse() as day}
+          {@const dateKey = formatDateKey(day)}
+          {@const dateData = month.dates?.find(d => d.date === dateKey)}
+          {@const total = dateData?.total || 0}
+          {@const hasIncome = dateData?.hasIncome || false}
+          {@const hasExpense = dateData?.hasExpense || false}
+          {@const hasData = hasIncome || hasExpense}
+          {@const isToday = dateKey === new Date().toISOString().split('T')[0]}
+          {@const dateType = hasIncome && hasExpense ? 'both' : (hasIncome ? 'income' : (hasExpense ? 'expense' : 'none'))}
 
-            <div
-              role="button"
-              class={`card card-compact w-full cursor-pointer border shadow-sm transition text-sm ${getToneClasses(dateType)}`}
-              class:outline={isToday}
-              class:opacity-60={!hasData}
-              on:click={() => handleDateClick(dateKey, true)}
-            >
-              <div class="card-body items-center text-center p-2">
-                <div class="text-base font-semibold">{day.getDate()}</div>
-                <div class="text-[11px] text-base-content/70">
-                  {#if hasData}
-                    {formatCurrency(Math.abs(total))}
-                  {:else}
-                    -
-                  {/if}
-                </div>
-                {#if isToday}
-                  <span class="badge px-3 py-2 badge-outline badge-xs mt-1">Today</span>
+          <div
+            role="button"
+            class={`card card-compact w-full cursor-pointer border shadow-sm transition text-sm ${getToneClasses(dateType)}`}
+            class:outline={isToday}
+            class:opacity-60={!hasData}
+            on:click={() => handleDateClick(dateKey, true)}
+          >
+            <div class="card-body items-center text-center p-2">
+              <div class="text-base font-semibold">{day.getDate()}</div>
+              <div class="text-[11px] text-base-content/70">
+                {#if hasData}
+                  {formatCurrency(Math.abs(total))}
+                {:else}
+                  -
                 {/if}
-                <div class="flex gap-1 mt-1">
-                  {#if dateType === 'income'}
-                    <span class="badge px-3 py-2 badge-success badge-sm">Income</span>
-                  {:else if dateType === 'expense'}
-                    <span class="badge px-3 py-2 badge-error badge-sm">Expense</span>
-                  {:else if dateType === 'both'}
-                    <span class="badge px-3 py-2 badge-info badge-sm">Both</span>
-                  {/if}
-                </div>
+              </div>
+              {#if isToday}
+                <span class="badge px-3 py-2 badge-outline badge-xs mt-1">Today</span>
+              {/if}
+              <div class="flex gap-1 mt-1">
+                {#if dateType === 'income'}
+                  <span class="badge px-3 py-2 badge-success badge-sm">Income</span>
+                {:else if dateType === 'expense'}
+                  <span class="badge px-3 py-2 badge-error badge-sm">Expense</span>
+                {:else if dateType === 'both'}
+                  <span class="badge px-3 py-2 badge-info badge-sm">Both</span>
+                {/if}
               </div>
             </div>
-          {/each}
-        </div>
+          </div>
+        {/each}
       </div>
     </div>
+
   {/each}
 </div>
 

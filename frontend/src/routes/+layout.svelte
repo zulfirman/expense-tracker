@@ -222,6 +222,11 @@
       handleAddAccount();
     }
   }
+
+  import { getPageCode as getPageCodeUtil } from '$lib/utils/pageCodes';
+
+  $: currentPath = $page?.url?.pathname || '/';
+  $: pageCode = getPageCodeUtil(currentPath);
 </script>
 
 {#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup' || $page.url.pathname === '/'}
@@ -335,12 +340,12 @@
   </header>
   {/if}
 
-  <main>
+  <main class="main-content">
     <slot />
   </main>
 
   {#if isAuthenticated && $page.url.pathname !== '/login' && $page.url.pathname !== '/signup'}
-  <div class="dock dock-sm fixed left-0 right-0 bottom-0 z-[1000] px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+  <div class="dock dock-sm fixed left-0 right-0 bottom-0 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
     <button
       class:dock-active={$page.url.pathname === '/expenses' || $page.url.pathname === '/'}
       on:click={() => goto('/expenses')}
@@ -390,6 +395,7 @@
   {/if}
 </div>
 {/if}
+
 
 {#if showAddAccountModal}
   <div class="modal modal-open z-[3000]" on:click={closeAddAccountModal}>
@@ -457,7 +463,7 @@
     top: 0;
     right: 0;
     padding: 1rem;
-    z-index: 1001;
+    z-index: 800;
   }
 
   .header-actions {
@@ -466,7 +472,7 @@
     align-items: center;
   }
 
-  main {
+  main.main-content {
     flex: 1;
     padding: 1rem;
     max-width: 100%;
@@ -477,6 +483,12 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: 80px;
     padding-top: 60px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  main.main-content::-webkit-scrollbar {
+    display: none;
   }
 
   /* Dock styling */

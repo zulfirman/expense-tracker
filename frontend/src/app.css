@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: cupcake --default, night --prefersdark, forest;
+    themes: cupcake --default, night --prefersdark, valentine, dracula;
 }
 
 :root {
@@ -38,50 +38,84 @@ html, body {
   padding: 0;
 }
 
-:global(body) {
-  height: 100vh;
-  max-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
+/* Hide scrollbars but keep functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* Ensure SweetAlert appears above modals */
-:global(.swal2-container) {
-  z-index: 12000 !important;
+.swal2-container {
+  z-index: 99999 !important;
 }
 
-/* Themed SweetAlert2 using DaisyUI vars */
-:global(.swal2-popup) {
-  background: hsl(var(--b1)) !important;
-  color: hsl(var(--bc)) !important;
-  border: 1px solid hsl(var(--b3)) !important;
+/* Themed SweetAlert2 - uses theme CSS variables */
+.swal2-popup {
+  background-color: var(--color-base-100) !important;
+  color: var(--color-base-content) !important;
+  border: 1px solid var(--color-base-300) !important;
   box-shadow: 0 12px 30px rgba(0,0,0,0.18) !important;
   border-radius: 1rem !important;
 }
 
-:global(.swal2-title),
-:global(.swal2-html-container) {
-  color: hsl(var(--bc)) !important;
+.swal2-title,
+.swal2-html-container {
+  color: var(--color-base-content) !important;
 }
 
-:global(.swal2-confirm) {
-  background-color: hsl(var(--p)) !important;
-  color: hsl(var(--pc)) !important;
-  border-color: hsl(var(--p)) !important;
+.swal2-confirm {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-content) !important;
+  border-color: var(--color-primary) !important;
   border-radius: 0.5rem !important;
 }
 
-:global(.swal2-cancel) {
-  background-color: hsl(var(--b2)) !important;
-  color: hsl(var(--bc)) !important;
-  border: 1px solid hsl(var(--b3)) !important;
+.swal2-confirm:hover {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.swal2-cancel {
+  background-color: var(--color-base-200) !important;
+  color: var(--color-base-content) !important;
+  border: 1px solid var(--color-base-300) !important;
   border-radius: 0.5rem !important;
 }
 
-:global(.swal2-actions) {
+.swal2-cancel:hover {
+  background-color: var(--color-base-300) !important;
+}
+
+.swal2-actions {
   gap: 0.5rem !important;
+}
+
+.swal2-icon {
+  border-color: var(--color-base-content) !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: var(--color-success) !important;
+  color: var(--color-success) !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: var(--color-error) !important;
+  color: var(--color-error) !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: var(--color-warning) !important;
+  color: var(--color-warning) !important;
+}
+
+.swal2-icon.swal2-info {
+  border-color: var(--color-info) !important;
+  color: var(--color-info) !important;
 }
 
 /* Spacing scale */

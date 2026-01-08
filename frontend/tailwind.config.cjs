@@ -8,8 +8,8 @@ module.exports = {
     require('daisyui')
   ],
   daisyui: {
-    themes: ['pastel', 'night'],
-    darkTheme: 'night',
+    // themes: ['pastel', 'night'],
+    // darkTheme: 'night',
     base: true,
     styled: true,
     utils: true,

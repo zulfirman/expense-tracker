@@ -1,11 +1,16 @@
 <script>
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import { getPageCode } from '$lib/utils/pageCodes';
 
-  const availableThemes = ['cupcake', 'night', 'forest'];
+  const availableThemes = ['cupcake', 'night','valentine','dracula'];
   let selectedTheme = 'cupcake';
+  
+  $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
     if (!$auth.isAuthenticated) {
@@ -25,18 +30,17 @@
 </script>
 
 <div class="max-w-4xl mx-auto space-y-4">
+  <PageHeader
+    title="Preferences"
+    subtitle="Manage how the app looks and behaves for your account."
+    pageCode={pageCode}
+  />
   <div class="card bg-base-100 shadow-xl border-1">
-    <div class="card-body">
-      <h2 class="card-title text-2xl mb-2">Preferences</h2>
-      <p class="text-sm text-base-content/70">
-        Manage how the app looks and behaves for your account.
-      </p>
-    </div>
-
     <div class="card-body space-y-4">
       <!-- Navigation links in two columns -->
       <div class="grid gap-3 md:grid-cols-2">
-        <a href="/preferences/categories" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+        <a href="/preferences/categories"
+           class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Categories</span>
             <span class="block text-xs text-base-content/70">
@@ -46,7 +50,8 @@
           <span class="text-lg">›</span>
         </a>
 
-        <a href="/preferences/currency" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+        <a href="/preferences/currency"
+           class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Currency & Quick Amount</span>
             <span class="block text-xs text-base-content/70">
@@ -56,7 +61,8 @@
           <span class="text-lg">›</span>
         </a>
 
-        <a href="/preferences/change-password" class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
+        <a href="/preferences/change-password"
+           class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Change Password</span>
             <span class="block text-xs text-base-content/70">
@@ -91,4 +97,3 @@
     </div>
   </div>
 </div>
-
