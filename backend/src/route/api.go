@@ -68,4 +68,11 @@ func SetupRoutes(e *echo.Echo, reg *registry.Registry) {
 	// Quick amounts routes
 	protected.GET("/quick-amounts", reg.QuickAmountHandler.GetQuickAmounts)
 	protected.PUT("/quick-amounts", reg.QuickAmountHandler.SetQuickAmounts)
+
+	// Workspace routes
+	protected.GET("/workspaces", reg.WorkSpaceHandler.List)
+	protected.GET("/workspaces/:id", reg.WorkSpaceHandler.Get)
+	protected.POST("/workspaces", reg.WorkSpaceHandler.Create)
+	protected.PUT("/workspaces/:id", reg.WorkSpaceHandler.Update)
+	protected.DELETE("/workspaces/:id", reg.WorkSpaceHandler.Delete)
 }

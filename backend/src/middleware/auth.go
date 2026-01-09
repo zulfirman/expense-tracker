@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,11 +45,21 @@ func CustomContextMiddleware(
 
 			// Helper to build custom context and continue request
 			setUserContextAndNext := func(user *model.M_user) error {
+				// Read workspace ID from header
+				workspaceIDStr := c.Request().Header.Get("X-Workspace-Id")
+				var workspaceID uint = 0
+				if workspaceIDStr != "" {
+					if id, err := strconv.ParseUint(workspaceIDStr, 10, 64); err == nil {
+						workspaceID = uint(id)
+					}
+				}
+				
 				cc := &model.CustomContext{
-					Context:  c,
-					UserID:   user.ID,
-					Email:    user.Email,
-					UserName: user.Name,
+					Context:     c,
+					UserID:      user.ID,
+					Email:       user.Email,
+					UserName:    user.Name,
+					WorkspaceID: workspaceID,
 				}
 				return next(cc)
 			}

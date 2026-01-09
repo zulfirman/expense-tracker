@@ -34,11 +34,12 @@ type UpdateCategoryRequest struct {
 func (h *CategoryHandler) GetCategories(c echo.Context) error {
 	cc := middleware.GetCustomContext(c)
 	userID := cc.UserID
+	workspaceID := cc.WorkspaceID
 
 	// Optional type filter query parameter
 	typeFilter := c.QueryParam("type")
 
-	categories, err := h.categoryRepo.GetAll(userID, typeFilter)
+	categories, err := h.categoryRepo.GetAll(userID, workspaceID, typeFilter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch categories"})
 	}
@@ -79,11 +80,12 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	}
 
 	category := model.M_category{
-		UserID:   userID,
-		Name:     req.Name,
-		Slug:     slug,
-		Type:     req.Type,
-		IsActive: true,
+		UserID:      userID,
+		WorkspaceID: cc.WorkspaceID,
+		Name:        req.Name,
+		Slug:        slug,
+		Type:        req.Type,
+		IsActive:    true,
 	}
 
 	if err := h.categoryRepo.Create(&category); err != nil {

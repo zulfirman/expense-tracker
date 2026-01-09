@@ -7,70 +7,89 @@
   import { accounts } from '$lib/stores/accounts';
   import InputExpenses from "$components/InputExpenses.svelte";
   import { requirePublicWithSleep } from '$lib/utils/authSleep';
+  import { workspace } from '$lib/stores/workspace';
+  import { get } from 'svelte/store';
+  import WorkspaceModal from '$lib/components/WorkspaceModal.svelte';
 
   let email = '';
   let password = '';
   let loading = false;
-
-  onMount(async () => {
-    // Redirect if already logged in (with small sleep to wait for auth init)
-    await requirePublicWithSleep('/app/expenses');
-  });
+  let showWorkspaceModal = false;
 
   async function handleLogin() {
-    if (loading) return; // Prevent double submission
-    
-    if (!email || !password) {
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Missing Fields',
-          text: 'Please enter both email and password',
-          zIndex: 9999
-        });
-      }, 50);
-      return;
-    }
+      if (loading) return; // Prevent double submission
 
-    loading = true;
-    try {
-      const response = await axios.post('/api/apps/auth/login', {
-        email,
-        password
-      });
+      if (!email || !password) {
+          setTimeout(() => {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Missing Fields',
+                  text: 'Please enter both email and password',
 
-      // Check if this is a fresh login (no existing accounts)
-      // If no existing accounts, treat as fresh login and clear any stale data
-      const hasExistingAccounts = localStorage.getItem('accounts');
-      const shouldClear = !hasExistingAccounts || JSON.parse(hasExistingAccounts || '[]').length === 0;
+              });
+          }, 50);
+          return;
+      }
 
-      // Add account to accounts store (handles multiple accounts)
-      // clearExisting=true means start fresh, false means add to existing
-      auth.login(response.data.user, response.data.token, response.data.refreshToken, shouldClear);
-      
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Welcome Back!',
-          timer: 1500,
-          showConfirmButton: false,
-          zIndex: 9999
-        });
-      }, 50);
+      loading = true;
+      try {
+          const response = await axios.post('/api/apps/auth/login', {
+              email,
+              password
+          });
 
-      goto('/app/expenses');
-    } catch (error) {
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: error.response?.data?.message || 'Invalid email or password',
-          zIndex: 9999
-        });
-      }, 50);
-    } finally {
-      loading = false;
-    }
+          // Check if this is a fresh login (no existing accounts)
+          // If no existing accounts, treat as fresh login and clear any stale data
+          const hasExistingAccounts = localStorage.getItem('accounts');
+          const shouldClear = !hasExistingAccounts || JSON.parse(hasExistingAccounts || '[]').length === 0;
+
+          // Add account to accounts store (handles multiple accounts)
+          // clearExisting=true means start fresh, false means add to existing
+          auth.login(response.data.user, response.data.token, response.data.refreshToken, shouldClear);
+
+           // Check workspace state BEFORE redirecting
+           await workspace.init();
+           const wsState = get(workspace);
+           
+           // Check if first signin is not completed and has 0 workspace
+           // Show workspace modal if needed (check every time to prevent empty workspace)
+           if (!response.data.user.firstSigninCompleted && wsState.list.length === 0) {
+               // No workspaces and first signin not completed - MUST create one
+               // Redirect first, then show modal
+               goto('/app/expenses');
+               setTimeout(() => {
+                   showWorkspaceModal = true;
+               }, 300);
+           } else if (wsState.list.length === 0) {
+               // Edge case: first signin completed but no workspaces - still show modal
+               goto('/app/expenses');
+               setTimeout(() => {
+                   showWorkspaceModal = true;
+               }, 300);
+           } else {
+               // Has workspaces, proceed normally
+               goto('/app/expenses');
+               setTimeout(() => {
+                   Swal.fire({
+                       icon: 'success',
+                       title: 'Welcome Back!',
+                       timer: 1500,
+                       showConfirmButton: false,
+                   });
+               }, 50);
+           }
+      } catch (error) {
+          setTimeout(() => {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Login Failed',
+                  text: error.response?.data?.message || 'Invalid email or password',
+
+              });
+          }, 50);
+      } finally {
+          loading = false;
+      }
   }
 
   function handleKeyDown(e) {
@@ -144,3 +163,12 @@
     </div>
   </div>
 </div>
+
+<WorkspaceModal
+  bind:open={showWorkspaceModal}
+  required={true}
+  on:saved={() => {
+    showWorkspaceModal = false;
+    goto('/app/expenses');
+  }}
+/>

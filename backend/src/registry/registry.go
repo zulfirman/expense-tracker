@@ -23,6 +23,7 @@ type Registry struct {
 	TemplateRepo     *repository.TemplateRepository
 	RefreshTokenRepo *repository.RefreshTokenRepository
 	QuickAmountRepo  *repository.QuickAmountRepository
+	WorkspaceRepo    *repository.WorkspaceRepository
 
 	// Handlers
 	AuthHandler        *handler.AuthHandler
@@ -32,6 +33,7 @@ type Registry struct {
 	BudgetHandler      *handler.BudgetHandler
 	TemplateHandler    *handler.TemplateHandler
 	QuickAmountHandler *handler.QuickAmountHandler
+	WorkSpaceHandler   *handler.WorkspaceHandler
 
 	// Middleware
 	AuthMiddleware echo.MiddlewareFunc
@@ -55,6 +57,7 @@ func NewRegistry() (*Registry, error) {
 		&model.R_budget{},
 		&model.M_refresh_token{},
 		&model.M_quick_amount{},
+		&model.M_workspace{},
 	); err != nil {
 		return nil, err
 	}
@@ -68,6 +71,7 @@ func NewRegistry() (*Registry, error) {
 	templateRepo := repository.NewTemplateRepository(db)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
 	quickAmountRepo := repository.NewQuickAmountRepository(db)
+	workspaceRepo := repository.NewWorkspaceRepository(db)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userRepo, refreshTokenRepo, db)
@@ -77,6 +81,7 @@ func NewRegistry() (*Registry, error) {
 	budgetHandler := handler.NewBudgetHandler(budgetRepo, categoryRepo)
 	templateHandler := handler.NewTemplateHandler(templateRepo, categoryRepo)
 	quickAmountHandler := handler.NewQuickAmountHandler(quickAmountRepo)
+	workspaceHandler := handler.NewWorkspaceHandler(workspaceRepo, userRepo, db)
 
 	// Initialize middleware (auth with JWT + refresh using Postgres)
 	authMiddleware := middleware.CustomContextMiddleware(userRepo, refreshTokenRepo)
@@ -91,6 +96,7 @@ func NewRegistry() (*Registry, error) {
 		TemplateRepo:       templateRepo,
 		RefreshTokenRepo:   refreshTokenRepo,
 		QuickAmountRepo:    quickAmountRepo,
+		WorkspaceRepo:      workspaceRepo,
 		AuthHandler:        authHandler,
 		ExpenseHandler:     expenseHandler,
 		IncomeHandler:      incomeHandler,
@@ -98,6 +104,7 @@ func NewRegistry() (*Registry, error) {
 		BudgetHandler:      budgetHandler,
 		TemplateHandler:    templateHandler,
 		QuickAmountHandler: quickAmountHandler,
+		WorkSpaceHandler:   workspaceHandler,
 		AuthMiddleware:     authMiddleware,
 	}, nil
 }

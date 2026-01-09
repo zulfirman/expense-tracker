@@ -4,9 +4,8 @@
   import { goto } from '$app/navigation';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
-  import { auth } from '$lib/stores/auth';
+  import { workspace } from '$lib/stores/workspace';
   import PageHeader from '$lib/components/PageHeader.svelte';
-  import PageCode from '$lib/components/PageCode.svelte';
   import Toggle from '$lib/components/Toggle.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
   import { requireAuthWithSleep } from '$lib/utils/authSleep';
@@ -21,15 +20,24 @@
   let categoryName = '';
   let categoryType = 'expense';
   let isActive = true;
-  let activeTab = 'expense'; // 'income' or 'expense'
+  let activeTab = 'expense';
   let draggedCategory = null;
   let draggedOverIndex = null;
   
   $: pageCode = getPageCode($page.url.pathname);
+  $: workspaceId = $page.params.id ? Number($page.params.id) : null;
 
   onMount(async () => {
     const ok = await requireAuthWithSleep();
     if (!ok) return;
+
+    if (!workspaceId) {
+      goto('/app/profile');
+      return;
+    }
+
+    // Set workspace as current to ensure API calls use correct workspace
+    workspace.setCurrent(workspaceId);
     await loadCategories();
   });
 
@@ -38,7 +46,6 @@
     try {
       const response = await api.get('/categories');
       categories = response.data || [];
-      // Sort by sequence, then by name
       incomeCategories = categories
         .filter(cat => cat.type === 'income')
         .sort((a, b) => {
@@ -56,12 +63,14 @@
           return a.name.localeCompare(b.name);
         });
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to load categories',
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to load categories',
 
-      });
+        });
+      }, 50);
     } finally {
       loading = false;
     }
@@ -69,7 +78,7 @@
 
   function openAddForm() {
     categoryName = '';
-    categoryType = activeTab; // Set type based on active tab
+    categoryType = activeTab;
     isActive = true;
     showAddForm = true;
     showEditForm = false;
@@ -93,7 +102,7 @@
   }
 
   async function handleCreate() {
-    if (loading) return; // Prevent double submission
+    if (loading) return;
     
     if (!categoryName.trim()) {
       setTimeout(() => {
@@ -142,7 +151,7 @@
   }
 
   async function handleUpdate() {
-    if (loading) return; // Prevent double submission
+    if (loading) return;
     
     if (!categoryName.trim()) {
       setTimeout(() => {
@@ -233,15 +242,14 @@
   }
 
   function toggleActive(category) {
-    if (loading) return; // Prevent double submission
+    if (loading) return;
     const newActiveState = !category.isActive;
-    // Update local state immediately for better UX
     category.isActive = newActiveState;
     handleUpdateCategory(category.id, category.name, newActiveState);
   }
 
   async function handleUpdateCategory(id, name, active) {
-    if (loading) return; // Prevent double submission
+    if (loading) return;
     loading = true;
     try {
       const category = categories.find(cat => cat.id === id);
@@ -287,11 +295,9 @@
       return;
     }
 
-    // Get categories of the same type
     const sameTypeCategories = categories.filter(cat => cat.type === targetType);
     const sortedCategories = [...sameTypeCategories].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
     
-    // Remove dragged item from array
     const draggedItem = sortedCategories.find(cat => cat.id === draggedCategory.id);
     if (!draggedItem) {
       draggedCategory = null;
@@ -301,7 +307,6 @@
     sortedCategories.splice(draggedCategory.index, 1);
     sortedCategories.splice(targetIndex, 0, draggedItem);
     
-    // Update sequences
     const updates = sortedCategories.map((cat, idx) => ({
       id: cat.id,
       sequence: idx + 1
@@ -312,12 +317,14 @@
       await api.put('/categories/sequence', { categories: updates });
       await loadCategories();
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to reorder categories',
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to reorder categories',
 
-      });
+        });
+      }, 50);
     } finally {
       loading = false;
       draggedCategory = null;
@@ -333,7 +340,7 @@
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto(`/app/workspaces/${workspaceId}`)}>Back</button>
       <button class="btn btn-primary btn-sm" on:click={openAddForm} disabled={loading}>
         + Add Category
       </button>
@@ -349,7 +356,6 @@
       <span>No categories yet. Create your first category to get started!</span>
     </div>
   {:else}
-    <!-- Tabs -->
     <div class="tabs tabs-boxed w-full sm:w-fit">
       <button
         class="tab text-xs sm:text-sm flex-1 sm:flex-none"
@@ -369,7 +375,6 @@
       </button>
     </div>
 
-    <!-- Tab Content -->
     <div class="space-y-3 mt-3">
       {#if activeTab === 'income'}
         {#if incomeCategories.length === 0}
@@ -401,7 +406,6 @@
                   <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
                   <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
                 </div>
-
               </div>
             </div>
           {/each}
@@ -566,4 +570,5 @@
     </div>
   </div>
 {/if}
+
 

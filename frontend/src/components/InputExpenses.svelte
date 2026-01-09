@@ -8,6 +8,7 @@
   import { formatCurrency } from '$lib/utils/currency';
   import { quickAmounts } from '$lib/stores/quickAmounts';
   import { currency } from '$lib/stores/currency';
+  import CategoryModal from '$lib/components/CategoryModal.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -31,6 +32,7 @@
   let categoriesLoading = true;
   let templatesLoading = true;
   let showTemplates = false;
+  let showCategoryModal = false;
 
   let quickAmountsList = [];
   $: quickAmountsList = $quickAmounts || [];
@@ -152,7 +154,7 @@
         icon: 'warning',
         title: 'Warning',
         text: 'Please select at least one category',
-        zIndex: 9999
+
       });
       return;
     }
@@ -162,7 +164,7 @@
         icon: 'warning',
         title: 'Warning',
         text: 'Please enter a valid amount',
-        zIndex: 9999
+
       });
       return;
     }
@@ -180,7 +182,7 @@
           icon: 'warning',
           title: 'Warning',
           text: 'Please select at least one valid category',
-          zIndex: 9999
+
         });
         loading = false;
         return;
@@ -201,7 +203,6 @@
           icon: 'success',
           title: 'Success!',
           text: 'Expense updated successfully',
-          zIndex: 9999,
           timer: 1500,
           showConfirmButton: false
         });
@@ -227,7 +228,7 @@
             </div>
           `,
           confirmButtonText: 'OK',
-          zIndex: 9999
+
         });
 
         // Call success callback if provided
@@ -258,7 +259,7 @@
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || (expenseId ? 'Failed to update expense' : 'Failed to save expense'),
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -328,6 +329,14 @@
                 ({selectedCategoryIds.length} Selected)
               {/if}
             </span>
+            <button
+              type="button"
+              class="btn btn-xs btn-primary"
+              on:click={() => showCategoryModal = true}
+              title="Add new category"
+            >
+              +
+            </button>
       </label>
       {#if categoriesLoading}
         <div class="flex justify-center py-4">
@@ -452,4 +461,12 @@
     </div>
   </form>
 </div>
+
+<CategoryModal
+  bind:open={showCategoryModal}
+  categoryType="expense"
+  on:saved={() => {
+    loadCategories();
+  }}
+/>
 

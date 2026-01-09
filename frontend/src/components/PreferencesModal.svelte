@@ -38,14 +38,14 @@
         text: 'Your currency preference has been saved',
         timer: 1500,
         showConfirmButton: false,
-        zIndex: 9999
+
       });
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Update Failed',
         text: error.response?.data?.message || 'Failed to update currency',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;

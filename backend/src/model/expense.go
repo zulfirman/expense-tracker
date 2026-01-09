@@ -9,6 +9,7 @@ import (
 type T_expense struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
 	UserID     uint           `json:"userId" gorm:"index;constraint:OnDelete:CASCADE"`
+	WorkspaceID uint          `json:"workspaceId" gorm:"index;not null;default:0"`
 	Categories []M_category   `json:"categories" gorm:"many2many:t_expense_categories;constraint:OnDelete:CASCADE"`
 	Date       time.Time      `json:"date" gorm:"type:date;index"`
 	Notes      string         `json:"notes" gorm:"type:text"`

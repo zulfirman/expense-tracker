@@ -35,7 +35,7 @@
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || 'Failed to load categories',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -73,7 +73,7 @@
         icon: 'warning',
         title: 'Missing Name',
         text: 'Please enter a category name',
-        zIndex: 9999
+
       });
       return;
     }
@@ -93,14 +93,14 @@
         title: 'Category Created',
         timer: 1500,
         showConfirmButton: false,
-        zIndex: 9999
+
       });
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || 'Failed to create category',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -113,7 +113,7 @@
         icon: 'warning',
         title: 'Missing Name',
         text: 'Please enter a category name',
-        zIndex: 9999
+
       });
       return;
     }
@@ -134,14 +134,14 @@
         title: 'Category Updated',
         timer: 1500,
         showConfirmButton: false,
-        zIndex: 9999
+
       });
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || 'Failed to update category',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -157,7 +157,7 @@
       confirmButtonText: 'Delete',
       cancelButtonText: 'Cancel',
       reverseButtons: true,
-      zIndex: 9999
+
     });
 
     if (result.isConfirmed) {
@@ -171,14 +171,14 @@
           title: 'Category Deleted',
           timer: 1500,
           showConfirmButton: false,
-          zIndex: 9999
+
         });
       } catch (error) {
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: error.response?.data?.message || 'Failed to delete category',
-          zIndex: 9999
+
         });
       } finally {
         loading = false;
@@ -205,7 +205,7 @@
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || 'Failed to update category',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;

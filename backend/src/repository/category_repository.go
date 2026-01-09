@@ -14,9 +14,9 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 	return &CategoryRepository{db: db}
 }
 
-func (r *CategoryRepository) GetAll(userID uint, typeFilter string) ([]model.M_category, error) {
+func (r *CategoryRepository) GetAll(userID uint, workspaceID uint, typeFilter string) ([]model.M_category, error) {
 	var categories []model.M_category
-	query := r.db.Where("user_id = ?", userID)
+	query := r.db.Where("user_id = ? AND workspace_id = ?", userID, workspaceID)
 
 	// Filter by type if provided
 	if typeFilter == "income" || typeFilter == "expense" {

@@ -34,7 +34,7 @@
         icon: 'warning',
         title: 'Invalid amount',
         text: 'Enter a positive number',
-        zIndex: 9999
+
       });
       return;
     }
@@ -58,7 +58,7 @@
           title: 'Quick amounts saved',
           timer: 1200,
           showConfirmButton: false,
-          zIndex: 9999
+
         });
       }, 50);
     } catch (err) {
@@ -67,7 +67,7 @@
           icon: 'error',
           title: 'Save failed',
           text: 'Could not save quick amounts',
-          zIndex: 9999
+
         });
       }, 50);
     } finally {

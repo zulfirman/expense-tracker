@@ -52,11 +52,12 @@ func (h *IncomeHandler) CreateIncome(c echo.Context) error {
 	}
 
 	in := &model.T_income{
-		UserID:     cc.UserID,
-		Categories: cats,
-		Date:       d,
-		Notes:      req.Notes,
-		Amount:     req.Amount,
+		UserID:      cc.UserID,
+		WorkspaceID: cc.WorkspaceID,
+		Categories:  cats,
+		Date:        d,
+		Notes:       req.Notes,
+		Amount:      req.Amount,
 	}
 
 	if err := h.incomeRepo.Create(in); err != nil {

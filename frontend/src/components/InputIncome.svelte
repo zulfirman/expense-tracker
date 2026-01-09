@@ -5,6 +5,7 @@
   import DatePicker from '$lib/components/DatePicker.svelte';
   import { onMount } from 'svelte';
   import { formatCurrency } from '$lib/utils/currency';
+  import CategoryModal from '$lib/components/CategoryModal.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -25,6 +26,7 @@
   let categories = [];
   let selectedCategoryIds = [];
   let categoriesLoading = false;
+  let showCategoryModal = false;
 
   const quickAmounts = [100000, 250000, 500000, 750000, 1000000];
 
@@ -117,7 +119,7 @@
         icon: 'warning',
         title: 'Warning',
         text: 'Please select at least one category',
-        zIndex: 9999
+
       });
       return;
     }
@@ -127,7 +129,7 @@
         icon: 'warning',
         title: 'Warning',
         text: 'Please enter a valid amount',
-        zIndex: 9999
+
       });
       return;
     }
@@ -150,7 +152,6 @@
           icon: 'success',
           title: 'Success!',
           text: 'Income updated successfully',
-          zIndex: 9999,
           timer: 1500,
           showConfirmButton: false
         });
@@ -176,7 +177,7 @@
             </div>
           `,
           confirmButtonText: 'OK',
-          zIndex: 9999
+
         });
 
         // Call success callback if provided
@@ -207,7 +208,7 @@
         icon: 'error',
         title: 'Error',
         text: error.response?.data?.message || (incomeId ? 'Failed to update income' : 'Failed to save income'),
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -251,6 +252,14 @@
                 ({selectedCategoryIds.length} Selected)
               {/if}
             </span>
+            <button
+              type="button"
+              class="btn btn-xs btn-primary"
+              on:click={() => showCategoryModal = true}
+              title="Add new category"
+            >
+              +
+            </button>
       </label>
       {#if categoriesLoading}
         <div class="flex justify-center py-4">
@@ -372,3 +381,11 @@
     </div>
   </form>
 </div>
+
+<CategoryModal
+  bind:open={showCategoryModal}
+  categoryType="income"
+  on:saved={() => {
+    loadCategories();
+  }}
+/>

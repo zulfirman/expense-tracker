@@ -8,6 +8,7 @@
     import { page } from '$app/stores';
     import { formatCurrency } from '$lib/utils/currency';
     import PageHeader from '$lib/components/PageHeader.svelte';
+    import CurrentWorkspaceBadge from '$lib/components/CurrentWorkspaceBadge.svelte';
     import { getPageCode } from '$lib/utils/pageCodes';
 
     // ============================================================================
@@ -174,7 +175,7 @@
                             confirmButtonText: 'Yes, Import',
                             cancelButtonText: 'No, Thanks',
                             reverseButtons: true,
-                            zIndex: 9999
+
                         });
 
                         if (result.isConfirmed) {
@@ -193,14 +194,14 @@
                                     text: `Successfully imported ${latestBudgets.length} budget(s) from ${latestMonthName}`,
                                     timer: 2000,
                                     showConfirmButton: false,
-                                    zIndex: 9999
+
                                 });
                             } catch (error) {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Import Failed',
                                     text: error.response?.data?.message || 'Failed to import budgets',
-                                    zIndex: 9999
+
                                 });
                             } finally {
                                 loading = false;
@@ -252,7 +253,7 @@
                     icon: 'warning',
                     title: 'Invalid Amount',
                     text: 'Please enter a valid budget amount',
-                    zIndex: 9999
+
                 });
             }, 50);
             return;
@@ -276,7 +277,7 @@
                     text: 'Budget has been saved successfully',
                     timer: 1500,
                     showConfirmButton: false,
-                    zIndex: 9999
+
                 });
             }, 50);
         } catch (error) {
@@ -285,7 +286,7 @@
                     icon: 'error',
                     title: 'Error',
                     text: error.response?.data?.message || 'Failed to save budget',
-                    zIndex: 9999
+
                 });
             }, 50);
         } finally {
@@ -306,7 +307,7 @@
             confirmButtonText: 'Delete',
             cancelButtonText: 'Cancel',
             reverseButtons: true,
-            zIndex: 9999
+
         });
 
         if (result.isConfirmed) {
@@ -320,14 +321,14 @@
                     title: 'Budget Deleted',
                     timer: 1500,
                     showConfirmButton: false,
-                    zIndex: 9999
+
                 });
             } catch (error) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: error.response?.data?.message || 'Failed to delete budget',
-                    zIndex: 9999
+
                 });
             } finally {
                 loading = false;
@@ -388,6 +389,7 @@
     subtitle="Track how much you plan to spend in each category this month."
     pageCode={pageCode}
   />
+  <CurrentWorkspaceBadge />
 
   <!-- Month Selector -->
   <div class="card bg-base-100 shadow-xl border-1">

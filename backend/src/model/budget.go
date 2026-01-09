@@ -10,6 +10,7 @@ import (
 type R_budget struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
 	UserID     uint           `json:"userId" gorm:"index;constraint:OnDelete:CASCADE"`
+	WorkspaceID uint          `json:"workspaceId" gorm:"index;not null;default:0"`
 	CategoryID uint           `json:"categoryId" gorm:"index;constraint:OnDelete:CASCADE"`
 	Category   M_category     `json:"category" gorm:"foreignKey:CategoryID;constraint:OnDelete:CASCADE"`
 	Month      string         `json:"month" gorm:"type:varchar(7);index"` // YYYY-MM

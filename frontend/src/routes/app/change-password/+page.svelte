@@ -22,7 +22,7 @@
         icon: 'warning',
         title: 'Missing Fields',
         text: 'Please fill in all fields',
-        zIndex: 9999
+
       });
       return;
     }
@@ -33,7 +33,7 @@
               icon: 'warning',
               title: 'Invalid Password',
               text: 'Password must be at least 6 characters long',
-              zIndex: 9999
+
           });
       },50);
       return;
@@ -44,7 +44,7 @@
         icon: 'warning',
         title: 'Password Mismatch',
         text: 'New password and confirm password do not match',
-        zIndex: 9999
+
       });
       return;
     }
@@ -62,7 +62,7 @@
         text: 'Your password has been updated successfully',
         timer: 1500,
         showConfirmButton: false,
-        zIndex: 9999
+
       });
 
       // Reset form
@@ -74,7 +74,7 @@
         icon: 'error',
         title: 'Change Failed',
         text: error.response?.data?.message || 'Failed to change password',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;

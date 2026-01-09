@@ -10,6 +10,8 @@
   import { onMount } from 'svelte';
   import Swal from 'sweetalert2';
   import { getInitials } from '$lib/utils/initials';
+  import { workspace } from '$lib/stores/workspace';
+  import { get } from 'svelte/store';
 
   let showProfileMenu = false;
   let showAccountMenu = false;
@@ -36,6 +38,11 @@
     
     if ($auth.isAuthenticated && (pathname === '/app/login' || pathname === '/app/signup')) {
       goto('/app/expenses');
+    }
+
+    // Initialize workspaces (creation handled in login/signup pages)
+    if ($auth.isAuthenticated && pathname.startsWith('/app/') && pathname !== '/app/login' && pathname !== '/app/signup') {
+      await workspace.init();
     }
     
     // Close profile and account menus when clicking outside
@@ -134,7 +141,7 @@
       confirmButtonText: 'Remove',
       cancelButtonText: 'Cancel',
       reverseButtons: true,
-      zIndex: 9999
+
     }).then((result) => {
       if (result.isConfirmed) {
         accounts.removeAccount(accountId);
@@ -147,102 +154,7 @@
     });
   }
 
-  function openAddAccountModal() {
-    showAddAccountModal = true;
-    showProfileMenu = false;
-    addAccountEmail = '';
-    addAccountPassword = '';
-  }
-
-  function closeAddAccountModal() {
-    showAddAccountModal = false;
-    addAccountEmail = '';
-    addAccountPassword = '';
-  }
-
-  async function handleAddAccount() {
-    if (addAccountLoading) return; // Prevent double submission
-    
-    if (!addAccountEmail || !addAccountPassword) {
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Missing Fields',
-          text: 'Please enter both email and password',
-          zIndex: 9999
-        });
-      }, 50);
-      return;
-    }
-
-    addAccountLoading = true;
-    try {
-      const response = await fetch('/api/apps/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: addAccountEmail,
-          password: addAccountPassword
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const data = await response.json();
-      
-      // Add account to accounts store (this is explicitly adding a new account)
-      // Don't clear existing accounts when using "Add Account" modal
-      auth.login(data.user, data.token, data.refreshToken, false);
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Account Added!',
-        text: `Logged in as ${data.user.name}`,
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
-
-      closeAddAccountModal();
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Account Added!',
-          text: `Logged in as ${data.user.name}`,
-          timer: 1500,
-          showConfirmButton: false,
-          zIndex: 9999
-        });
-      }, 50);
-      // Reload to refresh data
-      window.location.reload();
-    } catch (error) {
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: error.message || 'Invalid email or password',
-          zIndex: 9999
-        });
-      }, 50);
-    } finally {
-      addAccountLoading = false;
-    }
-  }
-
-  function handleAddAccountKeyDown(e) {
-    if (e.key === 'Enter' && !addAccountLoading) {
-      e.preventDefault();
-      setTimeout(() => {
-        handleAddAccount();
-      }, 50);
-    }
-  }
+  // Account add/switch/logout UI moved to /app/preferences
 
   import { getPageCode as getPageCodeUtil } from '$lib/utils/pageCodes';
 
@@ -399,23 +311,8 @@
     position: relative;
   }
 
-  .top-header {
-    position: fixed;
-    top: 0;
-    right: 0;
-    padding: 1rem;
-    z-index: 800;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
   main.main-content {
     flex: 1;
-    padding: 1rem;
     max-width: 100%;
     overflow-x: hidden;
     overflow-y: auto;

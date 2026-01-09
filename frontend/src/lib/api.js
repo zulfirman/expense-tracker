@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { auth } from './stores/auth';
+import { workspace } from './stores/workspace';
 import { browser } from '$app/environment';
-import {goto} from "$app/navigation";
 
 // Generate or read a stable device ID (used for token tracking on backend)
 let deviceId = null;
@@ -25,6 +25,7 @@ api.interceptors.request.use(
   (config) => {
     const token = auth.getToken();
     const refreshToken = auth.getRefreshToken();
+    const wsId = workspace.getCurrentId ? workspace.getCurrentId() : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,6 +34,9 @@ api.interceptors.request.use(
     }
     if (deviceId) {
       config.headers['X-Device-Id'] = deviceId;
+    }
+    if (wsId) {
+      config.headers['X-Workspace-Id'] = wsId;
     }
     return config;
   },

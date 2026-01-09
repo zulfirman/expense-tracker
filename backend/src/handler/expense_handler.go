@@ -57,11 +57,12 @@ func (h *ExpenseHandler) CreateExpense(c echo.Context) error {
 	}
 
 	exp := &model.T_expense{
-		UserID:     cc.UserID,
-		Categories: cats,
-		Date:       d,
-		Notes:      req.Notes,
-		Amount:     req.Amount,
+		UserID:      cc.UserID,
+		WorkspaceID: cc.WorkspaceID,
+		Categories:  cats,
+		Date:        d,
+		Notes:       req.Notes,
+		Amount:      req.Amount,
 	}
 
 	if err := h.expenseRepo.Create(exp); err != nil {
@@ -367,7 +368,7 @@ func (h *ExpenseHandler) GetDateExpenses(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid date"})
 	}
 
-	items, err := h.expenseRepo.GetByDate(cc.UserID, d)
+	items, err := h.expenseRepo.GetByDate(cc.UserID, cc.WorkspaceID, d)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to fetch expenses"})
 	}

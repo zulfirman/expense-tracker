@@ -59,11 +59,11 @@ func (r *ExpenseRepository) GetMonths(userID uint) ([]string, error) {
 }
 
 // GetByMonth returns all expenses for a given YYYY-MM.
-func (r *ExpenseRepository) GetByMonth(userID uint, month string) ([]model.T_expense, error) {
+func (r *ExpenseRepository) GetByMonth(userID uint, workspaceID uint, month string) ([]model.T_expense, error) {
 	var expenses []model.T_expense
 	if err := r.db.
 		Preload("Categories").
-		Where("user_id = ? AND to_char(date, 'YYYY-MM') = ?", userID, month).
+		Where("user_id = ? AND workspace_id = ? AND to_char(date, 'YYYY-MM') = ?", userID, workspaceID, month).
 		Order("date DESC, id DESC").
 		Find(&expenses).Error; err != nil {
 		return nil, err
@@ -72,11 +72,11 @@ func (r *ExpenseRepository) GetByMonth(userID uint, month string) ([]model.T_exp
 }
 
 // GetByDate returns all expenses for a specific date (YYYY-MM-DD).
-func (r *ExpenseRepository) GetByDate(userID uint, date time.Time) ([]model.T_expense, error) {
+func (r *ExpenseRepository) GetByDate(userID uint, workspaceID uint, date time.Time) ([]model.T_expense, error) {
 	var expenses []model.T_expense
 	if err := r.db.
 		Preload("Categories").
-		Where("user_id = ? AND date = ?", userID, date).
+		Where("user_id = ? AND workspace_id = ? AND date = ?", userID, workspaceID, date).
 		Order("id DESC").
 		Find(&expenses).Error; err != nil {
 		return nil, err

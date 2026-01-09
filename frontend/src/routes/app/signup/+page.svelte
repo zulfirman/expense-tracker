@@ -6,17 +6,16 @@
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
   import { requirePublicWithSleep } from '$lib/utils/authSleep';
+  import { workspace } from '$lib/stores/workspace';
+  import { get } from 'svelte/store';
+  import WorkspaceModal from '$lib/components/WorkspaceModal.svelte';
 
   let name = '';
   let email = '';
   let password = '';
   let confirmPassword = '';
   let loading = false;
-
-  onMount(async () => {
-    // Redirect if already logged in (with small sleep to wait for auth init)
-    await requirePublicWithSleep('/app/expenses');
-  });
+  let showWorkspaceModal = false;
 
   async function handleSignup() {
     if (loading) return; // Prevent double submission
@@ -27,7 +26,7 @@
           icon: 'warning',
           title: 'Missing Fields',
           text: 'Please fill in all fields',
-          zIndex: 9999
+
         });
       }, 50);
       return;
@@ -39,7 +38,7 @@
           icon: 'warning',
           title: 'Password Too Short',
           text: 'Password must be at least 6 characters',
-          zIndex: 9999
+
         });
       }, 50);
       return;
@@ -51,7 +50,7 @@
           icon: 'warning',
           title: `Passwords Don't Match`,
           text: 'Please make sure both passwords are the same',
-          zIndex: 9999
+
         });
       }, 50);
       return;
@@ -69,25 +68,39 @@
       // clearExisting=true means start fresh
       auth.login(response.data.user, response.data.token, response.data.refreshToken, true);
       
-      setTimeout(() => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Account Created!',
-          text: 'Welcome to Expenses Tracker',
-          timer: 2000,
-          showConfirmButton: false,
-          zIndex: 9999
-        });
-      }, 50);
-
-      goto('/app/expenses');
+      // Check workspace state BEFORE redirecting
+      await workspace.init();
+      const wsState = get(workspace);
+      
+      // After signup, check if first signin is not completed and has 0 workspace
+      // Show workspace modal if needed
+      if (!response.data.user.firstSigninCompleted && wsState.list.length === 0) {
+        // No workspaces and first signin not completed - MUST create one
+        // Redirect first, then show modal
+        goto('/app/expenses');
+        setTimeout(() => {
+          showWorkspaceModal = true;
+        }, 300);
+      } else {
+        // Has workspaces or first signin completed, just show success message
+        goto('/app/expenses');
+        setTimeout(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Account Created!',
+            text: 'Welcome to Expenses Tracker',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }, 50);
+      }
     } catch (error) {
       setTimeout(() => {
         Swal.fire({
           icon: 'error',
           title: 'Signup Failed',
           text: error.response?.data?.message || 'Failed to create account',
-          zIndex: 9999
+
         });
       }, 50);
     } finally {
@@ -188,3 +201,12 @@
     </div>
   </div>
 </div>
+
+<WorkspaceModal
+  bind:open={showWorkspaceModal}
+  required={true}
+  on:saved={() => {
+    showWorkspaceModal = false;
+    goto('/app/expenses');
+  }}
+/>

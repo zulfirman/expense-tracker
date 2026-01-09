@@ -9,6 +9,7 @@ import (
 type T_income struct {
 	ID         uint           `json:"id" gorm:"primaryKey"`
 	UserID     uint           `json:"userId" gorm:"index;constraint:OnDelete:CASCADE"`
+	WorkspaceID uint          `json:"workspaceId" gorm:"index;not null;default:0"`
 	Categories []M_category   `json:"categories" gorm:"many2many:t_income_categories;constraint:OnDelete:CASCADE"`
 	Date       time.Time      `json:"date" gorm:"type:date"`
 	Amount     float64        `json:"amount" gorm:"type:decimal(15,2)"`
@@ -20,7 +21,8 @@ type T_income struct {
 
 type R_balance struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
-	UserID    uint           `json:"userId" gorm:"uniqueIndex;constraint:OnDelete:CASCADE"` // one balance row per user
+	UserID    uint           `json:"userId" gorm:"index;constraint:OnDelete:CASCADE"`
+	WorkspaceID uint         `json:"workspaceId" gorm:"index;not null;default:0"`
 	Amount    float64        `json:"amount" gorm:"type:decimal(15,2);default:0"`
 	Notes     string         `json:"notes" gorm:"type:text"`
 	CreatedAt time.Time      `json:"createdAt"`

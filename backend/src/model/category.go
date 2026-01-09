@@ -14,6 +14,7 @@ type M_category struct {
 	IsActive  bool           `json:"isActive" gorm:"default:true"`
 	Sequence  int            `json:"sequence" gorm:"default:0;index:idx_category_sequence"`
 	UserID    uint           `json:"userId" gorm:"default:null;index:idx_category_user_id;index:idx_category_slug_user;constraint:OnDelete:CASCADE"`
+	WorkspaceID uint         `json:"workspaceId" gorm:"index;not null;default:0"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`

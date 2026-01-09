@@ -59,7 +59,7 @@ function createCurrencyStore() {
         }
       }
     },
-    formatCurrency: (amount) => {
+    formatCurrency: (amount, showSymbols = true) => {
       let currency = 'IDR';
       subscribe(value => { currency = value; })();
       
@@ -76,9 +76,12 @@ function createCurrencyStore() {
       
       if (isNaN(numericValue)) return '';
       
-      const symbol = CURRENCY_SYMBOLS[currency] || 'Rp.';
+      let symbol = CURRENCY_SYMBOLS[currency] || 'Rp.';
       const locale = CURRENCY_LOCALES[currency] || 'id-ID';
-      
+
+      if (showSymbols){
+          symbol = ""
+      }
       return symbol + ' ' + new Intl.NumberFormat(locale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0

@@ -51,7 +51,7 @@
         icon: 'error',
         title: 'Error',
         text: 'Failed to load expenses',
-        zIndex: 9999
+
       });
     } finally {
       loading = false;
@@ -137,7 +137,7 @@
       cancelButtonText: 'Cancel',
       reverseButtons: true,
       confirmButtonColor: '#ef4444',
-      zIndex: 9999
+
     });
 
     if (result.isConfirmed) {
@@ -148,7 +148,7 @@
           icon: 'success',
           title: 'Deleted!',
           text: 'Expense deleted successfully',
-          zIndex: 9999
+
         });
 
         await loadAll();
@@ -158,7 +158,7 @@
           icon: 'error',
           title: 'Error',
           text: error.response?.data?.message || 'Failed to delete expense',
-          zIndex: 9999
+
         });
       }
     }
@@ -174,7 +174,7 @@
       cancelButtonText: 'Cancel',
       reverseButtons: true,
       confirmButtonColor: '#ef4444',
-      zIndex: 9999
+
     });
 
     if (result.isConfirmed) {
@@ -185,7 +185,7 @@
           icon: 'success',
           title: 'Deleted!',
           text: 'Income deleted successfully',
-          zIndex: 9999
+
         });
 
         await loadAll();
@@ -195,7 +195,7 @@
           icon: 'error',
           title: 'Error',
           text: error.response?.data?.message || 'Failed to delete income',
-          zIndex: 9999
+
         });
       }
     }

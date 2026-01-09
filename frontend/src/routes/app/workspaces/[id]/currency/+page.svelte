@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { auth } from '$lib/stores/auth';
+  import { workspace } from '$lib/stores/workspace';
   import { currency } from '$lib/stores/currency';
   import { quickAmounts } from '$lib/stores/quickAmounts';
   import Swal from 'sweetalert2';
@@ -17,10 +17,19 @@
   let lastCurrency = null;
   
   $: pageCode = getPageCode($page.url.pathname);
+  $: workspaceId = $page.params.id ? Number($page.params.id) : null;
 
   onMount(async () => {
     const ok = await requireAuthWithSleep();
     if (!ok) return;
+
+    if (!workspaceId) {
+      goto('/app/profile');
+      return;
+    }
+
+    // Set workspace as current to ensure API calls use correct workspace
+    workspace.setCurrent(workspaceId);
 
     // Initialize currency & quick amounts
     await currency.init();
@@ -31,7 +40,7 @@
     lastCurrency = selectedCurrency;
   });
 
-  // When currency changes (by user interaction), reset quick amounts to that currency’s defaults
+  // When currency changes (by user interaction), reset quick amounts to that currency's defaults
   $: if (selectedCurrency && selectedCurrency !== lastCurrency) {
     const defaults = quickAmounts.getDefaultsByCurrency(selectedCurrency);
     amounts = defaults;
@@ -41,12 +50,14 @@
   function addAmount() {
     const value = Number(newAmount);
     if (isNaN(value) || value <= 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Invalid amount',
-        text: 'Enter a positive number',
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid amount',
+          text: 'Enter a positive number',
 
-      });
+        });
+      }, 50);
       return;
     }
     amounts = Array.from(new Set([...amounts, value])).sort((a, b) => a - b);
@@ -58,7 +69,7 @@
   }
 
   async function handleSave() {
-    if (loading) return; // Prevent double submission
+    if (loading) return;
 
     const result = await Swal.fire({
       title: 'Save preferences?',
@@ -116,7 +127,7 @@
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto(`/app/workspaces/${workspaceId}`)}>Back</button>
     </svelte:fragment>
   </PageHeader>
 
@@ -237,4 +248,5 @@
     </div>
   </div>
 </div>
+
 

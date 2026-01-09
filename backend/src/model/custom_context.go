@@ -4,9 +4,10 @@ import "github.com/labstack/echo/v4"
 
 type CustomContext struct {
 	echo.Context
-	UserID   uint
-	Email    string
-	UserName string
+	UserID      uint
+	Email       string
+	UserName    string
+	WorkspaceID uint
 }
 
 

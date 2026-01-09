@@ -8,7 +8,13 @@ import (
 )
 
 // SeedDefaultCategories creates default income and expense categories for a new user
+// This is the legacy function for backward compatibility
 func SeedDefaultCategories(db *gorm.DB, userID uint) error {
+	return SeedDefaultCategoriesForWorkspace(db, userID, 0)
+}
+
+// SeedDefaultCategoriesForWorkspace creates default income and expense categories for a workspace
+func SeedDefaultCategoriesForWorkspace(db *gorm.DB, userID uint, workspaceID uint) error {
 	defaultExpenseCategories := []string{
 		"Food & Dining",
 		"Transportation",
@@ -32,11 +38,12 @@ func SeedDefaultCategories(db *gorm.DB, userID uint) error {
 	for _, name := range defaultExpenseCategories {
 		slug := utils.GenerateSlug(name)
 		categories = append(categories, model.M_category{
-			UserID:   userID,
-			Name:     name,
-			Slug:     slug,
-			Type:     "expense",
-			IsActive: true,
+			UserID:      userID,
+			WorkspaceID: workspaceID,
+			Name:        name,
+			Slug:        slug,
+			Type:        "expense",
+			IsActive:    true,
 		})
 	}
 
@@ -44,11 +51,12 @@ func SeedDefaultCategories(db *gorm.DB, userID uint) error {
 	for _, name := range defaultIncomeCategories {
 		slug := utils.GenerateSlug(name)
 		categories = append(categories, model.M_category{
-			UserID:   userID,
-			Name:     name,
-			Slug:     slug,
-			Type:     "income",
-			IsActive: true,
+			UserID:      userID,
+			WorkspaceID: workspaceID,
+			Name:        name,
+			Slug:        slug,
+			Type:        "income",
+			IsActive:    true,
 		})
 	}
 
