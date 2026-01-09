@@ -242,16 +242,19 @@
      * Validates amount and creates/updates budget
      */
     async function saveBudget() {
+        if (loading) return; // Prevent double submission
         if (!editingCategory) return;
 
         const amount = parseFloat(budgetAmount.replace(/\D/g, ''));
         if (isNaN(amount) || amount <= 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Invalid Amount',
-                text: 'Please enter a valid budget amount',
-                zIndex: 9999
-            });
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Amount',
+                    text: 'Please enter a valid budget amount',
+                    zIndex: 9999
+                });
+            }, 50);
             return;
         }
 
@@ -266,21 +269,25 @@
             await loadBudgets();
             closeBudgetForm();
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Budget Saved',
-                text: 'Budget has been saved successfully',
-                timer: 1500,
-                showConfirmButton: false,
-                zIndex: 9999
-            });
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Budget Saved',
+                    text: 'Budget has been saved successfully',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    zIndex: 9999
+                });
+            }, 50);
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.response?.data?.message || 'Failed to save budget',
-                zIndex: 9999
-            });
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.response?.data?.message || 'Failed to save budget',
+                    zIndex: 9999
+                });
+            }, 50);
         } finally {
             loading = false;
         }
@@ -391,6 +398,8 @@
           <input
             id="month"
             type="month"
+            on:click={(e) => e.target.showPicker?.()}
+            on:focus={(e) => e.target.showPicker?.()}
             bind:value={currentMonth}
             on:change={handleMonthChange}
             class="input input-bordered w-full md:w-56 border-2"

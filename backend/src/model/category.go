@@ -12,6 +12,7 @@ type M_category struct {
 	Slug      string         `json:"slug" gorm:"default:null;index:idx_category_slug_user"`
 	Type      string         `json:"type" gorm:"not null;default:'expense';check:type IN ('income','expense')"` // income or expense
 	IsActive  bool           `json:"isActive" gorm:"default:true"`
+	Sequence  int            `json:"sequence" gorm:"default:0;index:idx_category_sequence"`
 	UserID    uint           `json:"userId" gorm:"default:null;index:idx_category_user_id;index:idx_category_slug_user;constraint:OnDelete:CASCADE"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`

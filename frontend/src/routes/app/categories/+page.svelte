@@ -4,6 +4,7 @@
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let categories = [];
   let incomeCategories = [];
@@ -17,9 +18,8 @@
   let isActive = true;
 
   onMount(async () => {
-    if (!$auth.isAuthenticated) {
-      return;
-    }
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
     await loadCategories();
   });
 
@@ -516,12 +516,6 @@
     gap: 0.75rem;
   }
 
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
 </style>
 
 

@@ -4,16 +4,16 @@
   import { auth } from '$lib/stores/auth';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let currentPassword = '';
   let newPassword = '';
   let confirmPassword = '';
   let loading = false;
 
-  onMount(() => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-    }
+  onMount(async () => {
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
   });
 
   async function handleSubmit() {

@@ -42,6 +42,7 @@ func SetupRoutes(e *echo.Echo, reg *registry.Registry) {
 	protected.GET("/categories", reg.CategoryHandler.GetCategories)
 	protected.POST("/categories", reg.CategoryHandler.CreateCategory)
 	protected.PUT("/categories/:id", reg.CategoryHandler.UpdateCategory)
+	protected.PUT("/categories/sequence", reg.CategoryHandler.UpdateCategoriesSequence)
 	protected.DELETE("/categories/:id", reg.CategoryHandler.DeleteCategory)
 
 	// Template routes

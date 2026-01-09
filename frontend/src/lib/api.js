@@ -74,7 +74,7 @@ api.interceptors.response.use(
           processQueue(new Error('Token refresh failed'), null);
           auth.logout();
           if (browser) {
-            goto('/login');
+            goto('/app/login');
           }
           return Promise.reject(error);
         }
@@ -82,7 +82,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         auth.logout();
         if (browser) {
-          goto('/login');
+          goto('/app/login');
         }
         return Promise.reject(refreshError);
       } finally {

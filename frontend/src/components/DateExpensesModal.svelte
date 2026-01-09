@@ -1,10 +1,14 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
+  import { page } from '$app/stores';
   import api from '$lib/api';
   import Swal from 'sweetalert2';
   import { formatCurrency } from '$lib/utils/currency';
+  import { getPageCode } from '$lib/utils/pageCodes';
   import InputExpenses from './InputExpenses.svelte';
   import InputIncome from './InputIncome.svelte';
+
+  $: pageCode = getPageCode($page?.url?.pathname || '/history');
 
   const dispatch = createEventDispatcher();
 
@@ -218,7 +222,10 @@
   <div class="modal-box w-11/12 max-w-3xl" on:click|stopPropagation>
     <div class="flex items-start justify-between gap-3 mb-4">
       <div>
-        <p class="text-xs uppercase tracking-wide text-base-content/60">Date</p>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-mono text-base-content/30">{pageCode}</span>
+          <p class="text-xs uppercase tracking-wide text-base-content/60">Date</p>
+        </div>
         <h2 class="text-2xl font-bold">{date ? formatDate(date.date) : ''}</h2>
       </div>
       <button class="btn btn-ghost btn-sm" on:click={close}>✕</button>
@@ -286,7 +293,7 @@
         {@const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0)}
         {@const netTotal = totalIncome - totalExpenses}
 
-        <div class="stats shadow-sm bg-base-200 border border-base-300 mb-6">
+        <div class="stats stats-vertical sm:stats-horizontal shadow-sm bg-base-200 border border-base-300 mb-6 w-full overflow-x-auto">
           <div class="stat">
             <div class="stat-title">Total Income</div>
             <div class="stat-value text-success text-xl">{formatCurrency(totalIncome)}</div>

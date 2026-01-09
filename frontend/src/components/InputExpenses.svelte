@@ -73,6 +73,7 @@
   }
 
   async function loadTemplates() {
+      return true
     try {
       const response = await api.get('/templates');
       templates = response.data;

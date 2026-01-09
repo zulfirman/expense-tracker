@@ -2,12 +2,14 @@
   import '../app.css';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
+  import { afterNavigate } from '$app/navigation';
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
   import { currency } from '$lib/stores/currency';
   import { onMount } from 'svelte';
   import Swal from 'sweetalert2';
+  import { getInitials } from '$lib/utils/initials';
 
   let showProfileMenu = false;
   let showAccountMenu = false;
@@ -26,14 +28,14 @@
     
     // Check authentication and redirect if needed (only after initialization)
     const pathname = $page.url.pathname;
-    const publicRoutes = ['/login', '/signup'];
+    const publicRoutes = ['/app/login', '/app/signup'];
     
-    if (!$auth.isAuthenticated && !publicRoutes.includes(pathname) && pathname !== '/') {
-      goto('/login');
+    if (!$auth.isAuthenticated && !publicRoutes.includes(pathname) && pathname !== '/' && !pathname.startsWith('/app/login') && !pathname.startsWith('/app/signup')) {
+      goto('/app/login');
     }
     
-    if ($auth.isAuthenticated && publicRoutes.includes(pathname)) {
-      goto('/expenses');
+    if ($auth.isAuthenticated && (pathname === '/app/login' || pathname === '/app/signup')) {
+      goto('/app/expenses');
     }
     
     // Close profile and account menus when clicking outside
@@ -60,9 +62,9 @@
   // Watch for auth changes and redirect (only after initialization)
   $: if (authInitialized && !isAuthenticated && $page && $page.url) {
     const pathname = $page.url.pathname;
-    const publicRoutes = ['/login', '/signup'];
+    const publicRoutes = ['/app/login', '/app/signup'];
     if (!publicRoutes.includes(pathname) && pathname !== '/') {
-      goto('/login');
+      goto('/app/login');
     }
   }
   
@@ -70,9 +72,9 @@
   // Only redirect if explicitly on login/signup pages, never redirect from other pages
   $: if (authInitialized && isAuthenticated && $page && $page.url) {
     const pathname = $page.url.pathname;
-    // Only redirect from login/signup pages, don't interfere with other pages like /budget
-    if (pathname === '/login' || pathname === '/signup') {
-      goto('/expenses');
+    // Only redirect from login/signup pages, don't interfere with other pages like /app/preferences
+    if (pathname === '/app/login' || pathname === '/app/signup') {
+      goto('/app/expenses');
     }
   }
   $: currentUser = $auth.user;
@@ -92,18 +94,18 @@
 
   function handleProfileClick() {
     showProfileMenu = false;
-    goto('/profile');
+      goto('/app/profile');
   }
 
   function handlePreferencesClick() {
     showProfileMenu = false;
-    goto('/preferences');
+      goto('/app/preferences');
   }
 
   function handleLogout() {
     auth.logout();
     showProfileMenu = false;
-    goto('/login');
+    goto('/app/login');
   }
 
   function toggleAccountMenu() {
@@ -139,7 +141,7 @@
         if (accountId === currentAccountId) {
           // If removed current account, redirect to login
           auth.logout();
-          goto('/login');
+          goto('/app/login');
         }
       }
     });
@@ -159,13 +161,17 @@
   }
 
   async function handleAddAccount() {
+    if (addAccountLoading) return; // Prevent double submission
+    
     if (!addAccountEmail || !addAccountPassword) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please enter both email and password',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Fields',
+          text: 'Please enter both email and password',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -203,23 +209,38 @@
       });
 
       closeAddAccountModal();
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Account Added!',
+          text: `Logged in as ${data.user.name}`,
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
       // Reload to refresh data
       window.location.reload();
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: error.message || 'Invalid email or password',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: error.message || 'Invalid email or password',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       addAccountLoading = false;
     }
   }
 
   function handleAddAccountKeyDown(e) {
-    if (e.key === 'Enter') {
-      handleAddAccount();
+    if (e.key === 'Enter' && !addAccountLoading) {
+      e.preventDefault();
+      setTimeout(() => {
+        handleAddAccount();
+      }, 50);
     }
   }
 
@@ -227,128 +248,28 @@
 
   $: currentPath = $page?.url?.pathname || '/';
   $: pageCode = getPageCodeUtil(currentPath);
+  
+  // Reset scroll position on route change
+  afterNavigate(() => {
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+  });
 </script>
 
-{#if isAuthenticated || $page.url.pathname === '/login' || $page.url.pathname === '/signup' || $page.url.pathname === '/'}
+{#if isAuthenticated || $page.url.pathname === '/app/login' || $page.url.pathname === '/app/signup' || $page.url.pathname === '/' || $page.url.pathname.startsWith('/app/')}
 <div class="app-container">
-  {#if isAuthenticated && $page.url.pathname !== '/login' && $page.url.pathname !== '/signup'}
-  <header class="top-header">
-    <div class="header-actions">
-      {#if isAuthenticated}
-        {#if accountList.length > 1}
-          <!-- Account switcher dropdown -->
-          <div class="dropdown dropdown-end">
-            <div
-              tabindex="0"
-              role="button"
-              class="btn btn-sm btn-soft gap-2"
-              title="Switch Account"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              <span class="text-xs font-medium">{accountList.length} Account{accountList.length === 1 ? '' : 's'}</span>
-            </div>
-            <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1002] w-72 p-2 shadow">
-              <li class="menu-title">
-                <span>Accounts</span>
-              </li>
-              {#each accountList as account}
-                <li>
-                  <button
-                    class="justify-between"
-                    on:click={() => handleSwitchAccount(account.id)}
-                  >
-                    <div class="flex flex-col items-start">
-                      <span class="font-medium text-sm truncate">{account.name}</span>
-                      <span class="text-xs opacity-70 truncate">{account.email}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      {#if account.id === currentAccountId}
-                        <span class="badge px-3 py-2 badge-primary badge-sm">Current</span>
-                      {/if}
-                      <span
-                        class="btn btn-xs btn-soft text-error"
-                        on:click|stopPropagation={(e) => handleRemoveAccount(account.id, e)}
-                        title="Remove Account"
-                      >
-                        ×
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              {/each}
-              <li class="pt-1">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm w-full"
-                  on:click={openAddAccountModal}
-                >
-                  + Add Account
-                </button>
-              </li>
-            </ul>
-          </div>
-        {/if}
-
-        <!-- Profile dropdown -->
-        <div class="dropdown dropdown-end">
-          <div
-            tabindex="0"
-            role="button"
-            class="btn btn-sm btn-soft gap-2"
-            title="Profile"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            {#if currentUser}
-              <span class="max-w-[120px] truncate text-sm font-semibold">{currentUser.name}</span>
-            {/if}
-          </div>
-          <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-[1002] w-52 p-2 shadow">
-            <li>
-              <button on:click={handleProfileClick}>
-                Profile
-              </button>
-            </li>
-            <li>
-              <button on:click={handlePreferencesClick}>
-                Preferences
-              </button>
-            </li>
-            {#if accountList.length <= 1}
-              <li>
-                <button on:click={openAddAccountModal}>
-                  + Add Account
-                </button>
-              </li>
-            {/if}
-            <li>
-              <button class="text-error" on:click={handleLogout}>
-                Logout
-              </button>
-            </li>
-          </ul>
-        </div>
-      {/if}
-    </div>
-  </header>
-  {/if}
 
   <main class="main-content">
     <slot />
   </main>
 
-  {#if isAuthenticated && $page.url.pathname !== '/login' && $page.url.pathname !== '/signup'}
+  {#if isAuthenticated && $page.url.pathname !== '/app/login' && $page.url.pathname !== '/app/signup' && $page.url.pathname !== '/app/login' && $page.url.pathname !== '/app/signup'}
   <div class="dock dock-sm fixed left-0 right-0 bottom-0 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
     <button
-      class:dock-active={$page.url.pathname === '/expenses' || $page.url.pathname === '/'}
-      on:click={() => goto('/expenses')}
+      class:dock-active={$page.url.pathname === '/app/expenses' || $page.url.pathname === '/expenses' || $page.url.pathname === '/'}
+      on:click={() => goto('/app/expenses')}
     >
       <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -358,8 +279,8 @@
     </button>
 
     <button
-      class:dock-active={$page.url.pathname === '/income'}
-      on:click={() => goto('/income')}
+      class:dock-active={$page.url.pathname === '/app/income' || $page.url.pathname === '/income'}
+      on:click={() => goto('/app/income')}
     >
       <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="19" x2="12" y2="5"></line>
@@ -369,8 +290,8 @@
     </button>
 
     <button
-      class:dock-active={$page.url.pathname === '/history'}
-      on:click={() => goto('/history')}
+      class:dock-active={$page.url.pathname === '/app/history' || $page.url.pathname === '/history'}
+      on:click={() => goto('/app/history')}
     >
       <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -382,14 +303,34 @@
     </button>
 
     <button
-      class:dock-active={$page.url.pathname === '/budget'}
-      on:click={() => goto('/budget')}
+      class:dock-active={$page.url.pathname === '/app/budget' || $page.url.pathname === '/budget'}
+      on:click={() => goto('/app/budget')}
     >
       <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"></line>
         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
       </svg>
       <span class="dock-label">Budget</span>
+    </button>
+
+    <button
+      class:dock-active={$page.url.pathname === '/app/profile' || $page.url.pathname === '/profile'}
+      on:click={() => goto('/app/profile')}
+      title={$auth.user?.name || 'Profile'}
+    >
+      {#if $auth.user?.name}
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 h-8 text-xs font-bold flex items-center justify-center">
+            <span>{getInitials($auth.user.name)}</span>
+          </div>
+        </div>
+      {:else}
+        <svg class="size-[1.4em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      {/if}
+      <!--<span class="dock-label">Profile</span>-->
     </button>
   </div>
   {/if}
@@ -482,7 +423,7 @@
     height: 0;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 80px;
-    padding-top: 60px;
+    padding-top: 20px;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }

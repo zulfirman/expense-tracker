@@ -8,6 +8,7 @@
   import Swal from 'sweetalert2';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let amounts = [];
   let newAmount = '';
@@ -16,10 +17,8 @@
   $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-      return;
-    }
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
     await quickAmounts.init();
     amounts = $quickAmounts || [];
   });
@@ -48,23 +47,29 @@
   }
 
   async function save() {
+    if (loading) return; // Prevent double submission
+    
     loading = true;
     try {
       await quickAmounts.setAmounts(amounts);
-      Swal.fire({
-        icon: 'success',
-        title: 'Quick amounts saved',
-        timer: 1200,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Quick amounts saved',
+          timer: 1200,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Save failed',
-        text: 'Could not save quick amounts',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Save failed',
+          text: 'Could not save quick amounts',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
@@ -84,7 +89,7 @@
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
     </svelte:fragment>
   </PageHeader>
 

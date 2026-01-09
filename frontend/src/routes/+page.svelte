@@ -6,9 +6,9 @@
   onMount(() => {
     auth.init();
     if ($auth.isAuthenticated) {
-      goto('/expenses');
+      goto('/app/expenses');
     } else {
-      goto('/login');
+      goto('/app/login');
     }
   });
 </script>

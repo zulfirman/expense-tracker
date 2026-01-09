@@ -5,6 +5,7 @@
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
+  import { requirePublicWithSleep } from '$lib/utils/authSleep';
 
   let name = '';
   let email = '';
@@ -12,41 +13,47 @@
   let confirmPassword = '';
   let loading = false;
 
-  onMount(() => {
-    // Redirect if already logged in
-    if ($auth.isAuthenticated) {
-      goto('/expenses');
-    }
+  onMount(async () => {
+    // Redirect if already logged in (with small sleep to wait for auth init)
+    await requirePublicWithSleep('/app/expenses');
   });
 
   async function handleSignup() {
+    if (loading) return; // Prevent double submission
+    
     if (!name || !email || !password) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please fill in all fields',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Fields',
+          text: 'Please fill in all fields',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
     if (password.length < 6) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Password Too Short',
-        text: 'Password must be at least 6 characters',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Password Too Short',
+          text: 'Password must be at least 6 characters',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
     if (password !== confirmPassword) {
-      Swal.fire({
-        icon: 'warning',
-        title: `Passwords Don't Match`,
-        text: 'Please make sure both passwords are the same',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: `Passwords Don't Match`,
+          text: 'Please make sure both passwords are the same',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -62,31 +69,38 @@
       // clearExisting=true means start fresh
       auth.login(response.data.user, response.data.token, response.data.refreshToken, true);
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Account Created!',
-        text: 'Welcome to Expenses Tracker',
-        timer: 2000,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Account Created!',
+          text: 'Welcome to Expenses Tracker',
+          timer: 2000,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
 
-      goto('/expenses');
+      goto('/app/expenses');
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Signup Failed',
-        text: error.response?.data?.message || 'Failed to create account',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Signup Failed',
+          text: error.response?.data?.message || 'Failed to create account',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter') {
-      handleSignup();
+    if (e.key === 'Enter' && !loading) {
+      e.preventDefault();
+      setTimeout(() => {
+        handleSignup();
+      }, 50);
     }
   }
 </script>
@@ -168,7 +182,7 @@
       <div class="mt-6 text-center">
         <p class="text-sm text-base-content/70">
           Already have an account?
-          <a href="/login" class="link link-primary font-medium">Login</a>
+          <a href="/app/login" class="link link-primary font-medium">Login</a>
         </p>
       </div>
     </div>

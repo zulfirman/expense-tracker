@@ -6,6 +6,7 @@
   import { auth } from '$lib/stores/auth';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   const availableThemes = ['cupcake', 'night','valentine','dracula'];
   let selectedTheme = 'cupcake';
@@ -13,10 +14,8 @@
   $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-      return;
-    }
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
     selectedTheme = $theme || 'cupcake';
   });
 
@@ -39,7 +38,7 @@
     <div class="card-body space-y-4">
       <!-- Navigation links in two columns -->
       <div class="grid gap-3 md:grid-cols-2">
-        <a href="/preferences/categories"
+        <a href="/app/preferences/categories"
            class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Categories</span>
@@ -50,7 +49,7 @@
           <span class="text-lg">›</span>
         </a>
 
-        <a href="/preferences/currency"
+        <a href="/app/preferences/currency"
            class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Currency & Quick Amount</span>
@@ -61,7 +60,7 @@
           <span class="text-lg">›</span>
         </a>
 
-        <a href="/preferences/change-password"
+        <a href="/app/preferences/change-password"
            class="btn btn-soft justify-between w-full normal-case h-full min-h-[120px] text-base">
           <span class="text-left">
             <span class="block font-semibold">Change Password</span>

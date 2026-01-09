@@ -17,13 +17,13 @@ func NewCategoryRepository(db *gorm.DB) *CategoryRepository {
 func (r *CategoryRepository) GetAll(userID uint, typeFilter string) ([]model.M_category, error) {
 	var categories []model.M_category
 	query := r.db.Where("user_id = ?", userID)
-	
+
 	// Filter by type if provided
 	if typeFilter == "income" || typeFilter == "expense" {
 		query = query.Where("type = ?", typeFilter)
 	}
-	
-	err := query.Order("type ASC, name ASC").Find(&categories).Error
+
+	err := query.Order("type ASC, sequence ASC, name ASC").Find(&categories).Error
 	return categories, err
 }
 

@@ -7,6 +7,7 @@
   import Swal from 'sweetalert2';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let currentPassword = '';
   let newPassword = '';
@@ -15,42 +16,47 @@
   
   $: pageCode = getPageCode($page.url.pathname);
 
-  onMount(() => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-    }
+  onMount(async () => {
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
   });
 
   async function handleSubmit() {
+    if (loading) return; // Prevent double submission
+    
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please fill in all fields',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Fields',
+          text: 'Please fill in all fields',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
     if (newPassword.length < 6) {
-      setTimeout(()=>{
-          Swal.fire({
-              icon: 'warning',
-              title: 'Invalid Password',
-              text: 'Password must be at least 6 characters long',
-              zIndex: 9999
-          });
-      },50);
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Password',
+          text: 'Password must be at least 6 characters long',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Password Mismatch',
-        text: 'New password and confirm password do not match',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Password Mismatch',
+          text: 'New password and confirm password do not match',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -61,26 +67,30 @@
         newPassword
       });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Password Changed',
-        text: 'Your password has been updated successfully',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Password Changed',
+          text: 'Your password has been updated successfully',
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
 
       // Reset form
       currentPassword = '';
       newPassword = '';
       confirmPassword = '';
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Change Failed',
-        text: error.response?.data?.message || 'Failed to change password',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Change Failed',
+          text: error.response?.data?.message || 'Failed to change password',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
@@ -88,7 +98,10 @@
 
   function handleKeyDown(e) {
     if (e.key === 'Enter' && !loading) {
-      handleSubmit();
+      e.preventDefault();
+      setTimeout(() => {
+        handleSubmit();
+      }, 50);
     }
   }
 </script>
@@ -101,7 +114,7 @@
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
     </svelte:fragment>
   </PageHeader>
 

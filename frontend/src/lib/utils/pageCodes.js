@@ -3,8 +3,8 @@ export function getPageCode(pathname) {
   if (pathname === '/income') return 'PG-INCOME';
   if (pathname === '/history') return 'PG-HISTORY';
   if (pathname === '/budget') return 'PG-BUDGET';
-  if (pathname === '/login') return 'PG-LOGIN';
-  if (pathname === '/signup') return 'PG-SIGNUP';
+  if (pathname === '/app/login') return 'PG-LOGIN';
+  if (pathname === '/app/signup') return 'PG-SIGNUP';
   if (pathname === '/profile') return 'PG-PROFILE';
   if (pathname === '/change-password') return 'PG-CHANGE-PW';
   if (pathname === '/preferences') return 'PG-PREF';
@@ -15,5 +15,6 @@ export function getPageCode(pathname) {
   if (pathname.startsWith('/categories')) return 'PG-CATEGORIES';
   return `PG-${pathname.replace(/\//g, '-').toUpperCase() || 'ROOT'}`;
 }
+
 
 

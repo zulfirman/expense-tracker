@@ -9,6 +9,11 @@
   import DateExpensesModal from './DateExpensesModal.svelte';
   import DatePicker from '$lib/components/DatePicker.svelte';
   import { formatCurrency } from '$lib/utils/currency';
+  import PageHeader from '$lib/components/PageHeader.svelte';
+  import { page } from '$app/stores';
+  import { getPageCode } from '$lib/utils/pageCodes';
+
+  $: pageCode = getPageCode($page?.url?.pathname || '/history');
 
   // ============================================================================
   // STATE VARIABLES - Calendar & Months
@@ -333,23 +338,26 @@
      TEMPLATE
      ============================================================================ -->
 <div class="expenses-history space-y-4">
-  <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-    <div>
-      <p class="text-xs uppercase tracking-wide text-base-content/60">Overview</p>
-      <h1 class="text-3xl font-bold">Expenses History</h1>
-    </div>
-    <button
-      class="btn btn-primary gap-2"
-      class:btn-active={showSearch}
-      on:click={toggleSearch}
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="m21 21-4.35-4.35"></path>
-      </svg>
-      Search
-    </button>
-  </div>
+  <PageHeader
+    title="Expenses History"
+    subtitle="View and manage your expense history."
+    pageCode={pageCode}
+    actions={true}
+  >
+    <svelte:fragment slot="actions">
+      <button
+        class="btn btn-primary gap-2"
+        class:btn-active={showSearch}
+        on:click={toggleSearch}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        Search
+      </button>
+    </svelte:fragment>
+  </PageHeader>
 
   {#if !balanceLoading && !loading}
     <div class="stats shadow-sm bg-base-100 border border-base-300">

@@ -28,6 +28,7 @@ type UpdateCategoryRequest struct {
 	Name     string `json:"name"`
 	Type     string `json:"type" validate:"omitempty,oneof=income expense"`
 	IsActive bool   `json:"isActive"`
+	Sequence int    `json:"sequence"`
 }
 
 func (h *CategoryHandler) GetCategories(c echo.Context) error {
@@ -145,7 +146,13 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 	if req.Type != "" && (req.Type == "income" || req.Type == "expense") {
 		category.Type = req.Type
 	}
-	category.IsActive = req.IsActive
+	if req.IsActive != category.IsActive {
+		category.IsActive = req.IsActive
+	}
+	// Update sequence if provided (0 is valid)
+	if req.Sequence != 0 || (req.Sequence == 0 && category.Sequence != 0) {
+		category.Sequence = req.Sequence
+	}
 
 	if err := h.categoryRepo.Update(category); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update category"})
@@ -169,6 +176,35 @@ func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Category deleted successfully"})
+}
+
+func (h *CategoryHandler) UpdateCategoriesSequence(c echo.Context) error {
+	cc := middleware.GetCustomContext(c)
+	userID := cc.UserID
+
+	var req struct {
+		Categories []struct {
+			ID       uint `json:"id"`
+			Sequence int  `json:"sequence"`
+		} `json:"categories"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid request"})
+	}
+
+	// Update each category's sequence
+	for _, catReq := range req.Categories {
+		category, err := h.categoryRepo.GetByID(userID, catReq.ID)
+		if err != nil {
+			continue // Skip if category not found
+		}
+		category.Sequence = catReq.Sequence
+		if err := h.categoryRepo.Update(category); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update category sequence"})
+		}
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Categories reordered successfully"})
 }
 
 func parseUint(s string) (uint, error) {

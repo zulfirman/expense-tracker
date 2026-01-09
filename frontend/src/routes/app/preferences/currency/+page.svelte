@@ -8,6 +8,7 @@
   import Swal from 'sweetalert2';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let selectedCurrency = 'IDR';
   let amounts = [];
@@ -18,10 +19,8 @@
   $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-      return;
-    }
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
 
     // Initialize currency & quick amounts
     await currency.init();
@@ -59,7 +58,7 @@
   }
 
   async function handleSave() {
-    if (loading) return;
+    if (loading) return; // Prevent double submission
 
     const result = await Swal.fire({
       title: 'Save preferences?',
@@ -79,21 +78,25 @@
       await currency.setCurrency(selectedCurrency);
       await quickAmounts.setAmounts(amounts);
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Preferences saved',
-        text: 'Currency and quick amounts have been updated.',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Preferences saved',
+          text: 'Currency and quick amounts have been updated.',
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Save failed',
-        text: error?.response?.data?.message || 'Failed to save preferences',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Save failed',
+          text: error?.response?.data?.message || 'Failed to save preferences',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
@@ -113,7 +116,7 @@
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
     </svelte:fragment>
   </PageHeader>
 

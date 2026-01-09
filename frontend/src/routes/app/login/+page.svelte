@@ -5,27 +5,30 @@
   import Swal from 'sweetalert2';
   import { auth } from '$lib/stores/auth';
   import { accounts } from '$lib/stores/accounts';
-  import InputExpenses from "../../components/InputExpenses.svelte";
+  import InputExpenses from "$components/InputExpenses.svelte";
+  import { requirePublicWithSleep } from '$lib/utils/authSleep';
 
   let email = '';
   let password = '';
   let loading = false;
 
-  onMount(() => {
-    // Redirect if already logged in
-    if ($auth.isAuthenticated) {
-      goto('/expenses');
-    }
+  onMount(async () => {
+    // Redirect if already logged in (with small sleep to wait for auth init)
+    await requirePublicWithSleep('/app/expenses');
   });
 
   async function handleLogin() {
+    if (loading) return; // Prevent double submission
+    
     if (!email || !password) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please enter both email and password',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Fields',
+          text: 'Please enter both email and password',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -45,30 +48,37 @@
       // clearExisting=true means start fresh, false means add to existing
       auth.login(response.data.user, response.data.token, response.data.refreshToken, shouldClear);
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Welcome Back!',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Welcome Back!',
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
 
-      goto('/expenses');
+      goto('/app/expenses');
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: error.response?.data?.message || 'Invalid email or password',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: error.response?.data?.message || 'Invalid email or password',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter') {
-      handleLogin();
+    if (e.key === 'Enter' && !loading) {
+      e.preventDefault();
+      setTimeout(() => {
+        handleLogin();
+      }, 50);
     }
   }
 </script>
@@ -121,11 +131,11 @@
       <div class="mt-6 text-center">
         <p class="text-sm text-base-content/70">
           Don't have an account?
-          <a href="/signup" class="link link-primary font-medium">Sign up</a>
+          <a href="/app/signup" class="link link-primary font-medium">Sign up</a>
         </p>
         {#if $auth.isAuthenticated}
           <p class="mt-4">
-            <a href="/expenses" class="link link-primary font-medium">
+            <a href="/app/expenses" class="link link-primary font-medium">
               Continue as {auth.user?.name || 'Current User'}
             </a>
           </p>

@@ -7,7 +7,9 @@
   import { auth } from '$lib/stores/auth';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import PageCode from '$lib/components/PageCode.svelte';
+  import Toggle from '$lib/components/Toggle.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
+  import { requireAuthWithSleep } from '$lib/utils/authSleep';
 
   let categories = [];
   let incomeCategories = [];
@@ -20,14 +22,14 @@
   let categoryType = 'expense';
   let isActive = true;
   let activeTab = 'expense'; // 'income' or 'expense'
+  let draggedCategory = null;
+  let draggedOverIndex = null;
   
   $: pageCode = getPageCode($page.url.pathname);
 
   onMount(async () => {
-    if (!$auth.isAuthenticated) {
-      goto('/login');
-      return;
-    }
+    const ok = await requireAuthWithSleep();
+    if (!ok) return;
     await loadCategories();
   });
 
@@ -36,8 +38,23 @@
     try {
       const response = await api.get('/categories');
       categories = response.data || [];
-      incomeCategories = categories.filter(cat => cat.type === 'income');
-      expenseCategories = categories.filter(cat => cat.type === 'expense');
+      // Sort by sequence, then by name
+      incomeCategories = categories
+        .filter(cat => cat.type === 'income')
+        .sort((a, b) => {
+          const seqA = a.sequence || 0;
+          const seqB = b.sequence || 0;
+          if (seqA !== seqB) return seqA - seqB;
+          return a.name.localeCompare(b.name);
+        });
+      expenseCategories = categories
+        .filter(cat => cat.type === 'expense')
+        .sort((a, b) => {
+          const seqA = a.sequence || 0;
+          const seqB = b.sequence || 0;
+          if (seqA !== seqB) return seqA - seqB;
+          return a.name.localeCompare(b.name);
+        });
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -76,13 +93,17 @@
   }
 
   async function handleCreate() {
+    if (loading) return; // Prevent double submission
+    
     if (!categoryName.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Name',
-        text: 'Please enter a category name',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Name',
+          text: 'Please enter a category name',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -90,39 +111,48 @@
     try {
       await api.post('/categories', {
         name: categoryName.trim(),
-        type: categoryType
+        type: categoryType,
+        isActive: isActive
       });
       
       await loadCategories();
       closeForms();
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Category Created',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Category Created',
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to create category',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to create category',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
   }
 
   async function handleUpdate() {
+    if (loading) return; // Prevent double submission
+    
     if (!categoryName.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Name',
-        text: 'Please enter a category name',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Missing Name',
+          text: 'Please enter a category name',
+          zIndex: 9999
+        });
+      }, 50);
       return;
     }
 
@@ -137,20 +167,24 @@
       await loadCategories();
       closeForms();
       
-      Swal.fire({
-        icon: 'success',
-        title: 'Category Updated',
-        timer: 1500,
-        showConfirmButton: false,
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Category Updated',
+          timer: 1500,
+          showConfirmButton: false,
+          zIndex: 9999
+        });
+      }, 50);
     } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to update category',
-        zIndex: 9999
-      });
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to update category',
+          zIndex: 9999
+        });
+      }, 50);
     } finally {
       loading = false;
     }
@@ -174,20 +208,24 @@
         await api.delete(`/categories/${category.id}`);
         await loadCategories();
         
-        Swal.fire({
-          icon: 'success',
-          title: 'Category Deleted',
-          timer: 1500,
-          showConfirmButton: false,
-          zIndex: 9999
-        });
+        setTimeout(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Category Deleted',
+            timer: 1500,
+            showConfirmButton: false,
+            zIndex: 9999
+          });
+        }, 50);
       } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: error.response?.data?.message || 'Failed to delete category',
-          zIndex: 9999
-        });
+        setTimeout(() => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data?.message || 'Failed to delete category',
+            zIndex: 9999
+          });
+        }, 50);
       } finally {
         loading = false;
       }
@@ -195,10 +233,15 @@
   }
 
   function toggleActive(category) {
-    handleUpdateCategory(category.id, category.name, !category.isActive);
+    if (loading) return; // Prevent double submission
+    const newActiveState = !category.isActive;
+    // Update local state immediately for better UX
+    category.isActive = newActiveState;
+    handleUpdateCategory(category.id, category.name, newActiveState);
   }
 
   async function handleUpdateCategory(id, name, active) {
+    if (loading) return; // Prevent double submission
     loading = true;
     try {
       const category = categories.find(cat => cat.id === id);
@@ -209,14 +252,75 @@
       });
       await loadCategories();
     } catch (error) {
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to update category',
+          zIndex: 9999
+        });
+      }, 50);
+    } finally {
+      loading = false;
+    }
+  }
+
+  function handleDragStart(category, index) {
+    draggedCategory = { ...category, index };
+  }
+
+  function handleDragOver(e, index) {
+    e.preventDefault();
+    draggedOverIndex = index;
+  }
+
+  function handleDragLeave() {
+    draggedOverIndex = null;
+  }
+
+  async function handleDrop(e, targetIndex, targetType) {
+    e.preventDefault();
+    draggedOverIndex = null;
+    
+    if (!draggedCategory || draggedCategory.index === targetIndex) {
+      draggedCategory = null;
+      return;
+    }
+
+    // Get categories of the same type
+    const sameTypeCategories = categories.filter(cat => cat.type === targetType);
+    const sortedCategories = [...sameTypeCategories].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+    
+    // Remove dragged item from array
+    const draggedItem = sortedCategories.find(cat => cat.id === draggedCategory.id);
+    if (!draggedItem) {
+      draggedCategory = null;
+      return;
+    }
+    
+    sortedCategories.splice(draggedCategory.index, 1);
+    sortedCategories.splice(targetIndex, 0, draggedItem);
+    
+    // Update sequences
+    const updates = sortedCategories.map((cat, idx) => ({
+      id: cat.id,
+      sequence: idx + 1
+    }));
+
+    loading = true;
+    try {
+      await api.put('/categories/sequence', { categories: updates });
+      await loadCategories();
+    } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to update category',
+        text: error.response?.data?.message || 'Failed to reorder categories',
         zIndex: 9999
       });
     } finally {
       loading = false;
+      draggedCategory = null;
     }
   }
 </script>
@@ -224,12 +328,12 @@
 <div class="max-w-3xl mx-auto space-y-4">
   <PageHeader
     title="My Categories"
-    subtitle="Manage your income and expense categories."
+    subtitle="Manage your income and expense categories. Drag and drop categories to reorder them."
     pageCode={pageCode}
     actions={true}
   >
     <svelte:fragment slot="actions">
-      <button class="btn btn-soft btn-sm" on:click={() => goto('/preferences')}>Back</button>
+      <button class="btn btn-soft btn-sm" on:click={() => goto('/app/preferences')}>Back</button>
       <button class="btn btn-primary btn-sm" on:click={openAddForm} disabled={loading}>
         + Add Category
       </button>
@@ -273,26 +377,31 @@
             <span>No income categories yet. Create your first income category!</span>
           </div>
         {:else}
-          {#each incomeCategories as category}
-            <div class="card bg-base-100 shadow-sm border-1">
+          {#each incomeCategories as category, index}
+            <div
+              class="card bg-base-100 shadow-sm border-1 cursor-move"
+              class:opacity-50={draggedCategory?.id === category.id}
+              class:border-primary={draggedOverIndex === index}
+              draggable={!loading}
+              on:dragstart={() => handleDragStart(category, index)}
+              on:dragover={(e) => handleDragOver(e, index)}
+              on:dragleave={handleDragLeave}
+              on:drop={(e) => handleDrop(e, index, 'income')}
+            >
               <div class="card-body flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
-                <div class="flex-1">
+                <div class="flex items-center gap-2 flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-base-content/40">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
                   <h3 class="font-semibold text-sm">{category.name}</h3>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <label class="label cursor-pointer gap-2">
-                    <span class="label-text text-xs sm:text-sm">Active</span>
-                    <input
-                      type="checkbox"
-                      class="toggle toggle-sm toggle-primary"
-                      checked={category.isActive}
-                      on:change={() => toggleActive(category)}
-                      disabled={loading}
-                    />
-                  </label>
                   <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
                   <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
                 </div>
+
               </div>
             </div>
           {/each}
@@ -303,22 +412,36 @@
             <span>No expense categories yet. Create your first expense category!</span>
           </div>
         {:else}
-          {#each expenseCategories as category}
-            <div class="card bg-base-100 shadow-sm border-1">
+          {#each expenseCategories as category, index}
+            <div
+              class="card bg-base-100 shadow-sm border-1 cursor-move"
+              class:opacity-50={draggedCategory?.id === category.id}
+              class:border-primary={draggedOverIndex === index}
+              draggable={!loading}
+              on:dragstart={() => handleDragStart(category, index)}
+              on:dragover={(e) => handleDragOver(e, index)}
+              on:dragleave={handleDragLeave}
+              on:drop={(e) => handleDrop(e, index, 'expense')}
+            >
               <div class="card-body flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
-                <div class="flex-1">
+                <div class="flex items-center gap-2 flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-base-content/40">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
                   <h3 class="font-semibold text-sm">{category.name}</h3>
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                   <label class="label cursor-pointer gap-2">
-                    <span class="label-text text-xs sm:text-sm">Active</span>
-                    <input
-                      type="checkbox"
-                      class="toggle toggle-sm toggle-primary"
+                    <Toggle
+                      size="sm"
+                      color="primary"
                       checked={category.isActive}
-                      on:change={() => toggleActive(category)}
                       disabled={loading}
+                      on:change={() => toggleActive(category)}
                     />
+                    <span class="label-text text-xs sm:text-sm">Active</span>
                   </label>
                   <button class="btn btn-xs btn-soft" on:click={() => openEditForm(category)}>Edit</button>
                   <button class="btn btn-xs btn-error" on:click={() => handleDelete(category)}>Delete</button>
@@ -335,7 +458,10 @@
 {#if showAddForm}
   <div class="modal modal-open z-[2100]">
     <div class="modal-box w-11/12 max-w-md">
-      <h3 class="font-semibold text-lg mb-2">Add Category</h3>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-mono text-base-content/30">{pageCode}</span>
+        <h3 class="font-semibold text-lg">Add Category</h3>
+      </div>
       <fieldset class="fieldset mb-3">
         <legend class="fieldset-legend">Type</legend>
         <select
@@ -356,17 +482,20 @@
           bind:value={categoryName}
           placeholder="e.g., Groceries"
           class="input input-bordered w-full border-2"
-          on:keydown={(e) => { if (e.key === 'Enter') handleCreate(); }}
+          on:keydown={(e) => { if (e.key === 'Enter' && !loading) { e.preventDefault(); setTimeout(() => handleCreate(), 50); } }}
           disabled={loading}
         />
       </fieldset>
-      <fieldset class="fieldset mb-4">
-        <legend class="fieldset-legend">Active</legend>
-        <label class="cursor-pointer label justify-start gap-3">
-          <input type="checkbox" class="toggle toggle-sm toggle-primary" bind:checked={isActive} disabled={loading} />
-          <span class="label-text">Active</span>
-        </label>
-      </fieldset>
+      <label class="label cursor-pointer gap-3 mb-4">
+        <Toggle
+          size="md"
+          color="primary"
+          checked={isActive}
+          disabled={loading}
+          on:change={(e) => isActive = e.detail}
+        />
+        <span class="label-text">Active</span>
+      </label>
       <div class="modal-action">
         <button class="btn btn-soft" on:click={closeForms} disabled={loading}>Cancel</button>
         <button class="btn btn-primary" on:click={handleCreate} disabled={loading}>
@@ -385,7 +514,10 @@
 {#if showEditForm}
   <div class="modal modal-open z-[2100]">
     <div class="modal-box w-11/12 max-w-md">
-      <h3 class="font-semibold text-lg mb-2">Edit Category</h3>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-mono text-base-content/30">{pageCode}</span>
+        <h3 class="font-semibold text-lg">Edit Category</h3>
+      </div>
       <fieldset class="fieldset mb-3">
         <legend class="fieldset-legend">Type</legend>
         <select
@@ -406,17 +538,20 @@
           bind:value={categoryName}
           placeholder="e.g., Groceries"
           class="input input-bordered w-full border-2"
-          on:keydown={(e) => { if (e.key === 'Enter') handleUpdate(); }}
+          on:keydown={(e) => { if (e.key === 'Enter' && !loading) { e.preventDefault(); setTimeout(() => handleUpdate(), 50); } }}
           disabled={loading}
         />
       </fieldset>
-      <fieldset class="fieldset mb-4">
-        <legend class="fieldset-legend">Active</legend>
-        <label class="cursor-pointer label justify-start gap-3">
-          <input type="checkbox" class="toggle toggle-sm" bind:checked={isActive} disabled={loading} />
-          <span class="label-text">Active</span>
-        </label>
-      </fieldset>
+      <label class="label cursor-pointer gap-3 mb-4">
+        <Toggle
+          size="md"
+          color="primary"
+          checked={isActive}
+          disabled={loading}
+          on:change={(e) => isActive = e.detail}
+        />
+        <span class="label-text">Active</span>
+      </label>
       <div class="modal-action">
         <button class="btn btn-soft" on:click={closeForms} disabled={loading}>Cancel</button>
         <button class="btn btn-primary" on:click={handleUpdate} disabled={loading}>

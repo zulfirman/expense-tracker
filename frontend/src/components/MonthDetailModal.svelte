@@ -1,10 +1,14 @@
 <script>
 import { createEventDispatcher, onMount, onDestroy, afterUpdate } from 'svelte';
+  import { page } from '$app/stores';
   import api from '$lib/api';
   import { Chart, registerables } from 'chart.js';
   import { formatCurrency } from '$lib/utils/currency';
   import { currency } from '$lib/stores/currency';
-import { theme } from '$lib/stores/theme';
+  import { theme } from '$lib/stores/theme';
+  import { getPageCode } from '$lib/utils/pageCodes';
+
+  $: pageCode = getPageCode($page?.url?.pathname || '/history');
 
   Chart.register(...registerables);
 
@@ -939,7 +943,10 @@ function getPalette() {
   <div class="modal-box w-11/12 max-w-5xl" on:click|stopPropagation>
     <div class="flex items-start justify-between gap-3 mb-4">
       <div>
-        <p class="text-xs uppercase tracking-wide text-base-content/60">Insights</p>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-mono text-base-content/30">{pageCode}</span>
+          <p class="text-xs uppercase tracking-wide text-base-content/60">Insights</p>
+        </div>
         <h2 class="text-2xl font-bold">Advanced Analytics</h2>
         <p class="text-sm text-base-content/70">{formatMonthYear(month.month)}</p>
       </div>
