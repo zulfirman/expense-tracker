@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { auth } from './stores/auth';
 import { browser } from '$app/environment';
+import {goto} from "$app/navigation";
 
 // Generate or read a stable device ID (used for token tracking on backend)
 let deviceId = null;
@@ -56,6 +57,9 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+      if (error?.status===401){
+          auth.logout();
+      }
     return Promise.reject(error);
   }
 );

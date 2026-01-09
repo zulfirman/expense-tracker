@@ -4,9 +4,11 @@
   import { goto } from '$app/navigation';
   import { theme } from '$lib/stores/theme';
   import { auth } from '$lib/stores/auth';
+  import * as helper from '$lib/utils/helper';
   import PageHeader from '$lib/components/PageHeader.svelte';
   import { getPageCode } from '$lib/utils/pageCodes';
   import { requireAuthWithSleep } from '$lib/utils/authSleep';
+  import {capitalizeFirst} from "../../../lib/utils/helper.js";
 
   const availableThemes = ['cupcake', 'night','valentine','dracula'];
   let selectedTheme = 'cupcake';
@@ -88,7 +90,7 @@
             on:change={handleThemeChange}
           >
             {#each availableThemes as t}
-              <option value={t}>{t}</option>
+              <option value={t}>{helper.capitalizeFirst(t)}</option>
             {/each}
           </select>
         </fieldset>

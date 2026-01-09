@@ -398,8 +398,7 @@
           <input
             id="month"
             type="month"
-            on:click={(e) => e.target.showPicker?.()}
-            on:focus={(e) => e.target.showPicker?.()}
+            on:focus={(e) => setTimeout(()=>{e.target.showPicker?.()},10)}
             bind:value={currentMonth}
             on:change={handleMonthChange}
             class="input input-bordered w-full md:w-56 border-2"
