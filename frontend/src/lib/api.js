@@ -1,7 +1,16 @@
 import axios from 'axios';
 import { auth } from './stores/auth';
-import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
+
+// Generate or read a stable device ID (used for token tracking on backend)
+let deviceId = null;
+if (browser) {
+  deviceId = localStorage.getItem('device_id');
+  if (!deviceId && typeof crypto !== 'undefined' && crypto.randomUUID) {
+    deviceId = crypto.randomUUID();
+    localStorage.setItem('device_id', deviceId);
+  }
+}
 
 const api = axios.create({
   baseURL: '/api/apps',
@@ -10,86 +19,43 @@ const api = axios.create({
   }
 });
 
-// Add auth token to requests
+// Add auth and refresh tokens to every request
 api.interceptors.request.use(
   (config) => {
     const token = auth.getToken();
+    const refreshToken = auth.getRefreshToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (refreshToken) {
+      config.headers['X-Refresh-Token'] = refreshToken;
+    }
+    if (deviceId) {
+      config.headers['X-Device-Id'] = deviceId;
+    }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Handle auth errors and auto-refresh tokens
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
+// Handle refreshed tokens coming from backend headers (no retry needed)
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  (response) => {
+    const newAccessToken =
+      response.headers['x-token'] || response.headers['X-Token'];
+    const newRefreshToken =
+      response.headers['x-refresh-token'] || response.headers['X-Refresh-Token'];
 
-    // If error is 401 and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // If already refreshing, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch(err => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const refreshed = await auth.refreshAccessToken();
-        if (refreshed) {
-          const newToken = auth.getToken();
-          processQueue(null, newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        } else {
-          processQueue(new Error('Token refresh failed'), null);
-          auth.logout();
-          if (browser) {
-            goto('/app/login');
-          }
-          return Promise.reject(error);
-        }
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        auth.logout();
-        if (browser) {
-          goto('/app/login');
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    if (newAccessToken || newRefreshToken) {
+      auth.setToken(
+        newAccessToken || auth.getToken(),
+        newRefreshToken || auth.getRefreshToken()
+      );
     }
 
+    return response;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );

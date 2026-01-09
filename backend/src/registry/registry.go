@@ -78,8 +78,8 @@ func NewRegistry() (*Registry, error) {
 	templateHandler := handler.NewTemplateHandler(templateRepo, categoryRepo)
 	quickAmountHandler := handler.NewQuickAmountHandler(quickAmountRepo)
 
-	// Initialize middleware
-	authMiddleware := middleware.CustomContextMiddleware(userRepo)
+	// Initialize middleware (auth with JWT + refresh using Postgres)
+	authMiddleware := middleware.CustomContextMiddleware(userRepo, refreshTokenRepo)
 
 	return &Registry{
 		DB:                 db,

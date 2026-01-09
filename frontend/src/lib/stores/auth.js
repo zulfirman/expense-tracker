@@ -84,59 +84,6 @@ function createAuthStore() {
         const user = { id: account.id, name: account.name, email: account.email };
         set({ user, token: account.token, refreshToken: account.refreshToken || null, isAuthenticated: true });
       }
-    },
-    refreshAccessToken: async function() {
-      if (!browser) return false;
-      
-      const refreshToken = localStorage.getItem('auth_refresh_token');
-      if (!refreshToken) {
-        return false;
-      }
-
-      try {
-      const response = await fetch('/api/apps/auth/refresh', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ refreshToken })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to refresh token');
-        }
-
-        const data = await response.json();
-        
-        // Update tokens in store and localStorage
-        if (browser) {
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('auth_refresh_token', data.refreshToken);
-        }
-        update(state => ({ ...state, token: data.token, refreshToken: data.refreshToken }));
-        
-        // Update accounts store
-        const account = accounts.getCurrentAccount();
-        if (account) {
-          accounts.addAccount(
-            { id: account.id, name: account.name, email: account.email },
-            data.token,
-            data.refreshToken
-          );
-        }
-        
-        return true;
-      } catch (error) {
-        // Logout on refresh failure
-        if (browser) {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_refresh_token');
-          localStorage.removeItem('auth_user');
-          accounts.clearAccounts();
-        }
-        set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
-        return false;
-      }
     }
   };
 }

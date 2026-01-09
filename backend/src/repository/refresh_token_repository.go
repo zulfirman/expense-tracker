@@ -30,4 +30,6 @@ func (r *RefreshTokenRepository) Delete(t *model.M_refresh_token) error {
 	return r.db.Delete(t).Error
 }
 
-
+func (r *RefreshTokenRepository) Save(t *model.M_refresh_token) error {
+	return r.db.Save(t).Error
+}
